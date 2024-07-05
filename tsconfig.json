@@ -1,37 +1,16 @@
 {
+  "exclude": ["node_modules", "static", "dist"],
   "compilerOptions": {
-    "target": "ES2015",
-    "useDefineForClassFields": true,
+    "jsx": "react",
+    "target": "es2016",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "skipLibCheck": true,
-
-    "types": ["vite/client"],
-    "outDir": "dist",
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
-
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-
-    /* Linting (使われてない部分の警告など) */
-    "strict": true,
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-
+    "moduleResolution": "Bundler",
     "allowJs": true,
-    "jsxImportSource": "react",
+    "noEmit": true,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true
-  },
-  "references": [{ "path": "./tsconfig.node.json" }],
-  "include": ["vite.config.ts"]
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true
+  }
 }

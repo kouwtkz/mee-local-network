@@ -3,12 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "cd dist && node ./index.js",
     "dev": "vite --host",
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build --mode client",
     "build:server": "vite build",
     "deploy": "pwsh -c ./deploy_rs.ps1",
+    "start": "cd dist && node ./index.js",
+    "tsc": "npx tsc",
     "ssh": "pwsh -c ssh rs -t 'cd mee-local-network; bash --login'",
     "docker:up": "docker-compose up",
     "docker:build": "docker-compose build"

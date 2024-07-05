@@ -1,5 +1,3 @@
-/// <reference types="vite/client" />
-
 import React from "react";
 import { existsSync, readdirSync, Stats, statSync } from "fs";
 import { CommonContext } from "../types/HonoCustomType";

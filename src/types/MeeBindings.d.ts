@@ -1,7 +1,7 @@
-export interface MeeEnv {
+interface MeeEnv {
   [k: string]: any;
 }
 
-export interface MeeBindings {
+interface MeeBindings {
   Bindings: MeeEnv
 }

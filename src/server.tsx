@@ -1,5 +1,3 @@
-/// <reference types="vite/client" />
-
 import React, { Children } from "react";
 import { DefaultLayout, Style } from "./layout";
 import { CommonContext, CommonHono } from "./types/HonoCustomType";
