@@ -6,7 +6,7 @@ WORKDIR /app
 # アプリケーションの依存関係をインストール(lockも含む)
 COPY package*.json ./
 
-RUN npm install --production
+RUN npm install --omit=dev
 
 # アプリケーションのソースをバンドルする（一部はコピーしない）
 # COPY . .
