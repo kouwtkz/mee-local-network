@@ -1,5 +1,5 @@
 import { appendTrailingSlash } from "hono/trailing-slash";
-import { CommonHono } from "../../src/types/HonoCustomType";
+import { CommonHono } from "../types/HonoCustomType";
 
 export function SetTrailingSlash(app: CommonHono) {
   app.all("*", async (c, next) => {

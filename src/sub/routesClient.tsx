@@ -1,8 +1,8 @@
 import React from "react";
 import { renderToString } from "react-dom/server";
-import { RoutingList } from "../../src/routes/client/RoutingList";
-import { CommonHono } from "../../src/types/HonoCustomType";
-import { DefaultLayout } from "../../src/layout";
+import { RoutingList } from "../routes/client/RoutingList";
+import { CommonHono } from "../types/HonoCustomType";
+import { DefaultLayout } from "../layout";
 
 export function RoutesClient(app: CommonHono) {
   RoutingList.forEach((path) => {

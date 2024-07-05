@@ -3,7 +3,7 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { ServerCommon } from "./server";
-import { MeeBindings } from "../src/types/MeeBindings";
+import { MeeBindings } from "./types/MeeBindings";
 const app = new Hono<MeeBindings>({ strict: false });
 
 ServerCommon(app);

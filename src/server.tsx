@@ -1,8 +1,8 @@
 /// <reference types="vite/client" />
 
 import React, { Children } from "react";
-import { DefaultLayout } from "../src/layout";
-import { CommonContext, CommonHono } from "../src/types/HonoCustomType";
+import { DefaultLayout } from "./layout";
+import { CommonContext, CommonHono } from "./types/HonoCustomType";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import {
@@ -14,14 +14,14 @@ import {
   writeFileSync,
 } from "fs";
 import { renderToString } from "react-dom/server";
-import { LogPage } from "../src/routes/server/LogPage";
-import { TopPage } from "../src/routes/server/Home";
+import { LogPage } from "./routes/server/LogPage";
+import { TopPage } from "./routes/server/Home";
 import {
   uploaderOptions,
   UploaderPage,
   UploaderViewerPage,
-} from "../src/routes/server/UploaderPage";
-import { LoginPage, SettingPage } from "../src/routes/server/SettingPage";
+} from "./routes/server/UploaderPage";
+import { LoginPage, SettingPage } from "./routes/server/SettingPage";
 
 const title = "めぇの電脳";
 
