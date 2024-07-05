@@ -2,7 +2,7 @@
 
 import React from "react";
 import { existsSync, readdirSync, Stats, statSync } from "fs";
-import { CommonContext } from "../../types/HonoCustomType";
+import { CommonContext } from "../types/HonoCustomType";
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 
 export const uploaderOptions = {

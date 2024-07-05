@@ -14,8 +14,9 @@ export default defineConfig(({ mode }) => {
       config.build = {
         rollupOptions: {
           input: [
-            './src/client.tsx',
+            // './src/client.tsx',
             './src/styles.scss',
+            './src/client/bbs.tsx',
             './src/client/uploader.ts',
           ],
           output: {
