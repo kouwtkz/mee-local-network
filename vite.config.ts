@@ -42,7 +42,7 @@ export default defineConfig(({ mode }) => {
         adapter({ app, server, req, res, next }) {
           app(res, res);
         },
-        appPath: './app/index.tsx'
+        appPath: './src/index.tsx'
       })])
       config = {
         ...config,
@@ -55,7 +55,7 @@ export default defineConfig(({ mode }) => {
     case "development":
       config.plugins!.push(
         devServer({
-          entry: 'app/dev.tsx',
+          entry: 'src/dev.tsx',
           exclude: [
             /src\/.*\.css$/,
             /.*\.ts$/,
