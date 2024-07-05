@@ -6,7 +6,8 @@ $dark-high-hover: #deff7b;
   scrollbar-width: thin;
   scrollbar-color: $high-hover transparent;
   body,
-  .paging {
+  .paging,
+  .search {
     color: black;
     background-color: white;
   }
@@ -22,7 +23,8 @@ $dark-high-hover: #deff7b;
   @media (prefers-color-scheme: dark) {
     scrollbar-color: $dark-high-color transparent;
     body,
-    .paging {
+    .paging,
+    .search {
       color: white;
       background-color: #353535;
     }
@@ -146,7 +148,7 @@ form.uploader {
   color: rgb(228, 69, 69);
 }
 
-ul {
+ul.links {
   padding: 0;
   margin-right: 3em;
   li {
@@ -162,4 +164,88 @@ ul {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+}
+
+.jump {
+  &.hide {
+    opacity: 0;
+    display: none;
+  }
+  transition: opacity 200ms;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  border: 0;
+  background: transparent;
+  margin: 1rem;
+  padding: 0;
+  font-size: 2rem;
+  color: #aaaaaa;
+  color: #aaaaaa99;
+  cursor: pointer;
+}
+
+button {
+  cursor: pointer;
+}
+
+.bbs {
+  .search {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    text-align: right;
+    > * {
+      display: inline-block;
+      margin: 0.4rem;
+    }
+    form {
+      margin: 0;
+      input[type="text"] {
+        width: 100%;
+        opacity: 0.7;
+        border-radius: 0.4em;
+        padding: 0.2em 0.4em;
+        border: solid #999 0.1em;
+        border: solid #9996 0.1em;
+        transition: 80ms;
+      }
+      button {
+        display: none;
+      }
+    }
+  }
+  .threadList {
+    > * {
+      margin: 0.2rem;
+    }
+  }
+  .thread {
+    width: 100%;
+    margin: 1rem auto 1rem;
+    max-width: 42rem;
+    box-sizing: border-box;
+    word-break: break-word;
+    text-align: left;
+    .item {
+      padding: 1.5rem 1rem 0.1rem;
+      .body {
+        white-space: pre-line;
+        img {
+          max-width: 100%;
+          max-height: 16em;
+        }
+      }
+      .info {
+        text-align: right;
+        a {
+          text-decoration-line: none;
+          &:hover {
+            text-decoration-line: underline;
+          }
+        }
+      }
+    }
+  }
 }

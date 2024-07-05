@@ -20,6 +20,7 @@ import {
   UploaderViewerPage,
 } from "./server/UploaderPage";
 import { LoginPage, SettingPage } from "./server/SettingPage";
+import { app_bbs } from "./server/bbs";
 
 const title = import.meta.env.VITE_TITLE;
 
@@ -127,6 +128,7 @@ export function ServerCommon(app: CommonHono) {
       RenderMainLayout({ children: <SettingPage isLogin={getIsLogin(c)} /> })
     );
   });
+  app.route("/bbs", app_bbs);
 
   ["private/*", "twitter/*"].forEach((path) => {
     app.get(path, async (c, next) => {
@@ -148,7 +150,7 @@ export function ServerCommon(app: CommonHono) {
       return c.html(
         renderToString(
           <DefaultLayout>
-            <ul>
+            <ul className="links">
               {files.map((file, i) => {
                 let dir = path.endsWith("/") ? path : path + "/";
                 let href = dir + file;

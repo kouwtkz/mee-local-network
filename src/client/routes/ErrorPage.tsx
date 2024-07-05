@@ -1,4 +1,4 @@
-import { Link, useRouteError } from "react-router-dom";
+import { useRouteError } from "react-router-dom";
 import { Base } from "./Root";
 import React from "react";
 
@@ -27,13 +27,13 @@ export function ErrorContent({ status, statusText }: ErrorType) {
         <>
           <h1>{errorObj.h1}</h1>
           <h4>{errorObj.h4}</h4>
-          <Link to="/">トップページへ戻る</Link>
+          <a href="/">トップページへ戻る</a>
         </>
       ) : (
         <>
           <h1>Error</h1>
           <h4>{statusText}</h4>
-          <Link to="/">トップページへ戻る</Link>
+          <a href="/">トップページへ戻る</a>
         </>
       )}
     </div>

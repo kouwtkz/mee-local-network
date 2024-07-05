@@ -5,7 +5,7 @@ export function TopPage({ title }: { title?: string }) {
     <>
       <h1>{title}</h1>
       <div className="row">
-        <ul>
+        <ul className="links">
           <li>
             <a href="uploader/">簡易あぷろだ</a>
           </li>

@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { CompactCode } from "./functions/StrFunctions.mjs";
+import { CompactCode } from "./functions/StrFunctions";
 import importStyles from "./styles.scss?inline";
 import { ServerCommon } from "./server";
 

@@ -4,7 +4,7 @@ export function SettingPage({ isLogin = false }: { isLogin?: boolean }) {
   return (
     <>
       <h1>せってい</h1>
-      <ul>
+      <ul className="links">
         {isLogin ? (
           <li>
             <a href="/logout/">ログアウト</a>
