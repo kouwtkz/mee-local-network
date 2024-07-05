@@ -1,0 +1,39 @@
+{
+  "name": "mee-local-network",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "cd dist && node ./index.js",
+    "dev": "vite --host",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "vite build --mode client",
+    "build:server": "vite build",
+    "deploy": "pwsh -c ./deploy_rs.ps1",
+    "ssh": "pwsh -c ssh rs -t 'cd mee-local-network; bash --login'",
+    "docker:up": "docker-compose up",
+    "docker:build": "docker-compose build"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.12.0",
+    "axios": "^1.7.2",
+    "hono": "^4.4.11",
+    "react-dom": "^18.3.1",
+    "react-icons": "^5.0.1"
+  },
+  "devDependencies": {
+    "@hono/vite-dev-server": "^0.12.2",
+    "@types/node": "^20.14.9",
+    "@types/react": "^18.2.79",
+    "@types/react-dom": "^18.2.25",
+    "@vitejs/plugin-react": "^4.2.1",
+    "react": "^18.2.0",
+    "react-cookie": "^7.1.4",
+    "react-device-detect": "^2.2.3",
+    "react-router-dom": "^6.24.1",
+    "sass": "^1.75.0",
+    "typescript": "^5.5.3",
+    "vite": "^4.0.0",
+    "vite-plugin-node": "^3.1.0",
+    "vite-tsconfig-paths": "^4.3.2"
+  }
+}

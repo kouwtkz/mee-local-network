@@ -1,0 +1,69 @@
+:root {
+  --bgc: white;
+  --txc: black;
+  --lkc: #769714;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bgc: #353535;
+    --txc: white;
+    --lkc: #c1e654;
+  }
+}
+
+body {
+  padding: 2% 0% 0% 4%;
+  color: #769714;
+  color: var(--txc);
+  background-color: var(--bgc);
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+body>* {
+  width: 100%;
+}
+
+a {
+  color: var(--lkc);
+}
+
+.viewer ul {
+  padding-left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+}
+
+.viewer li {
+  list-style: none;
+  width: auto;
+}
+
+.viewer img {
+  width: 20vw;
+  margin: 4px;
+}
+
+.alert-danger {
+  color: rgb(228, 69, 69);
+}
+
+ul {
+  padding: 0;
+  margin-right: 3em;
+}
+
+li {
+  display: block;
+  font-size: 2em;
+  width: 90%;
+  margin: 0 0 0.6em 1em;
+}
+
+.row {
+  display: flex;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}

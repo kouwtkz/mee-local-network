@@ -1,0 +1,165 @@
+$high-color: #769714;
+$high-hover: #aecc54;
+$dark-high-color: #c1e654;
+$dark-high-hover: #deff7b;
+:root {
+  scrollbar-width: thin;
+  scrollbar-color: $high-hover transparent;
+  body,
+  .paging {
+    color: black;
+    background-color: white;
+  }
+  a {
+    color: #bbc5a4;
+  }
+  a[href] {
+    color: $high-color;
+    &:hover {
+      color: $high-hover;
+    }
+  }
+  @media (prefers-color-scheme: dark) {
+    scrollbar-color: $dark-high-color transparent;
+    body,
+    .paging {
+      color: white;
+      background-color: #353535;
+    }
+    a {
+      color: #879071;
+    }
+    a[href] {
+      color: $dark-high-color;
+      &:hover {
+        color: $dark-high-hover;
+      }
+    }
+  }
+}
+
+$mobileWidth: 768px;
+$tabletWidth: 1024px;
+
+body {
+  padding: 2% 0% 0% 4%;
+  margin-bottom: 3rem;
+  overflow-y: scroll;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  > * {
+    width: 100%;
+  }
+}
+
+form.uploader {
+  text-align: center;
+  > * {
+    margin: 0.25rem;
+  }
+  button {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    border: none;
+    color: white;
+    background-color: #98b04f;
+    cursor: pointer;
+    &:hover {
+      background-color: #aebe7b;
+    }
+    font-size: 1.2rem;
+  }
+  @media (min-width: $mobileWidth) {
+    text-align: left;
+  }
+}
+.viewer {
+  ul {
+    padding: 0;
+    display: block;
+    text-align: center;
+    li {
+      display: inline-block;
+      width: 16rem;
+      margin: 0.5rem;
+      list-style: none;
+      img {
+        width: 100%;
+      }
+      .delete {
+        cursor: pointer;
+        border: none;
+        background: none;
+        font-size: medium;
+        color: #b46868;
+        text-decoration-line: none;
+        &:hover {
+          color: #a64444;
+          text-decoration-line: underline;
+        }
+      }
+    }
+  }
+  .paging {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    margin: auto;
+    display: table;
+    height: 2rem;
+    & > * {
+      display: table-cell;
+      vertical-align: middle;
+    }
+    .status {
+      font-family: sans-serif;
+      span {
+        margin-left: 0.25rem;
+        margin-right: 0.25rem;
+      }
+    }
+    font-size: 1.25rem;
+    svg {
+      width: 1.5rem;
+      height: 1.5rem;
+      margin: 0.5rem 0.75rem;
+    }
+  }
+  @media (min-width: $mobileWidth) {
+    ul {
+      text-align: left;
+      li {
+        width: 20rem;
+        text-align: center;
+      }
+    }
+    .paging {
+      svg {
+        width: 2rem;
+        height: 2rem;
+        margin: 0.5rem 0.75rem;
+      }
+    }
+  }
+}
+
+.alert-danger {
+  color: rgb(228, 69, 69);
+}
+
+ul {
+  padding: 0;
+  margin-right: 3em;
+  li {
+    display: block;
+    font-size: 2em;
+    width: 90%;
+    margin: 0 0 0.6em 1em;
+  }
+}
+
+.row {
+  display: flex;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}

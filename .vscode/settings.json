@@ -1,0 +1,22 @@
+{
+  "files.associations": {
+    "config*.json": "jsonc",
+    ".dev.vars": "toml",
+    ".env.*": "properties"
+  },
+  "vs-browser.url": "http://localhost:5173/",
+  "VsCodeTaskButtons.tasks": [
+    { "task": "npm" },
+    { "label": "update", "task": "npm: update" },
+    { "label": "dev", "task": "npm: dev" },
+    { "label": "build", "task": "npm: build" },
+    { "label": "deploy", "task": "npm: deploy" }
+  ],
+  // Explorer で非表示にするもの
+  "files.exclude": {
+    "**/cmd/redirect": true,
+    "**/.env.*.local": true,
+    "**/node_modules": true,
+    "**/desktop.ini": true
+  },
+}
