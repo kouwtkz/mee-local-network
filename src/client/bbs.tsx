@@ -116,20 +116,26 @@ function PostForm() {
 }
 
 function BBSPage() {
+  const currentName = useParams().name ?? "";
   const [search, setSearch] = useSearchParams();
-  const [threads, setThreads] = useState<ThreadType[]>([]);
-  const name = useParams().name;
+  const threadsList = useRef<{
+    [k: string]: ThreadType[] | undefined;
+  }>({});
+  const [loaded, setLoaded] = useState<string[]>([]);
+  const threads = useMemo(
+    () => threadsList.current[currentName] ?? [],
+    [loaded, currentName]
+  );
   useEffect(() => {
-    // const callSearch = createSearchParams({
-    //   order: "desc",
-    //   ...Object.fromEntries(search),
-    // });
-    const filename = (name ? name + "_" : "") + "threads.json";
-    axios.get("/bbs/api/get/threads/" + filename).then((r) => {
-      const rawData: ThreadsRawType[] = r.data;
-      setThreads(ParseThreads(rawData));
-    });
-  }, [name]);
+    if (!threadsList.current[currentName]) {
+      const filename = (currentName ? currentName + "_" : "") + "threads.json";
+      axios.get("/bbs/api/get/threads/" + filename).then((r) => {
+        const rawData: ThreadsRawType[] = r.data;
+        threadsList.current[currentName] = ParseThreads(rawData);
+        setLoaded(loaded.concat(currentName));
+      });
+    }
+  }, [currentName]);
   const threadsObject = useMemo(() => {
     return GetThreads({
       limit: 100,
