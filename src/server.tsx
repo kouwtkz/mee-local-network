@@ -50,7 +50,7 @@ export function ServerCommon(app: CommonHono) {
 
   const cookieKey = "localToken";
   const cookieValue = import.meta.env.VITE_COOKIE_VALUE;
-  const password = import.meta.env.VITE_COOKIE_PASSWORD;
+  const password = import.meta.env.VITE_LOGIN_PASSWORD;
   function getIsLogin(c: CommonContext) {
     return getCookie(c, cookieKey) === cookieValue;
   }

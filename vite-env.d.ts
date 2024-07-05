@@ -2,7 +2,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_COOKIE_VALUE?: string
-  readonly VITE_COOKIE_PASSWORD?: string
+  readonly VITE_LOGIN_PASSWORD?: string
 }
 
 interface ImportMeta {
