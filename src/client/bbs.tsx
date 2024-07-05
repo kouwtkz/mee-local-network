@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
 import {
   createBrowserRouter,
@@ -16,6 +16,7 @@ import { FormatDate } from "../functions/DateFunctions";
 import { Base } from "./routes/Root";
 import { parse } from "marked";
 import HTMLReactParser from "html-react-parser/lib/index";
+import { GetThreads, ParseThreads } from "../functions/bbs";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <RouterProvider
@@ -116,35 +117,32 @@ function PostForm() {
 
 function BBSPage() {
   const [search, setSearch] = useSearchParams();
-  const [threadsData, setThreadsData] = useState<ThreadsDataType>({
-    threads: [],
-    length: 0,
-    limit: 0,
-  });
+  const [threads, setThreads] = useState<ThreadType[]>([]);
   const name = useParams().name;
   useEffect(() => {
-    const callSearch = createSearchParams({
+    // const callSearch = createSearchParams({
+    //   order: "desc",
+    //   ...Object.fromEntries(search),
+    // });
+    const filename = (name ? name + "_" : "") + "threads.json";
+    axios.get("/bbs/api/get/threads/" + filename).then((r) => {
+      const rawData: ThreadsRawType[] = r.data;
+      setThreads(ParseThreads(rawData));
+    });
+  }, [name]);
+  const threadsObject = useMemo(() => {
+    return GetThreads({
+      limit: 100,
       order: "desc",
       ...Object.fromEntries(search),
+      threads: threads.concat(),
     });
-    const filename = (name ? name + "_" : "") + "threads.json";
-    axios
-      .get("/bbs/api/get/threads/" + filename + "?" + callSearch.toString())
-      .then((r) => {
-        const rawData: ThreadsResponseType = r.data;
-        const data: ThreadsDataType = {
-          ...rawData,
-          threads: rawData.threads.map(({ createdAt, updatedAt, ...args }) => ({
-            date: createdAt ? new Date(createdAt) : undefined,
-            ...args,
-          })),
-        };
-        setThreadsData(data);
-      });
-  }, [name, search]);
+  }, [threads, search]);
   function paging(go: number) {
     const p = Number(search.get("p") ?? 1);
-    const maxPage = Math.ceil(threadsData.length / threadsData.limit);
+    const maxPage = threadsObject.limit
+      ? Math.ceil(threadsObject.length / threadsObject.limit)
+      : 1;
     let np = p + go;
     if (np > maxPage) np = maxPage;
     if (np < 1) np = 1;
@@ -222,7 +220,7 @@ function BBSPage() {
         </div>
         {/* <PostForm /> */}
         <main className="thread">
-          {threadsData.threads.map((v, i) => (
+          {threadsObject.threads.map((v, i) => (
             <div className="item" data-id={v.id} key={i}>
               <div className="body">
                 {v.text

@@ -4,6 +4,7 @@ import { DefaultLayout, Style } from "../layout";
 import { renderToString } from "react-dom/server";
 import { Hono } from "hono";
 import { existsSync, readdirSync, readFileSync } from "fs";
+import { GetRawThreads } from "../functions/bbs";
 
 function bbs_layout(title = import.meta.env.VITE_TITLE) {
   return renderToString(
@@ -37,54 +38,26 @@ const app_api = new Hono<MeeBindings>();
       return c.json([]);
     }
   });
-  function GetThreads({
-    name,
-    id,
-    q,
-    limit = 100,
-    page = 1,
-    order = "asc",
-  }: {
-    name: string;
-    id?: number;
-    q?: string;
-    limit?: number;
-    page?: number;
-    order?: string;
-  }) {
+  function ReadThreads(name?: string) {
     let threads: ThreadsRawType[] = [];
     try {
-      threads = JSON.parse(readFileSync(bbsOptions.data_dir + name).toString());
+      threads = JSON.parse(
+        readFileSync(bbsOptions.data_dir + name ?? "").toString()
+      );
     } catch {}
-    if (typeof id === "number") {
-      const thread = threads.find((item) => item.id === id);
-      threads = thread ? [thread] : [];
-    }
-    if (q) {
-      threads = threads.filter((item) => item.text?.match(q));
-    }
-    if (order === "desc") {
-      threads.reverse();
-    }
-    const length = threads.length;
-    if (typeof page === "number" && typeof limit === "number") {
-      threads = threads.slice((page - 1) * limit, page * limit);
-    }
-    return { threads, length, limit } as ThreadsResponseType;
+    return threads;
   }
+
   app.get("get/threads/:name", (c) => {
+    return c.json(ReadThreads(c.req.param("name")));
+  });
+  app.get("get/threads/filter/:name", (c) => {
     const Url = new URL(c.req.url);
-    const id_str = Url.searchParams.get("id");
-    const limit_str = Url.searchParams.get("limit");
-    const page_str = Url.searchParams.get("p");
+    const search = Object.fromEntries(Url.searchParams);
     return c.json(
-      GetThreads({
-        name: c.req.param("name"),
-        id: id_str ? parseInt(id_str, 10) : undefined,
-        q: Url.searchParams.get("q") ?? undefined,
-        limit: limit_str ? parseInt(limit_str, 10) : undefined,
-        page: page_str ? parseInt(page_str, 10) : undefined,
-        order: Url.searchParams.get("order") ?? undefined,
+      GetRawThreads({
+        threads: ReadThreads(c.req.param("name")),
+        ...search,
       })
     );
   });

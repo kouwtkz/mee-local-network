@@ -1,22 +1,22 @@
-interface ThreadType {
+interface ThreadsRawType {
   id: number;
   name?: string;
   text?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface ThreadType extends ThreadsRawType {
   date?: Date;
 }
 
 interface ThreadsDataType {
   length: number;
-  limit: number;
+  limit?: number;
   threads: ThreadType[];
 }
 
-interface ThreadsRawType extends Omit<ThreadType, "date"> {
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-interface ThreadsResponseType extends Omit<ThreadsDataType, "threads"> {
+interface ThreadsRawDataType extends Omit<ThreadsDataType, "threads"> {
   threads: ThreadsRawType[];
 }
 
