@@ -8,6 +8,7 @@ import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import {
   chmodSync,
   existsSync,
+  mkdirSync,
   readdirSync,
   unlinkSync,
   writeFileSync,
@@ -82,6 +83,9 @@ export function ServerCommon(app: CommonHono) {
         const filename = file.name.replace(/\s+/, "_");
         const filePath = uploaderOptions.upload_dir + filename;
         await file.arrayBuffer().then((abuf) => {
+          try {
+            mkdirSync(uploaderOptions.upload_dir, { recursive: true });
+          } catch {}
           writeFileSync(filePath, Buffer.from(abuf));
           chmodSync(filePath, "0777");
         });
