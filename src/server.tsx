@@ -23,7 +23,7 @@ import {
 } from "./server/UploaderPage";
 import { LoginPage, SettingPage } from "./server/SettingPage";
 
-const title = "めぇの電脳";
+const title = import.meta.env.VITE_TITLE;
 
 function RenderMainLayout({
   children,
