@@ -83,7 +83,7 @@ function MultiParser({
                         v.attribs.class =
                           (v.attribs.class ? `${v.attribs.class} ` : "") +
                           "external";
-                    } else {
+                    } else if (!/^[^\/]+@[^\/]+$/.test(url)) {
                       v.attribs.onClick = ((e: any) => {
                         const queryFlag = url.startsWith("?");
                         let query = queryFlag
