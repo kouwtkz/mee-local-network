@@ -140,7 +140,7 @@ export function UploaderPage({ max = 3, ...props }: UploaderPageProps) {
         <button type="submit">送信する</button>
       </form>
       <UploaderViewer max={max} paging={false} {...props} />
-      <ul>
+      <ul className="links">
         <li>
           <a href="/uploader/viewer/">ビューア</a>
         </li>
@@ -157,7 +157,7 @@ export function UploaderViewerPage({ max = 10, ...props }: UploaderPageProps) {
     <>
       <h1>{uploaderOptions.title}</h1>
       <UploaderViewer max={max} paging={true} {...props} />
-      <ul>
+      <ul className="links">
         <li>
           <a href="/uploader/">アップロードページに戻る</a>
         </li>

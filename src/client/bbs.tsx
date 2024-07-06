@@ -17,6 +17,7 @@ import { Base } from "./routes/Root";
 import { parse } from "marked";
 import HTMLReactParser from "html-react-parser/lib/index";
 import { GetThreads, ParseThreads } from "../functions/bbs";
+import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <RouterProvider
@@ -50,7 +51,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 
 const threadLabeledList: { name: string; label?: string }[] = [
   { name: "", label: "メイン" },
-  { name: "old", label: "アーカイブ" },
+  { name: "old", label: "過去" },
 ];
 function ThreadListArea() {
   const currentName = useParams().name ?? "";
@@ -58,10 +59,7 @@ function ThreadListArea() {
   const list = threadLabeledList.filter(({ name }) => name !== currentName);
   return (
     <div className="threadList">
-      <span>
-        <span>現在: </span>
-        <span>{current?.label}</span>
-      </span>
+      <span>【{current?.label}】</span>
       {list.map(({ name, label }, i) => {
         return (
           <Link key={i} to={"/bbs" + (name ? "/" + name : "") + "/"}>
@@ -144,11 +142,15 @@ function BBSPage() {
       threads: threads.concat(),
     });
   }, [threads, search]);
+  const maxPage = useMemo(
+    () =>
+      threadsObject.limit
+        ? Math.ceil(threadsObject.length / threadsObject.limit)
+        : 1,
+    [threadsObject]
+  );
+  const p = useMemo(() => Number(search.get("p") ?? 1), [search]);
   function paging(go: number) {
-    const p = Number(search.get("p") ?? 1);
-    const maxPage = threadsObject.limit
-      ? Math.ceil(threadsObject.length / threadsObject.limit)
-      : 1;
     let np = p + go;
     if (np > maxPage) np = maxPage;
     if (np < 1) np = 1;
@@ -203,24 +205,28 @@ function BBSPage() {
             <button
               type="button"
               className="left"
+              title="前のページに戻る"
+              disabled={p <= 1}
               onClick={() => paging(-1)}
               onContextMenu={(e) => {
                 e.preventDefault();
                 paging(-1e6);
               }}
             >
-              ＜
+              <MdArrowBackIosNew />
             </button>
             <button
               type="button"
               className="right"
+              title="次のページに進む"
+              disabled={p >= maxPage}
               onClick={() => paging(1)}
               onContextMenu={(e) => {
                 e.preventDefault();
                 paging(1e6);
               }}
             >
-              ＞
+              <MdArrowForwardIos />
             </button>
           </div>
         </div>
