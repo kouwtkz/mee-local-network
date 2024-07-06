@@ -1,3 +1,4 @@
+$soft-color: #acc070;
 $high-color: #769714;
 $high-hover: #aecc54;
 $dark-high-color: #c1e654;
@@ -5,12 +6,13 @@ $dark-high-hover: #deff7b;
 $high-color-fluo: #76971475;
 $disabled-color: #bbc5a4;
 $disabled-color2: #a2ab8d;
+$form-input-bg: #d0d2d0;
 :root {
   scrollbar-width: thin;
-  scrollbar-color: $high-hover transparent;
+  scrollbar-color: $soft-color transparent;
   body,
-  .paging,
-  .search {
+  header,
+  .paging {
     color: black;
     background-color: white;
   }
@@ -24,10 +26,10 @@ $disabled-color2: #a2ab8d;
     }
   }
   @media (prefers-color-scheme: dark) {
-    scrollbar-color: $dark-high-color transparent;
+    scrollbar-color: $soft-color transparent;
     body,
-    .paging,
-    .search {
+    header,
+    .paging {
       color: white;
       background-color: #353535;
     }
@@ -204,11 +206,35 @@ button {
 }
 
 .bbs {
-  .search {
+  $postform-height: 6rem;
+  margin-top: $postform-height;
+  button {
+    color: white;
+    background-color: $high-color;
+    border: none;
+    margin: 0 0.1rem;
+    padding: 0;
+    border-radius: 0.1rem;
+    &:disabled {
+      cursor: auto;
+      background-color: $disabled-color2;
+    }
+    &:not(:disabled):hover {
+      background-color: $high-hover;
+    }
+    svg {
+      height: 1.25rem;
+      width: 1.25rem;
+      margin: 0.1rem 0.3rem;
+    }
+  }
+  header {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
+  }
+  .search {
     text-align: right;
     padding: 0.1rem 0;
     > *,
@@ -221,12 +247,10 @@ button {
       margin: 0;
       input[type="search"] {
         width: 9rem;
-        opacity: 0.7;
         border-radius: 0.4em;
         padding: 0.2em 0.4em;
+        background-color: $form-input-bg;
         border: solid #999 0.1em;
-        border: solid #9996 0.1em;
-        transition: 80ms;
         @media (min-width: $mobileWidth) {
           width: 12rem;
         }
@@ -235,25 +259,45 @@ button {
         display: none;
       }
     }
-    .paging {
-      button {
-        color: white;
-        background-color: $high-color;
-        border: none;
-        margin: 0 0.1rem;
-        border-radius: 0.1rem;
-        height: 1.5rem;
-        &:disabled {
-          cursor: auto;
-          background-color: $disabled-color2;
-        }
-        &:not(:disabled):hover {
-          background-color: $high-hover;
-        }
-        svg {
-          height: 1.2rem;
-          width: 1.2rem;
-        }
+  }
+  form.post {
+    margin: 0.1rem auto;
+    width: 100%;
+    max-width: 42rem;
+    .list {
+      display: flex;
+      justify-content: center;
+      textarea {
+        flex: 1;
+      }
+    }
+    > *,
+    .list > * {
+      margin-left: 0.1rem;
+      display: inline-block;
+      vertical-align: top;
+    }
+    input[type="file"],
+    .up.list {
+      display: none;
+    }
+    button {
+      svg {
+        width: 1.5rem;
+        height: 1.15rem;
+        margin: 0.3rem 0.5rem;
+      }
+    }
+    textarea {
+      padding: 0.4rem 0.5rem;
+      font-size: large;
+      height: 1.75rem;
+      transition: 100ms;
+      background-color: $form-input-bg;
+      border-radius: 0.1rem;
+      &:focus,
+      &:hover {
+        height: $postform-height;
       }
     }
   }
@@ -270,7 +314,7 @@ button {
     word-break: break-word;
     text-align: left;
     .item {
-      padding: 1.5rem 1rem 0.1rem;
+      padding: 0.1rem 1rem 1.5rem;
       .body {
         white-space: pre-line;
         img {

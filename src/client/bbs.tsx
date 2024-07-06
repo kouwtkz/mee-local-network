@@ -18,6 +18,39 @@ import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import { TopJumpArea } from "./components/TopJump";
 import findThreads from "../functions/findThreads";
 import MultiParser from "./components/MultiParser";
+import { FaFileImage } from "react-icons/fa";
+import { IoSend } from "react-icons/io5";
+import { create } from "zustand";
+
+interface ThreadsStateType {
+  threadsList: {
+    [k: string]: ThreadType[] | undefined;
+  };
+  reloadList: {
+    [k: string]: boolean;
+  };
+  setThreadsList: (name: string, list: ThreadType[]) => void;
+  setReloadList: (name: string, flag: boolean) => void;
+}
+export const useThreadsState = create<ThreadsStateType>((set) => ({
+  threadsList: {},
+  reloadList: {},
+  setThreadsList(name, list) {
+    set((state) => {
+      return {
+        threadsList: { ...state.threadsList, [name]: list },
+        reloadList: { ...state.reloadList, [name]: false },
+      };
+    });
+  },
+  setReloadList(name, flag) {
+    set((state) => {
+      return {
+        reloadList: { ...state.reloadList, [name]: flag },
+      };
+    });
+  },
+}));
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <RouterProvider
@@ -76,12 +109,27 @@ function ThreadListArea() {
 }
 
 function PostForm() {
+  const formref = useRef<HTMLFormElement>(null);
+  const currentName = useParams().name ?? "";
+  const { setReloadList } = useThreadsState();
   return (
     <form
       id="post_form"
       method="post"
-      action="/bbs/"
+      className="post"
+      action="/bbs/api/send/post/"
       encType="multipart/form-data"
+      ref={formref}
+      onSubmit={(e) => {
+        if (formref.current) {
+          e.preventDefault();
+          const fd = new FormData(formref.current);
+          axios.postForm(formref.current.action, fd).then(() => {
+            setReloadList(currentName, true);
+            formref.current?.reset();
+          });
+        }
+      }}
     >
       <div className="upload">
         <div className="file_input">
@@ -93,24 +141,28 @@ function PostForm() {
             accept="image/*, video/*, audio/*, text/*, application/*"
           />
         </div>
-        <div className="up_list">
+        <div className="up list">
           <div className="up_cancel">×</div>
           <div className="up_file"></div>
         </div>
       </div>
       <input type="hidden" name="update_target" />
-      <div className="write_space">
+      <div className="list">
         <div className="right buttons">
-          <input
+          <button
             id="file_selector_button"
             type="button"
-            value="F"
-            className="button unselectable"
-          />
+            title="ファイル選択"
+            disabled
+          >
+            <FaFileImage />
+          </button>
         </div>
         <textarea title="本文" name="text" />
         <div className="right buttons">
-          <input type="submit" value="▷" className="button" />
+          <button type="submit" title="送信">
+            <IoSend />
+          </button>
         </div>
       </div>
     </form>
@@ -205,24 +257,21 @@ function BBSPage() {
   const currentName = useParams().name ?? "";
   const current = threadLabeledList.find(({ name }) => name == currentName);
   const [search, setSearch] = useSearchParams();
-  const threadsList = useRef<{
-    [k: string]: ThreadType[] | undefined;
-  }>({});
-  const [loaded, setLoaded] = useState<string[]>([]);
+  const { threadsList, setThreadsList, reloadList } = useThreadsState();
   const threads = useMemo(
-    () => threadsList.current[currentName] ?? [],
-    [loaded, currentName]
+    () => threadsList[currentName] ?? [],
+    [threadsList, currentName]
   );
   useEffect(() => {
-    if (!threadsList.current[currentName]) {
-      const filename = (currentName ? currentName + "_" : "") + "threads.json";
-      axios.get("/bbs/api/get/threads/" + filename).then((r) => {
-        const rawData: ThreadsRawType[] = r.data;
-        threadsList.current[currentName] = ParseThreads(rawData);
-        setLoaded(loaded.concat(currentName));
-      });
+    if (!threadsList[currentName] || reloadList[currentName]) {
+      axios
+        .get("/bbs/api/get/threads/" + (currentName ? currentName + "/" : ""))
+        .then((r) => {
+          const rawData: ThreadsRawType[] = r.data;
+          setThreadsList(currentName, ParseThreads(rawData));
+        });
     }
-  }, [currentName]);
+  }, [currentName, reloadList]);
   const take = useMemo(() => {
     let v = search.get("take");
     return v ? Number(v) : 100;
@@ -247,28 +296,30 @@ function BBSPage() {
     return findThreads({ threads: threads.concat(), take, page, q, order, id });
   }, [threads, search]);
   return (
-    <div className="bbs">
-      <div>
-        <TopJumpArea />
-        <div className="search">
-          <ThreadListArea />
-          <SearchArea data={threadsObject} />
-        </div>
-        {/* <PostForm /> */}
-        <main className="thread">
-          {threadsObject.threads.map((v, i) => (
-            <div className="item" data-id={v.id} key={i}>
-              <div className="body">
-                {v.text ? <MultiParser>{v.text}</MultiParser> : null}
-              </div>
-              <div className="info">
-                <span className="num">{v.id}: </span>
-                <Link to={"?id=" + v.id}>
-                  <span className="date">
-                    {v.date ? FormatDate(v.date) : null}
-                  </span>
-                </Link>
-                {/* <button type="button" onClick={() => {}}>
+    <>
+      <div className="bbs">
+        <div>
+          <header>
+            <div className="search">
+              <ThreadListArea />
+              <SearchArea data={threadsObject} />
+            </div>
+            <PostForm />
+          </header>
+          <main className="thread">
+            {threadsObject.threads.map((v, i) => (
+              <div className="item" data-id={v.id} key={i}>
+                <div className="body">
+                  {v.text ? <MultiParser>{v.text}</MultiParser> : null}
+                </div>
+                <div className="info">
+                  <span className="num">{v.id}: </span>
+                  <Link to={"?id=" + v.id}>
+                    <span className="date">
+                      {v.date ? FormatDate(v.date) : null}
+                    </span>
+                  </Link>
+                  {/* <button type="button" onClick={() => {}}>
                   ×
                 </button>
                 <button
@@ -278,11 +329,13 @@ function BBSPage() {
                 >
                   ▽
                 </button> */}
+                </div>
               </div>
-            </div>
-          ))}
-        </main>
+            ))}
+          </main>
+        </div>
       </div>
-    </div>
+      <TopJumpArea />
+    </>
   );
 }

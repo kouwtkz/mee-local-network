@@ -3,7 +3,7 @@ import { CommonHono } from "../types/HonoCustomType";
 import { DefaultLayout, Style } from "../layout";
 import { renderToString } from "react-dom/server";
 import { Hono } from "hono";
-import { existsSync, readdirSync, readFileSync } from "fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
 import { GetRawThreads } from "../functions/bbs";
 
 function bbs_layout(title = import.meta.env.VITE_TITLE) {
@@ -28,7 +28,7 @@ export const bbsOptions = {
   data_dir: import.meta.env.PROD ? "../data/" : "./data/",
 };
 
-const app_api = new Hono<MeeBindings>();
+const app_api = new Hono<MeeBindings>({ strict: false });
 {
   const app = app_api;
   app.get("get/files", (c) => {
@@ -38,29 +38,64 @@ const app_api = new Hono<MeeBindings>();
       return c.json([]);
     }
   });
+
+  function GetThreadsFilename(name?: string) {
+    return (name ? name + "_" : "") + "threads.json";
+  }
+
   function ReadThreads(name?: string) {
+    const filename = GetThreadsFilename(name);
     let threads: ThreadsRawType[] = [];
     try {
       threads = JSON.parse(
-        readFileSync(bbsOptions.data_dir + name ?? "").toString()
+        readFileSync(bbsOptions.data_dir + filename).toString()
       );
     } catch {}
     return threads;
   }
 
-  app.get("get/threads/:name", (c) => {
-    return c.json(ReadThreads(c.req.param("name")));
+  function WriteThreads(threads: ThreadsRawType[], name?: string) {
+    const filename = GetThreadsFilename(name);
+    try {
+      writeFileSync(bbsOptions.data_dir + filename, JSON.stringify(threads));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  ["", "/:name"].forEach((n) => {
+    app.get("get/threads" + n, (c) => {
+      return c.json(ReadThreads(c.req.param("name")));
+    });
+    app.get("get/threads/filter" + n, (c) => {
+      const Url = new URL(c.req.url);
+      const search = Object.fromEntries(Url.searchParams);
+      return c.json(
+        GetRawThreads({
+          threads: ReadThreads(c.req.param("name")),
+          ...search,
+        })
+      );
+    });
+    app.post("send/post" + n, async (c) => {
+      let rawThreads = ReadThreads(c.req.param("name"));
+      const v = await c.req.parseBody();
+      console.log(v);
+      const currentDate = new Date();
+      const data: ThreadType = {
+        id: rawThreads.reduce((c, a) => (c <= a.id ? a.id + 1 : c), 0),
+        name: import.meta.env.VITE_USER_NAME,
+        text: v.text as string,
+        createdAt: currentDate.toISOString(),
+        updatedAt: currentDate.toISOString(),
+      };
+      rawThreads.push(data);
+      WriteThreads(rawThreads);
+      return c.json(data);
+    });
   });
-  app.get("get/threads/filter/:name", (c) => {
-    const Url = new URL(c.req.url);
-    const search = Object.fromEntries(Url.searchParams);
-    return c.json(
-      GetRawThreads({
-        threads: ReadThreads(c.req.param("name")),
-        ...search,
-      })
-    );
-  });
+
   app.get("*", (c) => {
     return c.notFound();
   });
