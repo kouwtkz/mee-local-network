@@ -1,7 +1,7 @@
 import { AutoAllotDate } from "./DateFunctions";
 import { findMany } from "./findMany";
 
-interface getThreadsProps {
+interface findThreadsProps {
   threads: ThreadType[];
   update?: boolean;
   take?: number;
@@ -13,9 +13,10 @@ interface getThreadsProps {
   order?: "asc" | "desc";
 }
 
-export default function findThreads({ threads, take, page, common, q = "", id, pinned = false, order = "desc" }: getThreadsProps): ThreadsDataType {
+export default function findThreads(
+  { threads, take, page, common, q = "", id, pinned = false, order = "desc" }
+    : findThreadsProps): ThreadsDataType {
   if (page) page--;
-  const skip = (take && page) ? take * page : 0;
   const options = {};
   let where: any[] = [];
 
@@ -23,8 +24,10 @@ export default function findThreads({ threads, take, page, common, q = "", id, p
     const wheres = setWhere(q, options);
     id = wheres.id;
     where = wheres.where;
+    if (wheres.take) take = wheres.take;
   }
-  // let { id, where } = wheres;
+  const skip = (take && page) ? take * page : 0;
+  
   if (common) where.push(
     { draft: false, date: { lte: new Date() } }
   )
@@ -67,6 +70,7 @@ function setWhere(q: string, options: WhereOptionsType) {
   const hiddenOption = options.hidden || { draft: false }
   const where: any[] = [];
   let id: number | undefined;
+  let take: number | undefined;
   let OR = false, OR_skip = false;
   const searchArray = q.replace(/^\s+|\s+$/, "").split(/\s+/);
   searchArray.forEach((item) => {
@@ -94,20 +98,14 @@ function setWhere(q: string, options: WhereOptionsType) {
         case "id":
           id = Number(filterValue);
           break;
+        case "take":
+          take = Number(filterValue);
+          break;
         case "title":
         case "body":
           where.push(
             {
               [filterKey]: {
-                contains: filterValue
-              }
-            })
-          break;
-        case "cat":
-        case "category":
-          where.push(
-            {
-              category: {
                 contains: filterValue
               }
             })
@@ -248,5 +246,5 @@ function setWhere(q: string, options: WhereOptionsType) {
     }
   })
   options.hidden = hiddenOption;
-  return { where, id };
+  return { where, id, take };
 }
