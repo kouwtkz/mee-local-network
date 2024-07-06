@@ -13,12 +13,11 @@ import {
 import ErrorPage from "./routes/ErrorPage";
 import { FormatDate } from "../functions/DateFunctions";
 import { Base } from "./routes/Root";
-import { parse } from "marked";
-import HTMLReactParser from "html-react-parser/lib/index";
 import { GetThreads, ParseThreads } from "../functions/bbs";
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import { TopJumpArea } from "./components/TopJump";
 import findThreads from "../functions/findThreads";
+import MultiParser from "./components/MultiParser";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <RouterProvider
@@ -114,6 +113,90 @@ function PostForm() {
   );
 }
 
+function SearchArea({ data }: { data: ThreadsDataType }) {
+  const [search, setSearch] = useSearchParams();
+  const refInput = useRef<HTMLInputElement>(null);
+  const p = useMemo(() => Number(search.get("p") ?? 1), [search]);
+  const q = useMemo(() => search.get("q") ?? "", [search]);
+  const maxPage = useMemo(
+    () => (data.take ? Math.ceil(data.length / data.take) : 1),
+    [data]
+  );
+  function paging(go: number) {
+    let np = p + go;
+    if (np > maxPage) np = maxPage;
+    if (np < 1) np = 1;
+    if (np !== p) {
+      const searchObject: { [k: string]: string } = {
+        ...Object.fromEntries(search),
+        p: np.toString(),
+      };
+      if (searchObject.p === "1") delete searchObject.p;
+      setSearch(searchObject, { preventScrollReset: false });
+    }
+  }
+  useEffect(() => {
+    if (refInput.current) refInput.current.value = q;
+  }, [q]);
+  return (
+    <div className="list">
+      <form
+        id="form_search_main"
+        method="get"
+        autoComplete="off"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const nq = (e.target as HTMLFormElement).q.value;
+          if (nq !== q) {
+            if (nq) setSearch({ q: nq });
+            else setSearch();
+          }
+        }}
+      >
+        <input
+          type="search"
+          title="検索"
+          name="q"
+          ref={refInput}
+          placeholder="キーワード検索"
+          defaultValue={q}
+        />
+        <button type="submit" className="submit button">
+          検索
+        </button>
+      </form>
+      <div className="paging">
+        <button
+          type="button"
+          className="left"
+          title="前のページに戻る"
+          disabled={p <= 1}
+          onClick={() => paging(-1)}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            paging(-1e6);
+          }}
+        >
+          <MdArrowBackIosNew />
+        </button>
+        <button
+          type="button"
+          className="right"
+          title="次のページに進む"
+          disabled={p >= maxPage}
+          onClick={() => paging(1)}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            paging(1e6);
+          }}
+        >
+          <MdArrowForwardIos />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function BBSPage() {
   const currentName = useParams().name ?? "";
   const [search, setSearch] = useSearchParams();
@@ -158,96 +241,20 @@ function BBSPage() {
   const threadsObject = useMemo(() => {
     return findThreads({ threads: threads.concat(), take, page, q, order, id });
   }, [threads, search]);
-  const maxPage = useMemo(
-    () =>
-      threadsObject.take
-        ? Math.ceil(threadsObject.length / threadsObject.take)
-        : 1,
-    [threadsObject]
-  );
-  const p = useMemo(() => Number(search.get("p") ?? 1), [search]);
-  function paging(go: number) {
-    let np = p + go;
-    if (np > maxPage) np = maxPage;
-    if (np < 1) np = 1;
-    if (np !== p) {
-      const searchObject: { [k: string]: string } = {
-        ...Object.fromEntries(search),
-        p: np.toString(),
-      };
-      if (searchObject.p === "1") delete searchObject.p;
-      setSearch(searchObject, { preventScrollReset: false });
-    }
-  }
   return (
     <div className="bbs">
       <div>
         <TopJumpArea />
         <div className="search">
           <ThreadListArea />
-          <div className="list">
-            <form
-              id="form_search_main"
-              method="get"
-              autoComplete="off"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const q = (e.target as HTMLFormElement).q.value;
-                if (q !== (search.get("q") ?? "")) {
-                  if (q) setSearch({ q });
-                  else setSearch();
-                }
-              }}
-            >
-              <input
-                type="search"
-                title="検索"
-                name="q"
-                placeholder="キーワード検索"
-                defaultValue={search.get("q") ?? ""}
-              />
-              <button type="submit" className="submit button">
-                検索
-              </button>
-            </form>
-            <div className="paging">
-              <button
-                type="button"
-                className="left"
-                title="前のページに戻る"
-                disabled={p <= 1}
-                onClick={() => paging(-1)}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  paging(-1e6);
-                }}
-              >
-                <MdArrowBackIosNew />
-              </button>
-              <button
-                type="button"
-                className="right"
-                title="次のページに進む"
-                disabled={p >= maxPage}
-                onClick={() => paging(1)}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  paging(1e6);
-                }}
-              >
-                <MdArrowForwardIos />
-              </button>
-            </div>
-          </div>
+          <SearchArea data={threadsObject} />
         </div>
         {/* <PostForm /> */}
         <main className="thread">
           {threadsObject.threads.map((v, i) => (
             <div className="item" data-id={v.id} key={i}>
               <div className="body">
-                {v.text
-                  ? HTMLReactParser(parse(v.text, { async: false }) as string)
-                  : null}
+                {v.text ? <MultiParser>{v.text}</MultiParser> : null}
               </div>
               <div className="info">
                 <span className="num">{v.id}: </span>
