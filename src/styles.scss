@@ -174,7 +174,7 @@ ul.links {
   flex-wrap: wrap;
 }
 
-.jump {
+.topJump {
   &.hide {
     opacity: 0;
     visibility: hidden;
@@ -206,21 +206,26 @@ button {
     left: 0;
     width: 100%;
     text-align: right;
-    > * {
-      vertical-align: middle;
+    padding: 0.1rem 0;
+    > *,
+    .list > * {
+      margin-left: 0.1rem;
       display: inline-block;
-      margin: 0.2rem;
+      vertical-align: middle;
     }
     form {
       margin: 0;
-      input[type="text"] {
-        width: 100%;
+      input[type="search"] {
+        width: 9rem;
         opacity: 0.7;
         border-radius: 0.4em;
         padding: 0.2em 0.4em;
         border: solid #999 0.1em;
         border: solid #9996 0.1em;
         transition: 80ms;
+        @media (min-width: $mobileWidth) {
+          width: 12rem;
+        }
       }
       button {
         display: none;
@@ -231,7 +236,7 @@ button {
         color: white;
         background-color: $high-color;
         border: none;
-        margin: 0.1rem;
+        margin: 0 0.1rem;
         border-radius: 0.1rem;
         height: 1.5rem;
         &:disabled {
@@ -250,7 +255,7 @@ button {
   }
   .threadList {
     > * {
-      margin: 0.2rem;
+      margin-right: 0.1rem;
     }
   }
   .thread {

@@ -3,7 +3,6 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
 import {
   createBrowserRouter,
-  createSearchParams,
   Link,
   Outlet,
   RouterProvider,
@@ -18,6 +17,7 @@ import { parse } from "marked";
 import HTMLReactParser from "html-react-parser/lib/index";
 import { GetThreads, ParseThreads } from "../functions/bbs";
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
+import { TopJumpArea } from "./components/TopJump";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <RouterProvider
@@ -113,38 +113,6 @@ function PostForm() {
   );
 }
 
-function ScrollTopArea() {
-  const ref = useRef<HTMLButtonElement>(null);
-  var scrTop = 400;
-  function handleScroll() {
-    if (ref.current)
-      if (window.scrollY > scrTop) {
-        ref.current.classList.remove("hide");
-      } else {
-        ref.current.classList.add("hide");
-      }
-  }
-  useEffect(() => {
-    handleScroll();
-    window.addEventListener("scroll", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [scrTop]);
-  return (
-    <button
-      type="button"
-      className="jump"
-      ref={ref}
-      onClick={() => {
-        scrollTo({ top: 0, behavior: "smooth" });
-      }}
-    >
-      ▲
-    </button>
-  );
-}
-
 function BBSPage() {
   const currentName = useParams().name ?? "";
   const [search, setSearch] = useSearchParams();
@@ -198,60 +166,62 @@ function BBSPage() {
   return (
     <div className="bbs">
       <div>
-        <ScrollTopArea />
+        <TopJumpArea />
         <div className="search">
           <ThreadListArea />
-          <form
-            id="form_search_main"
-            method="get"
-            autoComplete="off"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const q = (e.target as HTMLFormElement).q.value;
-              if (q !== (search.get("q") ?? "")) {
-                if (q) setSearch({ q });
-                else setSearch();
-              }
-            }}
-          >
-            <input
-              type="text"
-              title="検索"
-              name="q"
-              placeholder="キーワード検索"
-              defaultValue={search.get("q") ?? ""}
-            />
-            <button type="submit" className="submit button">
-              検索
-            </button>
-          </form>
-          <div className="paging">
-            <button
-              type="button"
-              className="left"
-              title="前のページに戻る"
-              disabled={p <= 1}
-              onClick={() => paging(-1)}
-              onContextMenu={(e) => {
+          <div className="list">
+            <form
+              id="form_search_main"
+              method="get"
+              autoComplete="off"
+              onSubmit={(e) => {
                 e.preventDefault();
-                paging(-1e6);
+                const q = (e.target as HTMLFormElement).q.value;
+                if (q !== (search.get("q") ?? "")) {
+                  if (q) setSearch({ q });
+                  else setSearch();
+                }
               }}
             >
-              <MdArrowBackIosNew />
-            </button>
-            <button
-              type="button"
-              className="right"
-              title="次のページに進む"
-              disabled={p >= maxPage}
-              onClick={() => paging(1)}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                paging(1e6);
-              }}
-            >
-              <MdArrowForwardIos />
-            </button>
+              <input
+                type="search"
+                title="検索"
+                name="q"
+                placeholder="キーワード検索"
+                defaultValue={search.get("q") ?? ""}
+              />
+              <button type="submit" className="submit button">
+                検索
+              </button>
+            </form>
+            <div className="paging">
+              <button
+                type="button"
+                className="left"
+                title="前のページに戻る"
+                disabled={p <= 1}
+                onClick={() => paging(-1)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  paging(-1e6);
+                }}
+              >
+                <MdArrowBackIosNew />
+              </button>
+              <button
+                type="button"
+                className="right"
+                title="次のページに進む"
+                disabled={p >= maxPage}
+                onClick={() => paging(1)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  paging(1e6);
+                }}
+              >
+                <MdArrowForwardIos />
+              </button>
+            </div>
           </div>
         </div>
         {/* <PostForm /> */}
