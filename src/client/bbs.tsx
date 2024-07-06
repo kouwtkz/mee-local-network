@@ -113,6 +113,38 @@ function PostForm() {
   );
 }
 
+function ScrollTopArea() {
+  const ref = useRef<HTMLButtonElement>(null);
+  var scrTop = 400;
+  function handleScroll() {
+    if (ref.current)
+      if (window.scrollY > scrTop) {
+        ref.current.classList.remove("hide");
+      } else {
+        ref.current.classList.add("hide");
+      }
+  }
+  useEffect(() => {
+    handleScroll();
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [scrTop]);
+  return (
+    <button
+      type="button"
+      className="jump"
+      ref={ref}
+      onClick={() => {
+        scrollTo({ top: 0, behavior: "smooth" });
+      }}
+    >
+      ▲
+    </button>
+  );
+}
+
 function BBSPage() {
   const currentName = useParams().name ?? "";
   const [search, setSearch] = useSearchParams();
@@ -166,15 +198,7 @@ function BBSPage() {
   return (
     <div className="bbs">
       <div>
-        <button
-          type="button"
-          className="jump"
-          onClick={() => {
-            scrollTo({ top: 0, behavior: "smooth" });
-          }}
-        >
-          ▲
-        </button>
+        <ScrollTopArea />
         <div className="search">
           <ThreadListArea />
           <form

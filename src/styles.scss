@@ -177,9 +177,12 @@ ul.links {
 .jump {
   &.hide {
     opacity: 0;
-    display: none;
+    visibility: hidden;
+    pointer-events: none;
   }
-  transition: opacity 200ms;
+  opacity: 1;
+  transition: 250ms;
+  cursor: pointer;
   position: fixed;
   bottom: 0;
   right: 0;
@@ -190,7 +193,6 @@ ul.links {
   font-size: 2rem;
   color: #aaaaaa;
   color: #aaaaaa99;
-  cursor: pointer;
 }
 
 button {
