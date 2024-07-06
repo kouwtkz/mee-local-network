@@ -6,7 +6,7 @@ $dark-high-hover: #deff7b;
 $high-color-fluo: #76971475;
 $disabled-color: #bbc5a4;
 $disabled-color2: #a2ab8d;
-$form-input-bg: #d0d2d0;
+$form-input-bg: #e9eae9;
 $delete-color: #b46868;
 $delete-hover: #a64444;
 
@@ -262,7 +262,10 @@ button {
         width: 9rem;
         border-radius: 0.4em;
         padding: 0.2em 0.4em;
-        background-color: $form-input-bg;
+        @media (prefers-color-scheme: dark) {
+          background-color: $form-input-bg;
+        }
+
         border: solid #999 0.1em;
         @media (min-width: $mobileWidth) {
           width: 12rem;
@@ -307,7 +310,9 @@ button {
       font-size: large;
       height: 1.75rem;
       transition: 100ms;
-      background-color: $form-input-bg;
+      @media (prefers-color-scheme: dark) {
+        background-color: $form-input-bg;
+      }
       border-radius: 0.1rem;
       &:focus,
       &:hover {
