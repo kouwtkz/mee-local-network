@@ -18,7 +18,7 @@ import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import { TopJumpArea } from "./components/TopJump";
 import findThreads from "../functions/findThreads";
 import MultiParser from "./components/MultiParser";
-import { FaFileImage, FaTimes } from "react-icons/fa";
+import { FaCaretDown, FaCaretUp, FaFileImage, FaTimes } from "react-icons/fa";
 import { IoSend } from "react-icons/io5";
 import { create } from "zustand";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -32,6 +32,8 @@ interface ThreadsStateType {
   };
   setThreadsList: (name: string, list: ThreadType[]) => void;
   setReloadList: (name: string, flag: boolean) => void;
+  edit?: number;
+  setEdit: (edit?: number) => void;
 }
 export const useThreadsState = create<ThreadsStateType>((set) => ({
   threadsList: {},
@@ -45,11 +47,12 @@ export const useThreadsState = create<ThreadsStateType>((set) => ({
     });
   },
   setReloadList(name, flag) {
-    set((state) => {
-      return {
-        reloadList: { ...state.reloadList, [name]: flag },
-      };
-    });
+    set((state) => ({
+      reloadList: { ...state.reloadList, [name]: flag },
+    }));
+  },
+  setEdit(edit) {
+    set(() => ({ edit }));
   },
 }));
 
@@ -114,13 +117,36 @@ function PostForm() {
   const formRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const currentName = useParams().name ?? "";
-  const { setReloadList } = useThreadsState();
+  const { threadsList, setReloadList, edit, setEdit } = useThreadsState();
+  const currentThread = threadsList[currentName];
+  const editThread = useMemo(
+    () =>
+      currentThread && typeof edit === "number"
+        ? currentThread.find(({ id }) => edit === id)
+        : undefined,
+    [edit, currentThread]
+  );
+  useEffect(() => {
+    if (formRef.current) {
+      const form = formRef.current;
+      if (form.edit.value !== "" && !editThread) {
+        form.edit.value = "";
+        form.reset();
+      } else if (editThread) {
+        form.edit.value = editThread.id;
+        form.text.value = editThread.text ?? "";
+        form.text.focus();
+      }
+    }
+  }, [editThread]);
   function Submit() {
     if (formRef.current) {
-      const fd = new FormData(formRef.current);
-      axios.postForm(formRef.current.action, fd).then(() => {
+      const form = formRef.current;
+      const fd = new FormData(form);
+      axios.postForm(form.action, fd).then(() => {
         setReloadList(currentName, true);
-        formRef.current?.reset();
+        setEdit();
+        form.reset();
       });
     }
   }
@@ -178,7 +204,7 @@ function PostForm() {
           <div className="up_file"></div>
         </div>
       </div>
-      <input type="hidden" name="update_target" />
+      <input type="hidden" name="edit" />
       <div className="list">
         <div className="right buttons">
           <button
@@ -311,8 +337,17 @@ function BBSPage() {
   const currentName = useParams().name ?? "";
   const current = threadLabeledList.find(({ name }) => name == currentName);
   const [search, setSearch] = useSearchParams();
-  const { threadsList, setThreadsList, reloadList, setReloadList } =
-    useThreadsState();
+  const {
+    threadsList,
+    setThreadsList,
+    reloadList,
+    setReloadList,
+    edit,
+    setEdit,
+  } = useThreadsState();
+  useEffect(() => {
+    setEdit();
+  }, [currentName]);
   const threads = useMemo(
     () => threadsList[currentName] ?? [],
     [threadsList, currentName]
@@ -361,52 +396,61 @@ function BBSPage() {
           <PostForm />
         </header>
         <main className="thread">
-          {threadsObject.threads.map((v, i) => (
-            <div className="item" data-id={v.id} key={i}>
-              <div className="body">
-                {v.text ? <MultiParser>{v.text}</MultiParser> : null}
-              </div>
-              <div className="info">
-                <span className="num">{v.id}: </span>
-                <Link to={"?id=" + v.id}>
-                  <span className="date">
-                    {v.date ? FormatDate(v.date) : null}
-                  </span>
-                </Link>
-                <button
-                  type="button"
-                  className="delete"
-                  title="削除する"
-                  onClick={() => {
-                    if (
-                      confirm("本当に削除しますか？\nid:" + v.id + " " + v.text)
-                    ) {
-                      const fd = new FormData();
-                      fd.append("id", v.id.toString());
-                      axios
-                        .delete(
-                          "/bbs/api/send/post/" +
-                            (currentName ? currentName + "/" : ""),
-                          { data: fd }
+          {threadsObject.threads.map((v, i) => {
+            const isEdit = edit === v.id;
+            return (
+              <div className="item" data-id={v.id} key={i}>
+                <div className="body">
+                  {v.text ? <MultiParser>{v.text}</MultiParser> : null}
+                </div>
+                <div className="info">
+                  <span className="num">{v.id}: </span>
+                  <Link to={"?id=" + v.id}>
+                    <span className="date">
+                      {v.date ? FormatDate(v.date) : null}
+                    </span>
+                  </Link>
+                  <button
+                    type="button"
+                    className="delete"
+                    title="削除する"
+                    onClick={() => {
+                      if (
+                        confirm(
+                          "本当に削除しますか？\nid:" + v.id + " " + v.text
                         )
-                        .then(() => {
-                          setReloadList(currentName, true);
-                        });
-                    }
-                  }}
-                >
-                  <FaTimes />
-                </button>
-                {/* <button
-                  type="button"
-                  className="update_calling_elem"
-                  onClick={() => {}}
-                >
-                  ▽
-                </button> */}
+                      ) {
+                        const fd = new FormData();
+                        fd.append("id", v.id.toString());
+                        axios
+                          .delete(
+                            "/bbs/api/send/post/" +
+                              (currentName ? currentName + "/" : ""),
+                            { data: fd }
+                          )
+                          .then(() => {
+                            setReloadList(currentName, true);
+                          });
+                      }
+                    }}
+                  >
+                    <FaTimes />
+                  </button>
+                  <button
+                    type="button"
+                    className="edit"
+                    title={isEdit ? "編集解除" : "編集する"}
+                    onClick={(e) => {
+                      if (isEdit) setEdit();
+                      else setEdit(v.id);
+                    }}
+                  >
+                    {isEdit ? <FaCaretUp /> : <FaCaretDown />}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </main>
       </div>
       <TopJumpArea />
