@@ -21,6 +21,7 @@ import MultiParser from "./components/MultiParser";
 import { FaFileImage, FaTimes } from "react-icons/fa";
 import { IoSend } from "react-icons/io5";
 import { create } from "zustand";
+import { useHotkeys } from "react-hotkeys-hook";
 
 interface ThreadsStateType {
   threadsList: {
@@ -110,9 +111,45 @@ function ThreadListArea() {
 }
 
 function PostForm() {
-  const formref = useRef<HTMLFormElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const currentName = useParams().name ?? "";
   const { setReloadList } = useThreadsState();
+  function Submit() {
+    if (formRef.current) {
+      const fd = new FormData(formRef.current);
+      axios.postForm(formRef.current.action, fd).then(() => {
+        setReloadList(currentName, true);
+        formRef.current?.reset();
+      });
+    }
+  }
+  useHotkeys(
+    "escape",
+    (e) => {
+      if (document.activeElement === textareaRef.current) {
+        textareaRef.current?.blur();
+        e.preventDefault();
+      }
+    },
+    { enableOnFormTags: ["TEXTAREA"] }
+  );
+  useHotkeys(
+    "ctrl+enter",
+    (e) => {
+      if (document.activeElement === textareaRef.current) {
+        e.preventDefault();
+        Submit();
+        textareaRef.current?.blur();
+      }
+    },
+    { enableOnFormTags: ["TEXTAREA"] }
+  );
+  useHotkeys("n", (e) => {
+    textareaRef.current?.focus();
+    e.preventDefault();
+  });
+
   return (
     <form
       id="post_form"
@@ -120,16 +157,10 @@ function PostForm() {
       className="post"
       action={"/bbs/api/send/post/" + (currentName ? currentName + "/" : "")}
       encType="multipart/form-data"
-      ref={formref}
+      ref={formRef}
       onSubmit={(e) => {
-        if (formref.current) {
-          e.preventDefault();
-          const fd = new FormData(formref.current);
-          axios.postForm(formref.current.action, fd).then(() => {
-            setReloadList(currentName, true);
-            formref.current?.reset();
-          });
-        }
+        e.preventDefault();
+        Submit();
       }}
     >
       <div className="upload">
@@ -159,7 +190,7 @@ function PostForm() {
             <FaFileImage />
           </button>
         </div>
-        <textarea title="本文" name="text" />
+        <textarea title="本文" name="text" ref={textareaRef} />
         <div className="right buttons">
           <button type="submit" title="送信">
             <IoSend />
@@ -175,6 +206,28 @@ function SearchArea({ data }: { data: ThreadsDataType }) {
   const refInput = useRef<HTMLInputElement>(null);
   const p = useMemo(() => Number(search.get("p") ?? 1), [search]);
   const q = useMemo(() => search.get("q") ?? "", [search]);
+  useHotkeys(
+    "escape",
+    (e) => {
+      if (document.activeElement === refInput.current) {
+        refInput.current?.blur();
+        e.preventDefault();
+      }
+    },
+    { enableOnFormTags: ["INPUT"] }
+  );
+  useHotkeys("slash", (e) => {
+    refInput.current?.focus();
+    e.preventDefault();
+  });
+  useHotkeys("j", (e) => {
+    paging(-1);
+    e.preventDefault();
+  });
+  useHotkeys("k", (e) => {
+    paging(1);
+    e.preventDefault();
+  });
   const maxPage = useMemo(
     () => (data.take ? Math.ceil(data.length / data.take) : 1),
     [data]
