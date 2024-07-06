@@ -89,7 +89,7 @@ const app_api = new Hono<MeeBindings>({ strict: false });
         createdAt: currentDate.toISOString(),
         updatedAt: currentDate.toISOString(),
       };
-      if (v.text) {
+      if (!/^\s*$/.test((v.text as string) ?? "")) {
         rawThreads.push(data);
         WriteThreads(rawThreads);
         return c.json(data);
