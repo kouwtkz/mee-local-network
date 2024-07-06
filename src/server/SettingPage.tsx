@@ -1,4 +1,5 @@
 import React from "react";
+import { CommonContext } from "../types/HonoCustomType";
 
 export function SettingPage({ isLogin = false }: { isLogin?: boolean }) {
   return (
@@ -20,12 +21,18 @@ export function SettingPage({ isLogin = false }: { isLogin?: boolean }) {
   );
 }
 
-export function LoginPage() {
+export function LoginPage({ c }: { c: CommonContext }) {
+  const Url = new URL(c.req.url);
   return (
     <>
       <h1>ログイン</h1>
       <form action="/login" method="POST">
         <input type="password" name="password" placeholder="パスワード" />
+        <input
+          type="hidden"
+          name="redirect"
+          defaultValue={Url.searchParams.get("redirect") ?? ""}
+        />
         {/* <label className="form-check-label">
           <input
             id="remember"

@@ -61,14 +61,14 @@ export function ServerCommon(app: CommonHono) {
     );
   });
   app.get("login", (c) => {
-    return c.html(RenderMainLayout({ children: <LoginPage /> }));
+    return c.html(RenderMainLayout({ children: <LoginPage c={c} /> }));
   });
   app.post("login", async (c) => {
     const body = await c.req.parseBody();
     if (cookieValue && body.password === password) {
       setCookie(c, cookieKey, cookieValue);
     }
-    return c.redirect("/");
+    return c.redirect((body.redirect as string) || "/");
   });
   app.get("logout", async (c) => {
     deleteCookie(c, cookieKey);
@@ -128,17 +128,19 @@ export function ServerCommon(app: CommonHono) {
       RenderMainLayout({ children: <SettingPage isLogin={getIsLogin(c)} /> })
     );
   });
-  app.route("/bbs", app_bbs);
 
-  ["private/*", "twitter/*"].forEach((path) => {
+  ["private/*", "twitter/*", "bbs/*", "offline/*"].forEach((path) => {
     app.get(path, async (c, next) => {
       if (getIsLogin(c)) {
         return next();
       } else {
-        return c.text("401 Unauthorized", 401);
+        const Url = new URL(c.req.url);
+        return c.redirect("/login/?redirect=" + encodeURIComponent(Url.href.replace(Url.origin, "")));
       }
     });
   });
+  app.route("/bbs", app_bbs);
+
   app.get("*", serveStatic({ root: publicPath }));
   app.get("*", serveStatic({ root: staticPath }));
   app.get("*", async (c, next) => {
