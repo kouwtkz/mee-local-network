@@ -81,7 +81,6 @@ const app_api = new Hono<MeeBindings>({ strict: false });
     app.post("send/post" + n, async (c) => {
       let rawThreads = ReadThreads(c.req.param("name"));
       const v = await c.req.parseBody();
-      console.log(v);
       const currentDate = new Date();
       const data: ThreadType = {
         id: rawThreads.reduce((c, a) => (c <= a.id ? a.id + 1 : c), 0),
@@ -90,9 +89,25 @@ const app_api = new Hono<MeeBindings>({ strict: false });
         createdAt: currentDate.toISOString(),
         updatedAt: currentDate.toISOString(),
       };
-      rawThreads.push(data);
-      WriteThreads(rawThreads);
-      return c.json(data);
+      if (v.text) {
+        rawThreads.push(data);
+        WriteThreads(rawThreads);
+        return c.json(data);
+      } else {
+        return c.text("本文が入力されていません", 401);
+      }
+    });
+    app.delete("send/post" + n, async (c) => {
+      let rawThreads = ReadThreads(c.req.param("name"));
+      const v = await c.req.parseBody();
+      if ("id" in v) {
+        const id = Number(v.id as string);
+        rawThreads = rawThreads.filter((item) => item.id !== id);
+        WriteThreads(rawThreads);
+        return c.json({ id });
+      } else {
+        return c.text("IDが入力されていません", 401);
+      }
     });
   });
 

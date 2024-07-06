@@ -7,6 +7,9 @@ $high-color-fluo: #76971475;
 $disabled-color: #bbc5a4;
 $disabled-color2: #a2ab8d;
 $form-input-bg: #d0d2d0;
+$delete-color: #b46868;
+$delete-hover: #a64444;
+
 :root {
   scrollbar-width: thin;
   scrollbar-color: $soft-color transparent;
@@ -102,10 +105,10 @@ form.uploader {
         border: none;
         background: none;
         font-size: medium;
-        color: #b46868;
+        color: $delete-color;
         text-decoration-line: none;
         &:hover {
-          color: #a64444;
+          color: $delete-hover;
           text-decoration-line: underline;
         }
       }
@@ -207,7 +210,12 @@ button {
 
 .bbs {
   $postform-height: 6rem;
-  margin-top: $postform-height;
+  &.postable {
+    margin-top: $postform-height;
+    form.post {
+      display: block;
+    }
+  }
   button {
     color: white;
     background-color: $high-color;
@@ -261,6 +269,7 @@ button {
     }
   }
   form.post {
+    display: none;
     margin: 0.1rem auto;
     width: 100%;
     max-width: 42rem;
@@ -324,10 +333,25 @@ button {
       }
       .info {
         text-align: right;
+        > * {
+          vertical-align: middle;
+        }
         a {
           text-decoration-line: none;
           &:hover {
             text-decoration-line: underline;
+          }
+        }
+        button.delete {
+          background-color: transparent;
+          color: $delete-color;
+          &:hover {
+            color: $delete-hover;
+          }
+          svg {
+            margin: 0 0 0 0.2rem;
+            width: 1rem;
+            height: 1rem;
           }
         }
       }

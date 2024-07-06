@@ -18,7 +18,7 @@ import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import { TopJumpArea } from "./components/TopJump";
 import findThreads from "../functions/findThreads";
 import MultiParser from "./components/MultiParser";
-import { FaFileImage } from "react-icons/fa";
+import { FaFileImage, FaTimes } from "react-icons/fa";
 import { IoSend } from "react-icons/io5";
 import { create } from "zustand";
 
@@ -86,9 +86,10 @@ const threadLabeledList: {
   name: string;
   label?: string;
   order?: OrderByType;
+  postable?: boolean;
 }[] = [
   { name: "", label: "メイン" },
-  { name: "old", label: "過去", order: "asc" },
+  { name: "old", label: "過去", order: "asc", postable: false },
 ];
 function ThreadListArea() {
   const currentName = useParams().name ?? "";
@@ -117,7 +118,7 @@ function PostForm() {
       id="post_form"
       method="post"
       className="post"
-      action="/bbs/api/send/post/"
+      action={"/bbs/api/send/post/" + (currentName ? currentName + "/" : "")}
       encType="multipart/form-data"
       ref={formref}
       onSubmit={(e) => {
@@ -257,7 +258,8 @@ function BBSPage() {
   const currentName = useParams().name ?? "";
   const current = threadLabeledList.find(({ name }) => name == currentName);
   const [search, setSearch] = useSearchParams();
-  const { threadsList, setThreadsList, reloadList } = useThreadsState();
+  const { threadsList, setThreadsList, reloadList, setReloadList } =
+    useThreadsState();
   const threads = useMemo(
     () => threadsList[currentName] ?? [],
     [threadsList, currentName]
@@ -297,43 +299,62 @@ function BBSPage() {
   }, [threads, search]);
   return (
     <>
-      <div className="bbs">
-        <div>
-          <header>
-            <div className="search">
-              <ThreadListArea />
-              <SearchArea data={threadsObject} />
-            </div>
-            <PostForm />
-          </header>
-          <main className="thread">
-            {threadsObject.threads.map((v, i) => (
-              <div className="item" data-id={v.id} key={i}>
-                <div className="body">
-                  {v.text ? <MultiParser>{v.text}</MultiParser> : null}
-                </div>
-                <div className="info">
-                  <span className="num">{v.id}: </span>
-                  <Link to={"?id=" + v.id}>
-                    <span className="date">
-                      {v.date ? FormatDate(v.date) : null}
-                    </span>
-                  </Link>
-                  {/* <button type="button" onClick={() => {}}>
-                  ×
-                </button>
+      <div className={"bbs" + (current?.postable ?? true ? " postable" : "")}>
+        <header>
+          <div className="search">
+            <ThreadListArea />
+            <SearchArea data={threadsObject} />
+          </div>
+          <PostForm />
+        </header>
+        <main className="thread">
+          {threadsObject.threads.map((v, i) => (
+            <div className="item" data-id={v.id} key={i}>
+              <div className="body">
+                {v.text ? <MultiParser>{v.text}</MultiParser> : null}
+              </div>
+              <div className="info">
+                <span className="num">{v.id}: </span>
+                <Link to={"?id=" + v.id}>
+                  <span className="date">
+                    {v.date ? FormatDate(v.date) : null}
+                  </span>
+                </Link>
                 <button
+                  type="button"
+                  className="delete"
+                  title="削除する"
+                  onClick={() => {
+                    if (
+                      confirm("本当に削除しますか？\nid:" + v.id + " " + v.text)
+                    ) {
+                      const fd = new FormData();
+                      fd.append("id", v.id.toString());
+                      axios
+                        .delete(
+                          "/bbs/api/send/post/" +
+                            (currentName ? currentName + "/" : ""),
+                          { data: fd }
+                        )
+                        .then(() => {
+                          setReloadList(currentName, true);
+                        });
+                    }
+                  }}
+                >
+                  <FaTimes />
+                </button>
+                {/* <button
                   type="button"
                   className="update_calling_elem"
                   onClick={() => {}}
                 >
                   ▽
                 </button> */}
-                </div>
               </div>
-            ))}
-          </main>
-        </div>
+            </div>
+          ))}
+        </main>
       </div>
       <TopJumpArea />
     </>
