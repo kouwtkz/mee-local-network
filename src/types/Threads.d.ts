@@ -12,7 +12,7 @@ interface ThreadType extends ThreadsRawType {
 
 interface ThreadsDataType {
   length: number;
-  limit?: number;
+  take?: number;
   threads: ThreadType[];
 }
 

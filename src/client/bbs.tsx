@@ -18,6 +18,7 @@ import HTMLReactParser from "html-react-parser/lib/index";
 import { GetThreads, ParseThreads } from "../functions/bbs";
 import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import { TopJumpArea } from "./components/TopJump";
+import findThreads from "../functions/findThreads";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <RouterProvider
@@ -134,18 +135,33 @@ function BBSPage() {
       });
     }
   }, [currentName]);
+  const take = useMemo(() => {
+    let v = search.get("take");
+    return v ? Number(v) : 100;
+  }, [search]);
+  const page = useMemo(() => {
+    let v = search.get("p");
+    return v ? Number(v) : 1;
+  }, [search]);
+  const q = useMemo(() => {
+    let v = search.get("q");
+    return v ? v : undefined;
+  }, [search]);
+  const order = useMemo(() => {
+    let v = search.get("order") as "asc" | "desc";
+    return v ? v : undefined;
+  }, [search]);
+  const id = useMemo(() => {
+    let v = search.get("id");
+    return v ? Number(v) : undefined;
+  }, [search]);
   const threadsObject = useMemo(() => {
-    return GetThreads({
-      limit: 100,
-      order: "desc",
-      ...Object.fromEntries(search),
-      threads: threads.concat(),
-    });
+    return findThreads({ threads: threads.concat(), take, page, q, order, id });
   }, [threads, search]);
   const maxPage = useMemo(
     () =>
-      threadsObject.limit
-        ? Math.ceil(threadsObject.length / threadsObject.limit)
+      threadsObject.take
+        ? Math.ceil(threadsObject.length / threadsObject.take)
         : 1,
     [threadsObject]
   );

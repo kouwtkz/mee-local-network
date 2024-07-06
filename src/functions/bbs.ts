@@ -59,7 +59,7 @@ export function GetThreads({
   }
   const length = threads.length;
   threads = PagingThreads({ threads, p, limit });
-  return { threads, length, limit: Number(limit) };
+  return { threads, length, take: Number(limit) };
 }
 interface GetRawThreadsProps extends GetThreadsBase {
   threads: ThreadsRawType[];
@@ -78,7 +78,7 @@ export function GetRawThreads({
   }
   const length = threads.length;
   threads = PagingThreads({ threads, p: page, limit });
-  return { threads, length, limit: Number(limit) };
+  return { threads, length, take: Number(limit) };
 }
 
 export function ParseThreads(rawThreads: ThreadsRawType[]) {
