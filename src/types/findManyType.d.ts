@@ -9,6 +9,7 @@ type findManyProps<T> = {
   where?: findWhereType<T>;
   take?: number,
   skip?: number,
-  orderBy?: { [K in keyof T]?: "asc" | "desc" }[],
+  orderBy?: { [K in keyof T]?: OrderByType }[],
   include?: any
 }
+type OrderByType = "asc" | "desc";

@@ -49,9 +49,13 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   />
 );
 
-const threadLabeledList: { name: string; label?: string }[] = [
+const threadLabeledList: {
+  name: string;
+  label?: string;
+  order?: OrderByType;
+}[] = [
   { name: "", label: "メイン" },
-  { name: "old", label: "過去" },
+  { name: "old", label: "過去", order: "asc" },
 ];
 function ThreadListArea() {
   const currentName = useParams().name ?? "";
@@ -199,6 +203,7 @@ function SearchArea({ data }: { data: ThreadsDataType }) {
 
 function BBSPage() {
   const currentName = useParams().name ?? "";
+  const current = threadLabeledList.find(({ name }) => name == currentName);
   const [search, setSearch] = useSearchParams();
   const threadsList = useRef<{
     [k: string]: ThreadType[] | undefined;
@@ -231,9 +236,9 @@ function BBSPage() {
     return v ? v : undefined;
   }, [search]);
   const order = useMemo(() => {
-    let v = search.get("order") as "asc" | "desc";
-    return v ? v : undefined;
-  }, [search]);
+    let v = search.get("order") as OrderByType;
+    return v ? v : current?.order;
+  }, [search, current]);
   const id = useMemo(() => {
     let v = search.get("id");
     return v ? Number(v) : undefined;
