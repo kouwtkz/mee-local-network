@@ -45,7 +45,7 @@ const app_api = new Hono<MeeBindings>({ strict: false });
 
   function ReadThreads(name?: string) {
     const filename = GetThreadsFilename(name);
-    let threads: ThreadsRawType[] = [];
+    let threads: ThreadsRawType[] | null = null;
     try {
       threads = JSON.parse(
         readFileSync(bbsOptions.data_dir + filename).toString()
@@ -66,20 +66,24 @@ const app_api = new Hono<MeeBindings>({ strict: false });
 
   ["", "/:name"].forEach((n) => {
     app.get("get/threads" + n, (c) => {
-      return c.json(ReadThreads(c.req.param("name")));
+      const threads = ReadThreads(c.req.param("name"));
+      if (!threads) return c.json(null, 400);
+      else return c.json(threads);
     });
     app.get("get/threads/filter" + n, (c) => {
       const Url = new URL(c.req.url);
       const search = Object.fromEntries(Url.searchParams);
+      const threads = ReadThreads(c.req.param("name"));
+      if (!threads) return c.json(null, 400);
       return c.json(
         GetRawThreads({
-          threads: ReadThreads(c.req.param("name")),
+          threads,
           ...search,
         })
       );
     });
     app.post("send/post" + n, async (c) => {
-      let rawThreads = ReadThreads(c.req.param("name"));
+      let rawThreads = ReadThreads(c.req.param("name")) ?? [];
       const v = await c.req.parseBody();
       const currentDate = new Date();
       const bodyCheck = !/^\s*$/.test((v.text as string) ?? "");
@@ -121,6 +125,7 @@ const app_api = new Hono<MeeBindings>({ strict: false });
     });
     app.delete("send/post" + n, async (c) => {
       let rawThreads = ReadThreads(c.req.param("name"));
+      if (!rawThreads) return c.text("スレッドがありません", 400);
       const v = await c.req.parseBody();
       if ("id" in v) {
         const id = Number(v.id as string);

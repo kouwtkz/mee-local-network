@@ -25,12 +25,12 @@ import { useHotkeys } from "react-hotkeys-hook";
 
 interface ThreadsStateType {
   threadsList: {
-    [k: string]: ThreadType[] | undefined;
+    [k: string]: ThreadType[] | null | undefined;
   };
   reloadList: {
     [k: string]: boolean;
   };
-  setThreadsList: (name: string, list: ThreadType[]) => void;
+  setThreadsList: (name: string, list: ThreadType[] | null) => void;
   setReloadList: (name: string, flag: boolean) => void;
   edit?: number;
   setEdit: (edit?: number) => void;
@@ -348,17 +348,20 @@ function BBSPage() {
   useEffect(() => {
     setEdit();
   }, [currentName]);
-  const threads = useMemo(
-    () => threadsList[currentName] ?? [],
-    [threadsList, currentName]
-  );
+  const threads = threadsList[currentName];
   useEffect(() => {
-    if (!threadsList[currentName] || reloadList[currentName]) {
+    if (
+      typeof threadsList[currentName] === "undefined" ||
+      reloadList[currentName]
+    ) {
       axios
         .get("/bbs/api/get/threads/" + (currentName ? currentName + "/" : ""))
         .then((r) => {
           const rawData: ThreadsRawType[] = r.data;
           setThreadsList(currentName, ParseThreads(rawData));
+        })
+        .catch(() => {
+          setThreadsList(currentName, null);
         });
     }
   }, [currentName, reloadList]);
@@ -383,7 +386,14 @@ function BBSPage() {
     return v ? Number(v) : undefined;
   }, [search]);
   const threadsObject = useMemo(() => {
-    return findThreads({ threads: threads.concat(), take, page, q, order, id });
+    return findThreads({
+      threads: (threads ?? []).concat(),
+      take,
+      page,
+      q,
+      order,
+      id,
+    });
   }, [threads, search]);
   return (
     <>
@@ -396,61 +406,63 @@ function BBSPage() {
           <PostForm />
         </header>
         <main className="thread">
-          {threadsObject.threads.map((v, i) => {
-            const isEdit = edit === v.id;
-            return (
-              <div className="item" data-id={v.id} key={i}>
-                <div className="body">
-                  {v.text ? <MultiParser>{v.text}</MultiParser> : null}
-                </div>
-                <div className="info">
-                  <span className="num">{v.id}: </span>
-                  <Link to={"?id=" + v.id}>
-                    <span className="date">
-                      {v.date ? FormatDate(v.date) : null}
-                    </span>
-                  </Link>
-                  <button
-                    type="button"
-                    className="delete"
-                    title="削除する"
-                    onClick={() => {
-                      if (
-                        confirm(
-                          "本当に削除しますか？\nid:" + v.id + " " + v.text
-                        )
-                      ) {
-                        const fd = new FormData();
-                        fd.append("id", v.id.toString());
-                        axios
-                          .delete(
-                            "/bbs/api/send/post/" +
-                              (currentName ? currentName + "/" : ""),
-                            { data: fd }
-                          )
-                          .then(() => {
-                            setReloadList(currentName, true);
-                          });
-                      }
-                    }}
-                  >
-                    <FaTimes />
-                  </button>
-                  <button
-                    type="button"
-                    className="edit"
-                    title={isEdit ? "編集解除" : "編集する"}
-                    onClick={(e) => {
-                      if (isEdit) setEdit();
-                      else setEdit(v.id);
-                    }}
-                  >
-                    {isEdit ? <FaCaretUp /> : <FaCaretDown />}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+          {typeof threads === "undefined"
+            ? "読み込み中…"
+            : threadsObject.threads.map((v, i) => {
+                const isEdit = edit === v.id;
+                return (
+                  <div className="item" data-id={v.id} key={i}>
+                    <div className="body">
+                      {v.text ? <MultiParser>{v.text}</MultiParser> : null}
+                    </div>
+                    <div className="info">
+                      <span className="num">{v.id}: </span>
+                      <Link to={"?id=" + v.id}>
+                        <span className="date">
+                          {v.date ? FormatDate(v.date) : null}
+                        </span>
+                      </Link>
+                      <button
+                        type="button"
+                        className="delete"
+                        title="削除する"
+                        onClick={() => {
+                          if (
+                            confirm(
+                              "本当に削除しますか？\nid:" + v.id + " " + v.text
+                            )
+                          ) {
+                            const fd = new FormData();
+                            fd.append("id", v.id.toString());
+                            axios
+                              .delete(
+                                "/bbs/api/send/post/" +
+                                  (currentName ? currentName + "/" : ""),
+                                { data: fd }
+                              )
+                              .then(() => {
+                                setReloadList(currentName, true);
+                              });
+                          }
+                        }}
+                      >
+                        <FaTimes />
+                      </button>
+                      <button
+                        type="button"
+                        className="edit"
+                        title={isEdit ? "編集解除" : "編集する"}
+                        onClick={(e) => {
+                          if (isEdit) setEdit();
+                          else setEdit(v.id);
+                        }}
+                      >
+                        {isEdit ? <FaCaretUp /> : <FaCaretDown />}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
         </main>
       </div>
       <TopJumpArea />
