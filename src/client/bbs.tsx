@@ -35,6 +35,8 @@ interface ThreadsStateType {
   setReloadList: (name: string, flag: boolean) => void;
   edit?: number;
   setEdit: (edit?: number) => void;
+  cursor: number;
+  setCursor: (cursor: number) => void;
 }
 export const useThreadsState = create<ThreadsStateType>((set) => ({
   threadsList: {},
@@ -54,6 +56,10 @@ export const useThreadsState = create<ThreadsStateType>((set) => ({
   },
   setEdit(edit) {
     set(() => ({ edit }));
+  },
+  cursor: 0,
+  setCursor(cursor) {
+    set(() => ({ cursor }));
   },
 }));
 
@@ -118,8 +124,10 @@ function PostForm() {
   const formRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const currentName = useParams().name ?? "";
-  const { threadsList, setReloadList, edit, setEdit } = useThreadsState();
+  const { threadsList, setReloadList, edit, setEdit, setCursor } =
+    useThreadsState();
   const currentThread = threadsList[currentName];
+  const [search, setSearch] = useSearchParams();
   const editThread = useMemo(
     () =>
       currentThread && typeof edit === "number"
@@ -145,6 +153,21 @@ function PostForm() {
       const form = formRef.current;
       const fd = new FormData(form);
       axios.postForm(form.action, fd).then(() => {
+        if (edit === undefined) {
+          if (search.has("id")) {
+            setCursor(0);
+            setSearch();
+          } else {
+            const hasP = search.has("p");
+            const obj = Object.fromEntries(search);
+            if (hasP) {
+              delete obj.p;
+              setSearch(obj);
+            } else {
+              document.body.scrollTo({ top: 0 });
+            }
+          }
+        }
         setReloadList(currentName, true);
         setEdit();
         form.reset();
@@ -318,7 +341,6 @@ function SearchArea({ data }: { data: ThreadsDataType }) {
 function BBSPage() {
   const currentName = useParams().name ?? "";
   const current = threadLabeledList.find(({ name }) => name == currentName);
-  const [cursor, setCursor] = useState(0);
   const refMain = useRef<HTMLElement>(null);
   const [search, setSearch] = useSearchParams();
   const {
@@ -328,6 +350,8 @@ function BBSPage() {
     setReloadList,
     edit,
     setEdit,
+    cursor,
+    setCursor,
   } = useThreadsState();
   useEffect(() => {
     setEdit();
