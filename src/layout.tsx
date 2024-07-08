@@ -1,6 +1,7 @@
 import React from "react";
+import { stylesAddVer } from "./server/env";
 
-const defaultStyle = <Style href="/assets/styles.css" />;
+const defaultStyle = <Style href={"/assets/styles.css" + stylesAddVer} />;
 
 export function Style({
   children,

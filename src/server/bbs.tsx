@@ -5,6 +5,7 @@ import { renderToString } from "react-dom/server";
 import { Hono } from "hono";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
 import { GetRawThreads } from "../functions/bbs";
+import { buildAddVer, stylesAddVer } from "./env";
 
 function bbs_layout(title = import.meta.env.VITE_BBS_TITLE) {
   return renderToString(
@@ -14,17 +15,21 @@ function bbs_layout(title = import.meta.env.VITE_BBS_TITLE) {
       script={
         <script
           type="module"
-          src={import.meta.env.PROD ? "/assets/bbs.js" : "/src/client/bbs.tsx"}
+          src={
+            import.meta.env.PROD
+              ? "/assets/bbs.js" + buildAddVer
+              : "/src/client/bbs.tsx"
+          }
         />
       }
       meta={
         <link
           rel="manifest"
-          href="/manifest/bbs.json"
+          href={"/manifest/bbs.json" + buildAddVer}
           crossOrigin="use-credentials"
         />
       }
-      style={<Style href="/assets/styles.css" />}
+      style={<Style href={"/assets/styles.css" + stylesAddVer} />}
     >
       <div id="root" />
     </DefaultLayout>
