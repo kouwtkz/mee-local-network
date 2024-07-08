@@ -324,6 +324,10 @@ function BBSPage() {
   useEffect(() => {
     setEdit();
   }, [currentName]);
+  useHotkeys("period", (e) => {
+    setReloadList(currentName, true);
+    e.preventDefault();
+  });
   const threads = threadsList[currentName];
   useEffect(() => {
     if (
