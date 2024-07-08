@@ -341,6 +341,13 @@ function BBSPage() {
         });
     }
   }, [currentName, reloadList]);
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js").then((reg) => {
+        // console.log("SW registered.", reg);
+      });
+    }
+  }, []);
   const take = useMemo(() => {
     let v = search.get("take");
     return v ? Number(v) : 100;

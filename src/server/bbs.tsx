@@ -17,7 +17,13 @@ function bbs_layout(title = import.meta.env.VITE_BBS_TITLE) {
           src={import.meta.env.PROD ? "/assets/bbs.js" : "/src/client/bbs.tsx"}
         />
       }
-      meta={<link rel="manifest" href="/manifest/bbs.json" crossOrigin="use-credentials" />}
+      meta={
+        <link
+          rel="manifest"
+          href="/manifest/bbs.json"
+          crossOrigin="use-credentials"
+        />
+      }
       style={<Style href="/assets/styles.css" />}
     >
       <div id="root" />
@@ -29,6 +35,8 @@ export const bbsOptions = {
   title: import.meta.env.VITE_BBS_TITLE ?? import.meta.env.VITE_TITLE,
   data_dir: import.meta.env.PROD ? "../data/" : "./data/",
 };
+
+const threads_list = ["", "/:name"];
 
 const app_api = new Hono<MeeBindings>({ strict: false });
 {
@@ -66,7 +74,7 @@ const app_api = new Hono<MeeBindings>({ strict: false });
     }
   }
 
-  ["", "/:name"].forEach((n) => {
+  threads_list.forEach((n) => {
     app.get("get/threads" + n, (c) => {
       const threads = ReadThreads(c.req.param("name"));
       if (!threads) return c.json(null, 400);
@@ -147,8 +155,11 @@ const app_api = new Hono<MeeBindings>({ strict: false });
 
 const app = new Hono<MeeBindings>();
 app.route("api", app_api);
-app.get("*", (c) => {
-  return c.html(bbs_layout());
+threads_list.forEach((n) => {
+  app.get(n, async (c, next) => {
+    if (/^[^\/]+\.[^\/]+$/.test(c.req.param("name") ?? "")) next();
+    else return c.html(bbs_layout());
+  });
 });
 
 export const app_bbs = app;
