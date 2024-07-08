@@ -101,13 +101,13 @@ const app_api = new Hono<MeeBindings>({ strict: false });
       let rawThreads = ReadThreads(c.req.param("name")) ?? [];
       const v = await c.req.parseBody();
       const currentDate = new Date();
-      const bodyCheck = !/^\s*$/.test((v.text as string) ?? "");
-      if (bodyCheck) {
+      const text = ((v.text as string) ?? "").replace(/^\s+|\s+$/g, "");
+      if (text) {
         function newData() {
           return {
             id: rawThreads.reduce((c, a) => (c <= a.id ? a.id + 1 : c), 0),
             name: import.meta.env.VITE_USER_NAME,
-            text: v.text as string,
+            text,
             createdAt: currentDate.toISOString(),
             updatedAt: currentDate.toISOString(),
           };
@@ -123,7 +123,7 @@ const app_api = new Hono<MeeBindings>({ strict: false });
             const found = rawThreads[foundIndex];
             data = {
               ...found,
-              text: String(v.text),
+              text,
               updatedAt: currentDate.toISOString(),
             };
             rawThreads[foundIndex] = data;
