@@ -27,7 +27,7 @@ export default function findThreads(
     if (wheres.take) take = wheres.take;
   }
   const skip = (take && page) ? take * page : 0;
-  
+
   if (common) where.push(
     { draft: false, date: { lte: new Date() } }
   )
@@ -81,15 +81,9 @@ function setWhere(q: string, options: WhereOptionsType) {
     else if (item.slice(0, 1) === "#") {
       const filterValue = item.slice(1);
       where.push({
-        OR: [{
-          category: {
-            contains: filterValue
-          }
-        }, {
-          text: {
-            contains: new RegExp(`#${filterValue}(\\s|$)`, "i")
-          }
-        }]
+        text: {
+          contains: new RegExp(`#${filterValue.replace(/(\+)/g, "\\$1")}(\\s|$)`, "i")
+        }
       })
     } else {
       const filterKey = item.slice(0, item.indexOf(":"));
