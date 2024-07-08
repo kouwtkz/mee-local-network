@@ -7,10 +7,11 @@
   "vs-browser.url": "http://localhost:5173/",
   "VsCodeTaskButtons.tasks": [
     { "task": "npm" },
-    { "label": "update", "task": "npm: update" },
     { "label": "dev", "task": "npm: dev" },
+    { "label": "preview", "task": "npm: start" },
     { "label": "build", "task": "npm: build" },
-    { "label": "deploy", "task": "npm: deploy" }
+    { "label": "deploy", "task": "npm: deploy" },
+    { "label": "ssh", "task": "npm: ssh" }
   ],
   // Explorer で非表示にするもの
   "files.exclude": {
@@ -18,5 +19,5 @@
     "**/.env.*.local": true,
     "**/node_modules": true,
     "**/desktop.ini": true
-  },
+  }
 }
