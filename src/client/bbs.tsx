@@ -155,7 +155,13 @@ function PostForm() {
     "escape",
     (e) => {
       if (document.activeElement === textareaRef.current) {
-        textareaRef.current?.blur();
+        if (edit === undefined) textareaRef.current?.blur();
+        else {
+          const ti = document.querySelector(
+            `.thread .item[data-id="${edit}"`
+          ) as HTMLElement | null;
+          ti?.focus();
+        }
         e.preventDefault();
       }
     },
@@ -325,7 +331,6 @@ function BBSPage() {
   } = useThreadsState();
   useEffect(() => {
     setEdit();
-    setCursor(0);
   }, [currentName]);
   useHotkeys("period, NumpadDecimal", (e) => {
     setReloadList(currentName, true);
@@ -380,6 +385,30 @@ function BBSPage() {
     let v = search.get("id");
     return v ? Number(v) : undefined;
   }, [search]);
+  const [kp, setKp] = useState(-1);
+  useEffect(() => {
+    if (id === undefined) {
+      if (kp !== page) {
+        setKp(page);
+        setCursor(0);
+        const ti = document.querySelector(
+          ".thread .item[tabindex]"
+        ) as HTMLElement | null;
+        if (ti) {
+          ti.focus();
+          ti.blur();
+        }
+      } else {
+        const ti = document.querySelector(
+          `.thread .item[data-id="${cursor}"`
+        ) as HTMLElement | null;
+        ti?.focus();
+      }
+    }
+  }, [id, page]);
+  useEffect(() => {
+    setKp(page);
+  }, [currentName]);
   const threads = threadsList[currentName];
   const threadsObject = useMemo(() => {
     return findThreads({
@@ -413,9 +442,7 @@ function BBSPage() {
       nextTarget?.focus();
     } else {
       if (cursor)
-        current = document.querySelector(
-          '.thread .item[data-id="' + cursor + '"]'
-        );
+        current = document.querySelector(`.thread .item[data-id="${cursor}"`);
       if (!current)
         current = document.querySelector(".thread .item[tabindex]") as any;
       current?.focus();
@@ -429,6 +456,10 @@ function BBSPage() {
     cursoring(1);
     e.preventDefault();
   });
+  function toggleEdit(id: number, isEdit: boolean) {
+    if (isEdit) setEdit();
+    else setEdit(id);
+  }
   return (
     <>
       <div className={"bbs" + (current?.postable ?? true ? " postable" : "")}>
@@ -465,6 +496,9 @@ function BBSPage() {
                     onKeyDown={(e) => {
                       if (e.target === e.currentTarget && e.code === "Enter") {
                         setSearch({ id: v.id.toString() });
+                        e.preventDefault();
+                      } else if (e.code === "F2") {
+                        toggleEdit(v.id, isEdit);
                         e.preventDefault();
                       }
                     }}
@@ -513,9 +547,8 @@ function BBSPage() {
                         type="button"
                         className="edit"
                         title={isEdit ? "編集解除" : "編集する"}
-                        onClick={(e) => {
-                          if (isEdit) setEdit();
-                          else setEdit(v.id);
+                        onClick={() => {
+                          toggleEdit(v.id, isEdit);
                         }}
                       >
                         {isEdit ? <FaCaretUp /> : <FaCaretDown />}
