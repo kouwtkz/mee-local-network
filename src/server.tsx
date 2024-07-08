@@ -135,7 +135,10 @@ export function ServerCommon(app: CommonHono) {
         return next();
       } else {
         const Url = new URL(c.req.url);
-        return c.redirect("/login/?redirect=" + encodeURIComponent(Url.href.replace(Url.origin, "")));
+        return c.redirect(
+          "/login/?redirect=" +
+            encodeURIComponent(Url.href.replace(Url.origin, ""))
+        );
       }
     });
   });

@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import devServer from '@hono/vite-dev-server'
 import { VitePluginNode } from 'vite-plugin-node';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import ssgBuild from '@hono/vite-ssg';
 
 export default defineConfig(({ mode }) => {
   let config: UserConfig = {
@@ -43,8 +44,10 @@ export default defineConfig(({ mode }) => {
         adapter({ app, server, req, res, next }) {
           app(res, res);
         },
-        appPath: './src/index.tsx'
-      })])
+        appPath: './src/index.tsx',
+      }),
+      ssgBuild({ entry: "./src/ssg.tsx" }),
+    ])
       config = {
         ...config,
         build: {

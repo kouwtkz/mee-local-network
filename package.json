@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@hono/vite-dev-server": "^0.12.2",
+    "@hono/vite-ssg": "^0.1.0",
     "@types/node": "^20.14.9",
     "@types/react": "^18.2.79",
     "@types/react-dom": "^18.2.25",

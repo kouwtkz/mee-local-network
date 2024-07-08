@@ -12,6 +12,8 @@
           "-webkit-tap-highlight-color"
         ]
       }
-    ]
+    ],
+    "apple-touch-icons": "off",
+    "manifest-file-extension": "off"
   }
 }

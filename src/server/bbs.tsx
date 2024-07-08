@@ -16,6 +16,7 @@ function bbs_layout(title = import.meta.env.VITE_TITLE) {
           src={import.meta.env.PROD ? "/assets/bbs.js" : "/src/client/bbs.tsx"}
         />
       }
+      meta={<link rel="manifest" href="/manifest/bbs.json" crossOrigin="use-credentials" />}
       style={<Style href="/assets/styles.css" />}
     >
       <div id="root" />
@@ -24,7 +25,7 @@ function bbs_layout(title = import.meta.env.VITE_TITLE) {
 }
 
 export const bbsOptions = {
-  title: "簡易BBS",
+  title: "めぇのBBS",
   data_dir: import.meta.env.PROD ? "../data/" : "./data/",
 };
 
