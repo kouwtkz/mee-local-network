@@ -8,7 +8,7 @@
   "VsCodeTaskButtons.tasks": [
     { "task": "npm" },
     { "label": "dev", "task": "npm: dev" },
-    { "label": "preview", "task": "npm: start" },
+    { "label": "preview", "task": "npm: preview" },
     { "label": "build", "task": "npm: build" },
     { "label": "deploy", "task": "npm: deploy" },
     { "label": "ssh", "task": "npm: ssh" }
