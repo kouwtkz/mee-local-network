@@ -411,7 +411,7 @@ function BBSPage() {
             : threadsObject.threads.map((v, i) => {
                 const isEdit = edit === v.id;
                 return (
-                  <div className="item" data-id={v.id} key={i}>
+                  <div className={"item"} data-id={v.id} key={i}>
                     <div className="body">
                       {v.text ? <MultiParser>{v.text}</MultiParser> : null}
                     </div>
