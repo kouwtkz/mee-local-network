@@ -18,10 +18,11 @@ import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import { TopJumpArea } from "./components/TopJump";
 import findThreads from "../functions/findThreads";
 import MultiParser from "./components/MultiParser";
-import { FaCaretDown, FaCaretUp, FaFileImage, FaTimes } from "react-icons/fa";
+import { FaCaretDown, FaCaretUp, FaTimes } from "react-icons/fa";
 import { IoSend } from "react-icons/io5";
 import { create } from "zustand";
 import { useHotkeys } from "react-hotkeys-hook";
+import { TbReload } from "react-icons/tb";
 
 interface ThreadsStateType {
   threadsList: {
@@ -189,35 +190,10 @@ function PostForm() {
         Submit();
       }}
     >
-      <div className="upload">
-        <div className="file_input">
-          <input
-            id="file_selector"
-            title="アップロードするファイル"
-            name="uploadedfile"
-            type="file"
-            accept="image/*, video/*, audio/*, text/*, application/*"
-          />
-        </div>
-        <div className="up list">
-          <div className="up_cancel">×</div>
-          <div className="up_file"></div>
-        </div>
-      </div>
       <input type="hidden" name="edit" />
       <div className="list">
-        <div className="right buttons">
-          <button
-            id="file_selector_button"
-            type="button"
-            title="ファイル選択"
-            disabled
-          >
-            <FaFileImage />
-          </button>
-        </div>
         <textarea title="本文" name="text" ref={textareaRef} />
-        <div className="right buttons">
+        <div>
           <button type="submit" title="送信">
             <IoSend />
           </button>
@@ -400,6 +376,19 @@ function BBSPage() {
       <div className={"bbs" + (current?.postable ?? true ? " postable" : "")}>
         <header>
           <div className="search">
+            <button
+              type="button"
+              title="リロード"
+              onClick={() => {
+                setReloadList(currentName, true);
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                location.reload();
+              }}
+            >
+              <TbReload />
+            </button>
             <ThreadListArea />
             <SearchArea data={threadsObject} />
           </div>

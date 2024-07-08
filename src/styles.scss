@@ -66,6 +66,10 @@ body {
   }
 }
 
+body.pwa {
+  overscroll-behavior-y: none;
+}
+
 form.uploader {
   text-align: center;
   > * {

@@ -9,7 +9,8 @@
         "ignore": [
           "scrollbar-width",
           "scrollbar-color",
-          "-webkit-tap-highlight-color"
+          "-webkit-tap-highlight-color",
+          "overscroll-behavior-y"
         ]
       }
     ],
