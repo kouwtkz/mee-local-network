@@ -222,11 +222,11 @@ function SearchArea({ data }: { data: ThreadsDataType }) {
     refInput.current?.focus();
     e.preventDefault();
   });
-  useHotkeys("j", (e) => {
+  useHotkeys("o", (e) => {
     paging(-1);
     e.preventDefault();
   });
-  useHotkeys("k", (e) => {
+  useHotkeys("p", (e) => {
     paging(1);
     e.preventDefault();
   });
@@ -312,6 +312,8 @@ function SearchArea({ data }: { data: ThreadsDataType }) {
 function BBSPage() {
   const currentName = useParams().name ?? "";
   const current = threadLabeledList.find(({ name }) => name == currentName);
+  const [cursor, setCursor] = useState(0);
+  const refMain = useRef<HTMLElement>(null);
   const [search, setSearch] = useSearchParams();
   const {
     threadsList,
@@ -323,12 +325,18 @@ function BBSPage() {
   } = useThreadsState();
   useEffect(() => {
     setEdit();
+    setCursor(0);
   }, [currentName]);
   useHotkeys("period, NumpadDecimal", (e) => {
     setReloadList(currentName, true);
     e.preventDefault();
   });
-  const threads = threadsList[currentName];
+  function findParentItem(e: Element | null) {
+    if (e === null || e.classList.contains("item")) return e;
+    const p = e ? e.parentElement : e;
+    if (!refMain.current?.contains(e) || !p) return null;
+    else return findParentItem(p);
+  }
   useEffect(() => {
     if (
       typeof threadsList[currentName] === "undefined" ||
@@ -372,6 +380,7 @@ function BBSPage() {
     let v = search.get("id");
     return v ? Number(v) : undefined;
   }, [search]);
+  const threads = threadsList[currentName];
   const threadsObject = useMemo(() => {
     return findThreads({
       threads: (threads ?? []).concat(),
@@ -382,6 +391,44 @@ function BBSPage() {
       id,
     });
   }, [threads, search]);
+  function cursoring(n: number) {
+    let current: HTMLElement | null = null;
+    const flag1 = refMain.current?.contains(document.activeElement);
+    if (flag1) current = findParentItem(document.activeElement) as any;
+    if (flag1 && current) {
+      let nextTarget: HTMLElement | null = current;
+      if (n < 0) {
+        for (var i = 0; i > n; i--) {
+          const t = nextTarget?.previousElementSibling as HTMLElement | null;
+          nextTarget = t ?? nextTarget;
+          if (t === null && document.body.scrollTop !== 0)
+            document.body.scrollTo({ top: 0 });
+        }
+      } else if (n > 0) {
+        for (var i = 0; i < n; i++) {
+          const t = nextTarget?.nextElementSibling as HTMLElement | null;
+          nextTarget = t ?? nextTarget;
+        }
+      }
+      nextTarget?.focus();
+    } else {
+      if (cursor)
+        current = document.querySelector(
+          '.thread .item[data-id="' + cursor + '"]'
+        );
+      if (!current)
+        current = document.querySelector(".thread .item[tabindex]") as any;
+      current?.focus();
+    }
+  }
+  useHotkeys("j", (e) => {
+    cursoring(-1);
+    e.preventDefault();
+  });
+  useHotkeys("k", (e) => {
+    cursoring(1);
+    e.preventDefault();
+  });
   return (
     <>
       <div className={"bbs" + (current?.postable ?? true ? " postable" : "")}>
@@ -405,13 +452,27 @@ function BBSPage() {
           </div>
           <PostForm />
         </header>
-        <main className="thread">
+        <main className="thread" ref={refMain}>
           {typeof threads === "undefined"
             ? "読み込み中…"
             : threadsObject.threads.map((v, i) => {
                 const isEdit = edit === v.id;
                 return (
-                  <div className={"item"} data-id={v.id} key={i}>
+                  <div
+                    className={"item" + (isEdit ? " isEdit" : "")}
+                    tabIndex={-1}
+                    data-id={v.id}
+                    onKeyDown={(e) => {
+                      if (e.target === e.currentTarget && e.code === "Enter") {
+                        setSearch({ id: v.id.toString() });
+                        e.preventDefault();
+                      }
+                    }}
+                    onFocus={() => {
+                      setCursor(v.id);
+                    }}
+                    key={i}
+                  >
                     <div className="body">
                       {v.text ? <MultiParser>{v.text}</MultiParser> : null}
                     </div>

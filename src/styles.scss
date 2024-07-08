@@ -1,4 +1,5 @@
 $soft-color: #acc070;
+$soft-color-fluo: #acc07020;
 $high-color: #769714;
 $high-hover: #aecc54;
 $dark-high-color: #c1e654;
@@ -61,7 +62,10 @@ body {
 * {
   font-family: sans-serif;
   -webkit-tap-highlight-color: $high-color-fluo;
-  & ::selection {
+  &:not(button):focus {
+    outline: solid 1px $soft-color;
+  }
+  &::selection {
     background-color: $high-color;
     color: white;
   }
@@ -341,6 +345,13 @@ button {
     text-align: left;
     .item {
       padding: 0.1rem 1rem 1.5rem;
+      &:focus {
+        outline: none;
+        background-color: $soft-color-fluo;
+      }
+      &.isEdit {
+        outline: solid 2px $soft-color;
+      }
       .body {
         white-space: pre-line;
         img {
@@ -354,6 +365,7 @@ button {
           vertical-align: middle;
         }
         a {
+          margin-right: 0.2rem;
           text-decoration-line: none;
           &:hover {
             text-decoration-line: underline;
@@ -362,7 +374,7 @@ button {
         button {
           background-color: transparent;
           svg {
-            margin: 0 0 0 0.2rem;
+            margin: 0 0.1rem;
             width: 1rem;
             height: 1rem;
           }
