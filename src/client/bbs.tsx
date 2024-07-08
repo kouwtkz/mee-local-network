@@ -324,7 +324,7 @@ function BBSPage() {
   useEffect(() => {
     setEdit();
   }, [currentName]);
-  useHotkeys("period", (e) => {
+  useHotkeys("period, NumpadDecimal", (e) => {
     setReloadList(currentName, true);
     e.preventDefault();
   });
