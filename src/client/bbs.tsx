@@ -165,6 +165,7 @@ function PostForm() {
               setSearch(obj);
             } else {
               document.body.scrollTo({ top: 0 });
+              setCursor(0);
             }
           }
         }
