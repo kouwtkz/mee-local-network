@@ -176,22 +176,6 @@ function PostForm() {
     }
   }
   useHotkeys(
-    "escape",
-    (e) => {
-      if (document.activeElement === textareaRef.current) {
-        if (edit === undefined) textareaRef.current?.blur();
-        else {
-          const ti = document.querySelector(
-            `.thread .item[data-id="${edit}"`
-          ) as HTMLElement | null;
-          ti?.focus();
-        }
-        e.preventDefault();
-      }
-    },
-    { enableOnFormTags: ["TEXTAREA"] }
-  );
-  useHotkeys(
     "ctrl+enter",
     (e) => {
       if (document.activeElement === textareaRef.current) {
@@ -222,7 +206,23 @@ function PostForm() {
     >
       <input type="hidden" name="edit" />
       <div className="list">
-        <textarea title="本文" name="text" ref={textareaRef} />
+        <textarea
+          title="本文"
+          name="text"
+          ref={textareaRef}
+          onKeyDown={(e) => {
+            if (e.code === "Escape") {
+              if (edit === undefined) textareaRef.current?.blur();
+              else {
+                const ti = document.querySelector(
+                  `.thread .item[data-id="${edit}"`
+                ) as HTMLElement | null;
+                ti?.focus();
+              }
+              e.preventDefault();
+            }
+          }}
+        />
         <div>
           <button type="submit" title="送信">
             <IoSend />
@@ -481,6 +481,10 @@ function BBSPage() {
     cursoring(1);
     e.preventDefault();
   });
+  useHotkeys("escape", () => {
+    if (document.activeElement) (document.activeElement as HTMLElement).blur();
+  });
+
   function toggleEdit(id: number, isEdit: boolean) {
     if (isEdit) setEdit();
     else setEdit(id);
