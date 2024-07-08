@@ -6,10 +6,11 @@ import { Hono } from "hono";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
 import { GetRawThreads } from "../functions/bbs";
 
-function bbs_layout(title = import.meta.env.VITE_TITLE) {
+function bbs_layout(title = import.meta.env.VITE_BBS_TITLE) {
   return renderToString(
     <DefaultLayout
       title={title}
+      className="pwa"
       script={
         <script
           type="module"
@@ -25,7 +26,7 @@ function bbs_layout(title = import.meta.env.VITE_TITLE) {
 }
 
 export const bbsOptions = {
-  title: "めぇのBBS",
+  title: import.meta.env.VITE_BBS_TITLE ?? import.meta.env.VITE_TITLE,
   data_dir: import.meta.env.PROD ? "../data/" : "./data/",
 };
 

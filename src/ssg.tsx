@@ -6,7 +6,7 @@ const app = new Hono<MeeBindings>({ strict: true });
 
 app.get("/manifest/bbs.json", async (c) => {
   return c.json({
-    name: "めぇのBBS",
+    name: import.meta.env.VITE_BBS_TITLE ?? import.meta.env.VITE_TITLE,
     display: "standalone",
     scope: "/bbs/",
     start_url: "/bbs/",
