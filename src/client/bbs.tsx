@@ -180,8 +180,8 @@ function PostForm() {
     (e) => {
       if (document.activeElement === textareaRef.current) {
         e.preventDefault();
-        Submit();
         textareaRef.current?.blur();
+        Submit();
       }
     },
     { enableOnFormTags: ["TEXTAREA"] }
