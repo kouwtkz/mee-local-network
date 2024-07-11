@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
 import {
@@ -23,6 +23,7 @@ import { IoSend } from "react-icons/io5";
 import { create } from "zustand";
 import { useHotkeys } from "react-hotkeys-hook";
 import { TbReload } from "react-icons/tb";
+import { getRedirectUrl } from "../functions/redirectUrl";
 
 interface ThreadsStateType {
   threadsList: {
@@ -378,8 +379,10 @@ function BBSPage() {
           const rawData: ThreadsRawType[] = r.data;
           setThreadsList(currentName, ParseThreads(rawData));
         })
-        .catch(() => {
-          setThreadsList(currentName, null);
+        .catch((r: AxiosError) => {
+          if (r.response?.status === 401) {
+            location.href = getRedirectUrl(location.href);
+          } else setThreadsList(currentName, null);
         });
     }
   }, [currentName, reloadList]);

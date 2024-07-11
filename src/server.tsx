@@ -21,6 +21,7 @@ import {
 } from "./server/UploaderPage";
 import { LoginPage, SettingPage } from "./server/SettingPage";
 import { app_bbs } from "./server/bbs";
+import { getIsLogin, LoginRedirect } from "./server/LoginCheck";
 
 const title = import.meta.env.VITE_TITLE;
 
@@ -50,9 +51,7 @@ export function ServerCommon(app: CommonHono) {
   const cookieKey = "localToken";
   const cookieValue = import.meta.env.VITE_COOKIE_VALUE;
   const password = import.meta.env.VITE_LOGIN_PASSWORD;
-  function getIsLogin(c: CommonContext) {
-    return getCookie(c, cookieKey) === cookieValue;
-  }
+
   app.get("/", (c) => {
     return c.html(
       RenderMainLayout({
@@ -129,18 +128,8 @@ export function ServerCommon(app: CommonHono) {
     );
   });
 
-  ["private/*", "twitter/*", "bbs/*", "offline/*"].forEach((path) => {
-    app.get(path, async (c, next) => {
-      if (getIsLogin(c)) {
-        return next();
-      } else {
-        const Url = new URL(c.req.url);
-        return c.redirect(
-          "/login/?redirect=" +
-            encodeURIComponent(Url.href.replace(Url.origin, ""))
-        );
-      }
-    });
+  ["private/*", "twitter/*", "offline/*"].forEach((path) => {
+    app.get(path, LoginRedirect);
   });
   app.route("/bbs", app_bbs);
 

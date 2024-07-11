@@ -6,6 +6,7 @@ import { Hono } from "hono";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
 import { GetRawThreads } from "../functions/bbs";
 import { buildAddVer, stylesAddVer } from "./env";
+import { LoginRedirect, Unauthorized } from "./LoginCheck";
 
 function bbs_layout(title = import.meta.env.VITE_BBS_TITLE) {
   return renderToString(
@@ -80,6 +81,7 @@ const app_api = new Hono<MeeBindings>({ strict: false });
   }
 
   threads_list.forEach((n) => {
+    app.get("*", Unauthorized);
     app.get("get/threads" + n, (c) => {
       const threads = ReadThreads(c.req.param("name"));
       if (!threads) return c.json(null, 400);
@@ -159,6 +161,7 @@ const app_api = new Hono<MeeBindings>({ strict: false });
 }
 
 const app = new Hono<MeeBindings>();
+app.get("*", LoginRedirect);
 app.route("api", app_api);
 threads_list.forEach((n) => {
   app.get(n, async (c, next) => {
