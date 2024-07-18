@@ -10,6 +10,10 @@ $disabled-color2: #a2ab8d;
 $form-input-bg: #e9eae9;
 $delete-color: #b46868;
 $delete-hover: #a64444;
+$background-color: #edf6df;
+
+@import url("https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap");
+$font-KosugiMaru: "Kosugi Maru";
 
 :root {
   scrollbar-width: thin;
@@ -18,7 +22,7 @@ $delete-hover: #a64444;
   header,
   .paging {
     color: black;
-    background-color: white;
+    background-color: $background-color;
   }
   a {
     color: $disabled-color;
@@ -56,11 +60,18 @@ body {
   padding: 2% 0% 0% 4%;
   margin-bottom: 3rem;
   overflow-y: scroll;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  font: 1em $font-KosugiMaru, "Lucida Grande", Helvetica, Arial, sans-serif;
+  line-height: 1.25em;
+}
+
+input,
+textarea,
+button,
+select {
+  font-family: sans-serif;
 }
 
 * {
-  font-family: sans-serif;
   -webkit-tap-highlight-color: $high-color-fluo;
   &:not(button):focus {
     outline: solid 1px $soft-color;
@@ -176,6 +187,7 @@ ul.links {
   li {
     display: block;
     font-size: 2em;
+    line-height: normal;
     width: 90%;
     margin: 0 0 0.6em 1em;
   }
