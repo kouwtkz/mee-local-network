@@ -18,12 +18,19 @@ import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import { TopJumpArea } from "./components/TopJump";
 import findThreads from "../functions/findThreads";
 import MultiParser from "./components/MultiParser";
-import { FaCaretDown, FaCaretUp, FaTimes } from "react-icons/fa";
+import { FaCaretDown, FaCaretUp, FaHome, FaTimes } from "react-icons/fa";
 import { IoSend } from "react-icons/io5";
 import { create } from "zustand";
 import { useHotkeys } from "react-hotkeys-hook";
-import { TbReload } from "react-icons/tb";
+import { TbPencil, TbPencilCancel, TbReload } from "react-icons/tb";
 import { getRedirectUrl } from "../functions/redirectUrl";
+import { ThemeStateClass } from "./state/ThemeSetter";
+import { CgDarkMode, CgMoon, CgSun } from "react-icons/cg";
+
+export const DarkThemeState = new ThemeStateClass("darktheme", [
+  "light",
+  "dark",
+]);
 
 interface ThreadsStateType {
   threadsList: {
@@ -206,29 +213,27 @@ function PostForm() {
       }}
     >
       <input type="hidden" name="edit" />
-      <div className="list">
-        <textarea
-          title="本文"
-          name="text"
-          ref={textareaRef}
-          onKeyDown={(e) => {
-            if (e.code === "Escape") {
-              if (edit === undefined) textareaRef.current?.blur();
-              else {
-                const ti = document.querySelector(
-                  `.thread .item[data-id="${edit}"`
-                ) as HTMLElement | null;
-                ti?.focus();
-              }
-              e.preventDefault();
+      <textarea
+        title="本文"
+        name="text"
+        ref={textareaRef}
+        onKeyDown={(e) => {
+          if (e.code === "Escape") {
+            if (edit === undefined) textareaRef.current?.blur();
+            else {
+              const ti = document.querySelector(
+                `.thread .item[data-id="${edit}"`
+              ) as HTMLElement | null;
+              ti?.focus();
             }
-          }}
-        />
-        <div>
-          <button type="submit" title="送信">
-            <IoSend />
-          </button>
-        </div>
+            e.preventDefault();
+          }
+        }}
+      />
+      <div>
+        <button type="submit" title="送信">
+          <IoSend />
+        </button>
       </div>
     </form>
   );
@@ -284,7 +289,7 @@ function SearchArea({ data }: { data: ThreadsDataType }) {
   return (
     <div className="list">
       <form
-        id="form_search_main"
+        className="search"
         method="get"
         autoComplete="off"
         onSubmit={(e) => {
@@ -334,6 +339,60 @@ function SearchArea({ data }: { data: ThreadsDataType }) {
           }}
         >
           <MdArrowForwardIos />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DarkThemeButton() {
+  const { theme: darktheme, next } = DarkThemeState.use();
+  return (
+    <button type="button" title="ダークテーマ切替" onClick={next}>
+      {darktheme === "light" ? (
+        <CgSun />
+      ) : darktheme === "dark" ? (
+        <CgMoon />
+      ) : (
+        <CgDarkMode />
+      )}
+    </button>
+  );
+}
+
+function OptionButtons() {
+  const currentName = useParams().name ?? "";
+  const { setReloadList } = useThreadsState();
+  const [isOpen, setOpen] = useState(false);
+  return (
+    <div className={"buttons" + (isOpen ? " opened" : "")}>
+      <button
+        type="button"
+        className="opener"
+        title="展開"
+        onClick={() => {
+          setOpen(!isOpen);
+        }}
+      >
+        {isOpen ? <FaCaretUp /> : <FaCaretDown />}
+      </button>
+      <div className="list">
+        <a className="button" title="ホームへ戻る" href="/">
+          <FaHome />
+        </a>
+        <DarkThemeButton />
+        <button
+          type="button"
+          title="読み込み"
+          onClick={() => {
+            setReloadList(currentName, true);
+          }}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            location.reload();
+          }}
+        >
+          <TbReload />
         </button>
       </div>
     </div>
@@ -494,27 +553,18 @@ function BBSPage() {
   }
   return (
     <>
+      {DarkThemeState.State()}
       <div className={"bbs" + (current?.postable ?? true ? " postable" : "")}>
         <header>
+          <OptionButtons />
           <div className="search">
-            <button
-              type="button"
-              title="リロード"
-              onClick={() => {
-                setReloadList(currentName, true);
-              }}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                location.reload();
-              }}
-            >
-              <TbReload />
-            </button>
             <ThreadListArea />
             <SearchArea data={threadsObject} />
           </div>
-          <PostForm />
         </header>
+        <div className="under">
+          <PostForm />
+        </div>
         <main className="thread" ref={refMain}>
           {typeof threads === "undefined"
             ? "読み込み中…"
@@ -583,15 +633,15 @@ function BBSPage() {
                           toggleEdit(v.id, isEdit);
                         }}
                       >
-                        {isEdit ? <FaCaretUp /> : <FaCaretDown />}
+                        {isEdit ? <TbPencilCancel /> : <TbPencil />}
                       </button>
                     </div>
                   </div>
                 );
               })}
         </main>
+        <TopJumpArea />
       </div>
-      <TopJumpArea />
     </>
   );
 }

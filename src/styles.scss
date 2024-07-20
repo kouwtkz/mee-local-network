@@ -15,36 +15,18 @@ $background-color: #f1f6df;
 @import url("https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap");
 $font-KosugiMaru: "Kosugi Maru";
 
-:root {
-  scrollbar-width: thin;
+@mixin darkMode() {
   scrollbar-color: $soft-color transparent;
   body,
   header,
+  .under,
   .paging {
-    color: black;
-    background-color: $background-color;
+    color: white;
+    background-color: #282a27;
   }
-  a {
-    color: $disabled-color;
-  }
-  a[href] {
-    color: $high-color;
-    &:hover {
-      color: $high-hover;
-    }
-  }
-  @media (prefers-color-scheme: dark) {
-    scrollbar-color: $soft-color transparent;
-    body,
-    header,
-    .paging {
-      color: white;
-      background-color: #282a27;
-    }
-    a {
-      color: #879071;
-    }
-    a[href] {
+  a:not(.button) {
+    color: #879071;
+    &[href] {
       color: $dark-high-color;
       &:hover {
         color: $dark-high-hover;
@@ -53,15 +35,47 @@ $font-KosugiMaru: "Kosugi Maru";
   }
 }
 
-$mobileWidth: 768px;
-$tabletWidth: 1024px;
+:root {
+  scrollbar-width: thin;
+  scrollbar-color: $soft-color transparent;
+  body,
+  header,
+  .under,
+  .paging {
+    color: black;
+    background-color: $background-color;
+  }
+  a:not(.button) {
+    color: $disabled-color;
+    &[href] {
+      color: $high-color;
+      &:hover {
+        color: $high-hover;
+      }
+    }
+  }
+  &.dark {
+    @include darkMode();
+  }
+  &:not(.light):not(.dark) {
+    @media (prefers-color-scheme: dark) {
+      @include darkMode();
+    }
+  }
+}
+
+$mobileWidth: 520px;
+$tabletWidth: 768px;
+$desktopWidth: 1024px;
 
 body {
-  padding: 2% 0% 0% 4%;
   margin-bottom: 3rem;
   overflow-y: scroll;
   font: 1em $font-KosugiMaru, "Lucida Grande", Helvetica, Arial, sans-serif;
   line-height: 1.25em;
+  .simple & {
+    padding: 2% 0% 0% 4%;
+  }
 }
 
 input,
@@ -69,6 +83,7 @@ textarea,
 button,
 select {
   font-family: sans-serif;
+  line-height: 1.25em;
 }
 
 * {
@@ -184,6 +199,7 @@ form.uploader {
 ul.links {
   padding: 0;
   margin-right: 3em;
+  margin-bottom: 2em;
   li {
     display: block;
     font-size: 2em;
@@ -206,6 +222,15 @@ ul.links {
     visibility: hidden;
     pointer-events: none;
   }
+  svg {
+    height: 1.5rem;
+    width: 1.5rem;
+    margin: 0.25rem;
+  }
+  margin: 0.5rem;
+  @media (min-width: $tabletWidth) {
+    margin-right: 2rem;
+  }
   opacity: 1;
   transition: 250ms;
   cursor: pointer;
@@ -214,11 +239,12 @@ ul.links {
   right: 0;
   border: 0;
   background: transparent;
-  margin: 1rem;
   padding: 0;
-  font-size: 2rem;
   color: #aaaaaa;
   color: #aaaaaa99;
+  .postable & {
+    margin-bottom: 2.5rem;
+  }
 }
 
 button {
@@ -231,83 +257,128 @@ button {
 
 .bbs {
   $postform-height: 6rem;
-  &.postable {
-    margin-top: $postform-height;
+  &:not(.postable) {
     form.post {
-      display: block;
+      display: none;
     }
     .thread .item .info {
       button.edit {
-        display: inline;
+        display: none;
       }
     }
   }
-  button {
-    color: white;
-    background-color: $high-color;
-    border: none;
-    margin: 0 0.1rem;
-    padding: 0;
-    border-radius: 0.1rem;
-    &:disabled {
-      cursor: auto;
-      background-color: $disabled-color2;
-    }
-    &:not(:disabled):hover {
-      background-color: $high-hover;
-    }
-    svg {
-      height: 1.25rem;
-      width: 1.25rem;
-      margin: 0.1rem 0.3rem;
+  button,
+  .button {
+    &:not(.topJump) {
+      display: inline-block;
+      color: white;
+      background-color: $high-color;
+      border: none;
+      margin: 0 0.1rem;
+      padding: 0;
+      border-radius: 0.1rem;
+      &:disabled {
+        cursor: auto;
+        background-color: $disabled-color2;
+      }
+      &:not(:disabled):hover {
+        background-color: $high-hover;
+      }
+      svg {
+        height: 1.25rem;
+        width: 1.25rem;
+        margin: 0.1rem 0.3rem;
+      }
     }
   }
   header {
+    display: flex;
+    justify-content: space-around;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
+    > * {
+      padding: 0.1rem;
+    }
+  }
+  .under {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+  }
+  .buttons {
+    .opener {
+      display: none;
+    }
+    @media (max-width: $mobileWidth) {
+      .opener {
+        display: block;
+      }
+      .list {
+        display: none;
+        position: absolute;
+        margin-top: 0.25rem;
+      }
+      &.opened .list {
+        display: block;
+      }
+    }
   }
   .search {
     text-align: right;
-    padding: 0.1rem 0;
     > *,
     .list > * {
       margin-left: 0.1rem;
       display: inline-block;
       vertical-align: middle;
     }
-    form {
+    form.search {
       margin: 0;
       input[type="search"] {
-        width: 9rem;
+        width: 8rem;
         border-radius: 0.4em;
         padding: 0.2em 0.4em;
         @media (prefers-color-scheme: dark) {
           background-color: $form-input-bg;
         }
-
         border: solid #999 0.1em;
-        @media (min-width: $mobileWidth) {
-          width: 12rem;
-        }
       }
-      button {
+      button[type="submit"] {
         display: none;
       }
     }
+    button,
+    .button {
+      svg {
+        margin: 0.1rem 0.2rem;
+      }
+    }
+    @media (min-width: $mobileWidth) {
+      form.search input[type="search"] {
+        width: 12rem;
+      }
+      button,
+      .button {
+        svg {
+          margin: 0.1rem 0.3rem;
+        }
+      }
+    }
+  }
+  .under form.post {
+    align-items: flex-end;
   }
   form.post {
-    display: none;
-    margin: 0.1rem auto;
+    display: flex;
+    margin: 0.25rem auto;
     width: 100%;
     max-width: 42rem;
-    .list {
-      display: flex;
-      justify-content: center;
-      textarea {
-        flex: 1;
-      }
+    justify-content: center;
+    textarea {
+      flex: 1;
     }
     > *,
     .list > * {
@@ -350,7 +421,7 @@ button {
   }
   .thread {
     width: 100%;
-    margin: 1rem auto 1rem;
+    margin: 4rem auto 6rem;
     max-width: 42rem;
     box-sizing: border-box;
     word-break: break-word;
@@ -397,7 +468,7 @@ button {
             }
           }
           &.edit {
-            display: none;
+            display: inline;
             color: $high-color;
             &:hover {
               color: $high-hover;

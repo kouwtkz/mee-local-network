@@ -25,23 +25,33 @@ import { getIsLogin, LoginRedirect } from "./server/LoginCheck";
 
 const title = import.meta.env.VITE_TITLE;
 
-function RenderMainLayout({
-  children,
-  script,
-}: {
+interface RenderBaseLayoutProps {
   children?: React.ReactNode;
   script?: string | string[];
-}) {
+  dark?: string;
+}
+function RenderBaseLayout({ children, script, dark }: RenderBaseLayoutProps) {
   const scripts = script
     ? (Array.isArray(script) ? script : [script]).map((src, i) => (
         <script key={i} src={src} />
       ))
     : undefined;
   return renderToString(
-    <DefaultLayout title={title} script={scripts}>
+    <DefaultLayout
+      title={title}
+      script={scripts}
+      className={"simple" + (dark ? ` ${dark}` : "")}
+    >
       {children}
     </DefaultLayout>
   );
+}
+
+interface RenderMainLayoutProps extends Omit<RenderBaseLayoutProps, "dark"> {
+  c: CommonContext;
+}
+function RenderMainLayout({ c, ...args }: RenderMainLayoutProps) {
+  return RenderBaseLayout({ ...args, dark: getCookie(c, "darktheme") });
 }
 
 export function ServerCommon(app: CommonHono) {
@@ -56,22 +66,34 @@ export function ServerCommon(app: CommonHono) {
     return c.html(
       RenderMainLayout({
         children: <TopPage title={title} />,
+        c,
       })
     );
   });
   app.get("login", (c) => {
-    return c.html(RenderMainLayout({ children: <LoginPage c={c} /> }));
+    return c.html(RenderMainLayout({ c, children: <LoginPage c={c} /> }));
   });
   app.post("login", async (c) => {
     const body = await c.req.parseBody();
     if (cookieValue && body.password === password) {
-      setCookie(c, cookieKey, cookieValue);
+      setCookie(c, cookieKey, cookieValue, { maxAge: 2592000, path: "/" });
     }
     return c.redirect((body.redirect as string) || "/");
   });
   app.get("logout", async (c) => {
     deleteCookie(c, cookieKey);
     return c.redirect("/setting");
+  });
+  app.get("theme/dark/:mode", (c) => {
+    const mode = c.req.param("mode");
+    if (mode === "system") {
+      deleteCookie(c, "darktheme");
+    } else {
+      setCookie(c, "darktheme", mode, { maxAge: 34e6, path: "/" });
+    }
+    const Url = new URL(c.req.url);
+    const redirect = Url.searchParams.get("redirect") ?? "/";
+    return c.redirect(redirect);
   });
   app.post("uploader", async (c) => {
     const body = await c.req.parseBody();
@@ -106,6 +128,7 @@ export function ServerCommon(app: CommonHono) {
   app.get("uploader", (c) => {
     return c.html(
       RenderMainLayout({
+        c,
         children: <UploaderPage c={c} />,
         script: uploaderScript,
       })
@@ -114,17 +137,26 @@ export function ServerCommon(app: CommonHono) {
   app.get("uploader/viewer", (c) => {
     return c.html(
       RenderMainLayout({
+        c,
         children: <UploaderViewerPage c={c} />,
         script: uploaderScript,
       })
     );
   });
   app.get("log", (c) => {
-    return c.html(RenderMainLayout({ children: <LogPage /> }));
+    return c.html(RenderMainLayout({ c, children: <LogPage /> }));
   });
   app.get("setting", (c) => {
     return c.html(
-      RenderMainLayout({ children: <SettingPage isLogin={getIsLogin(c)} /> })
+      RenderMainLayout({
+        c,
+        children: (
+          <SettingPage
+            isLogin={getIsLogin(c)}
+            darktheme={getCookie(c, "darktheme")}
+          />
+        ),
+      })
     );
   });
 
@@ -142,28 +174,31 @@ export function ServerCommon(app: CommonHono) {
       let files = readdirSync(StaticAddPath);
       files = files.filter((f) => !/^\.|archive|\.php$/.test(f));
       return c.html(
-        renderToString(
-          <DefaultLayout>
-            <ul className="links">
-              {files.map((file, i) => {
-                let dir = path.endsWith("/") ? path : path + "/";
-                let href = dir + file;
-                if (/\/.[^.]+[^\/]$/.test(href)) href = href + "/";
-                return (
-                  <li key={i}>
-                    <a href={href}>{file}</a>
-                  </li>
-                );
-              })}
-            </ul>
-            <p>
-              <a href="../">一つ上に戻る</a>
-            </p>
-            <p>
-              <a href="/">トップへ戻る</a>
-            </p>
-          </DefaultLayout>
-        )
+        RenderMainLayout({
+          c,
+          children: (
+            <>
+              <ul className="links">
+                {files.map((file, i) => {
+                  let dir = path.endsWith("/") ? path : path + "/";
+                  let href = dir + file;
+                  if (/\/.[^.]+[^\/]$/.test(href)) href = href + "/";
+                  return (
+                    <li key={i}>
+                      <a href={href}>{file}</a>
+                    </li>
+                  );
+                })}
+              </ul>
+              <p>
+                <a href="../">一つ上に戻る</a>
+              </p>
+              <p>
+                <a href="/">ホームへ戻る</a>
+              </p>
+            </>
+          ),
+        })
       );
     } else {
       return next();

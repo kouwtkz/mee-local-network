@@ -1,11 +1,30 @@
 import React from "react";
 import { CommonContext } from "../types/HonoCustomType";
 
-export function SettingPage({ isLogin = false }: { isLogin?: boolean }) {
+export function SettingPage({
+  darktheme,
+  isLogin = false,
+}: {
+  darktheme?: string;
+  isLogin?: boolean;
+}) {
   return (
     <>
       <h1>せってい</h1>
       <ul className="links">
+        <li>
+          {darktheme === "light" ? (
+            <a href="/theme/dark/dark?redirect=/setting/">ダークテーマに切替</a>
+          ) : darktheme === "dark" ? (
+            <a href="/theme/dark/system?redirect=/setting/">
+              システムのテーマに切替
+            </a>
+          ) : (
+            <a href="/theme/dark/light?redirect=/setting/">
+              ライトテーマに切替
+            </a>
+          )}
+        </li>
         {isLogin ? (
           <li>
             <a href="/logout/">ログアウト</a>
@@ -16,7 +35,7 @@ export function SettingPage({ isLogin = false }: { isLogin?: boolean }) {
           </li>
         )}
       </ul>
-      <a href="/">トップへ戻る</a>
+      <a href="/">ホームへ戻る</a>
     </>
   );
 }
@@ -33,16 +52,6 @@ export function LoginPage({ c }: { c: CommonContext }) {
           name="redirect"
           defaultValue={Url.searchParams.get("redirect") ?? ""}
         />
-        {/* <label className="form-check-label">
-          <input
-            id="remember"
-            type="checkbox"
-            name="remember"
-            value="1"
-            className="form-check-input"
-          />
-          次回から省略
-        </label> */}
         <button type="submit">送信</button>
       </form>
     </>

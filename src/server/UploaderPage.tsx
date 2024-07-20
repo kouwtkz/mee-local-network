@@ -145,7 +145,7 @@ export function UploaderPage({ max = 3, ...props }: UploaderPageProps) {
           <a href="/uploader/viewer/">ビューア</a>
         </li>
         <li>
-          <a href="/">トップへ戻る</a>
+          <a href="/">ホームへ戻る</a>
         </li>
       </ul>
     </>
@@ -162,7 +162,7 @@ export function UploaderViewerPage({ max = 10, ...props }: UploaderPageProps) {
           <a href="/uploader/">アップロードページに戻る</a>
         </li>
         <li>
-          <a href="/">トップへ戻る</a>
+          <a href="/">ホームへ戻る</a>
         </li>
       </ul>
     </>
