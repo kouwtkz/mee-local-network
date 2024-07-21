@@ -74,7 +74,7 @@ body {
   margin-bottom: 3rem;
   overflow-y: scroll;
   font: 1em $font-KosugiMaru, "Lucida Grande", Helvetica, Arial, sans-serif;
-  line-height: 1.25em;
+  line-height: 1.25;
   .simple & {
     padding: 2% 0% 0% 4%;
   }
@@ -85,7 +85,7 @@ textarea,
 button,
 select {
   font-family: sans-serif;
-  line-height: 1.25em;
+  line-height: 1.25;
 }
 
 [hidden] {
