@@ -22,14 +22,14 @@ interface webManifestType {
   "share_target": {
     "action": string,
     "method"?: "GET" | "POST",
-    "enctype"?: "multipart/form-data" | string,
+    "enctype"?: "multipart/form-data",
     "params": {
       "title"?: string,
       "text"?: string,
       "url"?: string,
       "files"?: [
         {
-          "name": string,
+          "name": "name" | string,
           "accept": string[]
         },
       ]
