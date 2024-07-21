@@ -22,7 +22,7 @@ import { FaCaretDown, FaCaretUp, FaHome, FaPen, FaTimes } from "react-icons/fa";
 import { IoSend } from "react-icons/io5";
 import { create } from "zustand";
 import { useHotkeys } from "react-hotkeys-hook";
-import { TbPencil, TbPencilCancel, TbReload } from "react-icons/tb";
+import { TbEraser, TbPencil, TbPencilCancel, TbReload } from "react-icons/tb";
 import { getRedirectUrl } from "../functions/redirectUrl";
 import { ThemeStateClass } from "./state/ThemeSetter";
 import { CgDarkMode, CgMoon, CgSun } from "react-icons/cg";
@@ -137,7 +137,7 @@ function PostForm() {
     useThreadsState();
   const currentThread = threadsList[currentName];
   const [search, setSearch] = useSearchParams();
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(true);
   const editThread = useMemo(
     () =>
       currentThread && typeof edit === "number"
@@ -276,7 +276,21 @@ function PostForm() {
                 }
               }}
             />
-            <div>
+            <div className="buttons">
+              <button
+                type="button"
+                className="reset"
+                title="リセット"
+                onClick={() => {
+                  if (confirm("入力内容をリセットしますか？")) {
+                    setEdit();
+                    formRef.current?.reset();
+                    if (show) textareaRef.current?.focus();
+                  }
+                }}
+              >
+                <TbEraser />
+              </button>
               <button
                 type="submit"
                 title="送信"
