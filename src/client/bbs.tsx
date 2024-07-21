@@ -207,6 +207,20 @@ function PostForm() {
   useEffect(() => {
     if (show) textareaRef.current?.focus();
   }, [show]);
+  const shared_intent = useMemo(() => {
+    const list = ["name", "description", "link"]
+      .map((v) => search.get(v) ?? "")
+      .filter((v) => v);
+    return list.join("\n");
+  }, [search]);
+  useEffect(() => {
+    if (formRef.current && shared_intent) {
+      const form = formRef.current;
+      form.text.value = shared_intent + "\n";
+      setShow(true);
+      setSearch({}, { replace: true });
+    }
+  }, [shared_intent]);
 
   return (
     <>

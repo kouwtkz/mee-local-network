@@ -6,7 +6,9 @@ const app = new Hono<MeeBindings>({ strict: true });
 
 app.get("/manifest/bbs.json", async (c) => {
   return c.json({
-    name: import.meta.env.VITE_BBS_TITLE ?? import.meta.env.VITE_TITLE,
+    name: import.meta.env.DEV
+      ? "開発中"
+      : import.meta.env.VITE_BBS_TITLE ?? import.meta.env.VITE_TITLE,
     display: "standalone",
     scope: "/bbs/",
     start_url: "/bbs/",
@@ -17,6 +19,14 @@ app.get("/manifest/bbs.json", async (c) => {
         type: "image/png",
       },
     ],
+    share_target: {
+      action: "/bbs/",
+      params: {
+        title: "name",
+        text: "description",
+        url: "link",
+      },
+    },
   } as webManifestType);
 });
 
