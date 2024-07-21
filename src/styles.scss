@@ -444,7 +444,7 @@ button {
     .buttons {
       display: flex;
       flex-direction: row;
-      align-items: flex-end;
+      align-items: center;
       justify-content: space-between;
       @media (min-width: $mobileWidth) {
         flex-direction: column;
@@ -455,7 +455,7 @@ button {
       svg {
         width: 1.25rem;
         height: 1.25rem;
-        margin: 0.25rem 0.25rem;
+        margin: 0.25rem;
       }
       &.reset {
         color: $high-hover;
