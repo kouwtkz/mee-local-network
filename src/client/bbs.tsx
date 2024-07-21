@@ -137,7 +137,7 @@ function PostForm() {
     useThreadsState();
   const currentThread = threadsList[currentName];
   const [search, setSearch] = useSearchParams();
-  const [show, setShow] = useState(true);
+  const [show, setShow] = useState(false);
   const editThread = useMemo(
     () =>
       currentThread && typeof edit === "number"
