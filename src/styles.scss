@@ -11,19 +11,18 @@ $form-input-bg: #e9eae9;
 $delete-color: #b46868;
 $delete-hover: #a64444;
 $background-color: #f1f6df;
+$background-dark: #282a27;
 
 @import url("https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap");
 $font-KosugiMaru: "Kosugi Maru";
 
 @mixin darkMode() {
+  --background-color: #{$background-dark};
   scrollbar-color: $soft-color transparent;
   body,
-  header,
-  .under,
-  .modal .box,
-  .paging {
+  header {
     color: white;
-    background-color: #282a27;
+    background-color: $background-dark;
   }
   a:not(.button) {
     color: #879071;
@@ -39,11 +38,9 @@ $font-KosugiMaru: "Kosugi Maru";
 :root {
   scrollbar-width: thin;
   scrollbar-color: $soft-color transparent;
+  --background-color: #{$background-color};
   body,
-  header,
-  .under,
-  .modal .box,
-  .paging {
+  header {
     color: black;
     background-color: $background-color;
   }
@@ -162,6 +159,7 @@ form.uploader {
     margin: auto;
     display: table;
     height: 2rem;
+    background-color: var(--background-color);
     & > * {
       display: table-cell;
       vertical-align: middle;
@@ -278,6 +276,33 @@ button {
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: var(--background-color);
+  }
+}
+
+.mobileFold {
+  .opener {
+    display: none!important;
+  }
+  > .list {
+    display: flex;
+    align-items: center;
+    background-color: var(--background-color);
+  }
+  @media (max-width: $mobileWidth) {
+    .opener {
+      display: block!important;
+    }
+    > .list {
+      display: none;
+      position: absolute;
+      padding: 0.25rem 0.5rem;
+      left: 0;
+      right: 0;
+    }
+    &.opened > .list {
+      display: flex;
+    }
   }
 }
 
@@ -325,30 +350,17 @@ button {
       padding: 0.1rem;
     }
   }
+  .buttons {
+    display: flex;
+    align-items: center;
+  }
   .under {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
     z-index: 10;
-  }
-  .buttons {
-    .opener {
-      display: none;
-    }
-    @media (max-width: $mobileWidth) {
-      .opener {
-        display: block;
-      }
-      .list {
-        display: none;
-        position: absolute;
-        margin-top: 0.25rem;
-      }
-      &.opened .list {
-        display: block;
-      }
-    }
+    background-color: var(--background-color);
   }
   .search {
     text-align: right;
@@ -361,7 +373,7 @@ button {
     form.search {
       margin: 0;
       input[type="search"] {
-        width: 8rem;
+        width: 9rem;
         border-radius: 0.4em;
         padding: 0.2em 0.4em;
         @media (prefers-color-scheme: dark) {

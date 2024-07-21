@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
 import {
   createBrowserRouter,
@@ -115,16 +115,18 @@ function ThreadListArea() {
   const current = threadLabeledList.find(({ name }) => name == currentName);
   const list = threadLabeledList.filter(({ name }) => name !== currentName);
   return (
-    <div className="threadList">
-      <span>【{current?.label}】</span>
-      {list.map(({ name, label }, i) => {
-        return (
-          <Link key={i} to={"/bbs" + (name ? "/" + name : "") + "/"}>
-            &gt;{label}
-          </Link>
-        );
-      })}
-    </div>
+    <MobileFold closed={<FaCaretDown />} opened={<FaCaretUp />}>
+      <div className="threadList">
+        <span>【{current?.label}】</span>
+        {list.map(({ name, label }, i) => {
+          return (
+            <Link key={i} to={"/bbs" + (name ? "/" + name : "") + "/"}>
+              &gt;{label}
+            </Link>
+          );
+        })}
+      </div>
+    </MobileFold>
   );
 }
 
@@ -437,41 +439,58 @@ function DarkThemeButton() {
   );
 }
 
-function OptionButtons() {
-  const currentName = useParams().name ?? "";
-  const { setReloadList } = useThreadsState();
+function MobileFold({
+  children,
+  closed,
+  opened,
+  title = "展開",
+}: {
+  children?: ReactNode;
+  closed: ReactNode;
+  opened: ReactNode;
+  title?: string;
+}) {
   const [isOpen, setOpen] = useState(false);
   return (
-    <div className={"buttons" + (isOpen ? " opened" : "")}>
+    <div className={"mobileFold" + (isOpen ? " opened" : "")}>
       <button
         type="button"
         className="opener"
-        title="展開"
+        title={title}
         onClick={() => {
           setOpen(!isOpen);
         }}
       >
-        {isOpen ? <FaCaretUp /> : <FaCaretDown />}
+        {isOpen ? opened : closed}
       </button>
-      <div className="list">
-        <a className="button" title="ホームへ戻る" href="/">
-          <FaHome />
-        </a>
-        <DarkThemeButton />
-        <button
-          type="button"
-          title="読み込み"
-          onClick={() => {
-            setReloadList(currentName, true);
-          }}
-          onContextMenu={(e) => {
-            e.preventDefault();
-            location.reload();
-          }}
-        >
-          <TbReload />
-        </button>
-      </div>
+      <div className="list">{children}</div>
+    </div>
+  );
+}
+
+function OptionButtons() {
+  const currentName = useParams().name ?? "";
+  const { setReloadList } = useThreadsState();
+  return (
+    <div className="buttons">
+      <a className="button" title="ホームへ戻る" href="/">
+        <FaHome />
+      </a>
+      <DarkThemeButton />
+      <button
+        type="button"
+        title="読み込み"
+        onClick={() => {
+          setReloadList(currentName, true);
+        }}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          location.reload();
+        }}
+      >
+        <TbReload />
+      </button>
+      <ThreadListArea />
     </div>
   );
 }
@@ -636,7 +655,6 @@ function BBSPage() {
         <header>
           <OptionButtons />
           <div className="search">
-            <ThreadListArea />
             <SearchArea data={threadsObject} />
           </div>
         </header>
