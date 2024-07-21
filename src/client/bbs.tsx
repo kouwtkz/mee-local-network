@@ -18,7 +18,7 @@ import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
 import { TopJumpArea } from "./components/TopJump";
 import findThreads from "../functions/findThreads";
 import MultiParser from "./components/MultiParser";
-import { FaCaretDown, FaCaretUp, FaHome, FaTimes } from "react-icons/fa";
+import { FaCaretDown, FaCaretUp, FaHome, FaPen, FaTimes } from "react-icons/fa";
 import { IoSend } from "react-icons/io5";
 import { create } from "zustand";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -129,6 +129,7 @@ function ThreadListArea() {
 }
 
 function PostForm() {
+  const modalRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const currentName = useParams().name ?? "";
@@ -136,6 +137,7 @@ function PostForm() {
     useThreadsState();
   const currentThread = threadsList[currentName];
   const [search, setSearch] = useSearchParams();
+  const [show, setShow] = useState(false);
   const editThread = useMemo(
     () =>
       currentThread && typeof edit === "number"
@@ -188,54 +190,86 @@ function PostForm() {
     (e) => {
       if (document.activeElement === textareaRef.current) {
         e.preventDefault();
-        textareaRef.current?.blur();
+        setShow(false);
         Submit();
       }
     },
     { enableOnFormTags: ["TEXTAREA"] }
   );
   useHotkeys("n", (e) => {
-    textareaRef.current?.focus();
+    setShow(true);
     e.preventDefault();
   });
+  useEffect(() => {
+    if (typeof edit !== "undefined") setShow(true);
+  }, [edit]);
+  useEffect(() => {
+    if (show) textareaRef.current?.focus();
+  }, [show]);
 
   return (
-    <form
-      id="post_form"
-      method="post"
-      className="post"
-      action={"/bbs/api/send/post/" + (currentName ? currentName + "/" : "")}
-      encType="multipart/form-data"
-      ref={formRef}
-      onSubmit={(e) => {
-        e.preventDefault();
-        Submit();
-      }}
-    >
-      <input type="hidden" name="edit" />
-      <textarea
-        title="本文"
-        name="text"
-        ref={textareaRef}
-        onKeyDown={(e) => {
-          if (e.code === "Escape") {
-            if (edit === undefined) textareaRef.current?.blur();
-            else {
-              const ti = document.querySelector(
-                `.thread .item[data-id="${edit}"`
-              ) as HTMLElement | null;
-              ti?.focus();
-            }
-            e.preventDefault();
-          }
+    <>
+      <button
+        type="button"
+        title="投稿する"
+        className="post"
+        onClick={() => {
+          setShow(true);
         }}
-      />
-      <div>
-        <button type="submit" title="送信">
-          <IoSend />
-        </button>
+      >
+        <FaPen />
+      </button>
+      <div
+        className="modal"
+        hidden={!show}
+        ref={modalRef}
+        onClick={(e) => {
+          if (e.target === modalRef.current) setShow(false);
+          e.preventDefault();
+        }}
+      >
+        <div className="box">
+          <form
+            method="post"
+            className="post"
+            action={
+              "/bbs/api/send/post/" + (currentName ? currentName + "/" : "")
+            }
+            encType="multipart/form-data"
+            ref={formRef}
+            onSubmit={(e) => {
+              e.preventDefault();
+              Submit();
+            }}
+          >
+            <input type="hidden" name="edit" />
+            <textarea
+              title="本文"
+              name="text"
+              placeholder="今、何してる？"
+              ref={textareaRef}
+              onKeyDown={(e) => {
+                if (e.code === "Escape") {
+                  setShow(false);
+                  if (edit !== undefined) {
+                    const ti = document.querySelector(
+                      `.thread .item[data-id="${edit}"`
+                    ) as HTMLElement | null;
+                    ti?.focus();
+                  }
+                  e.preventDefault();
+                }
+              }}
+            />
+            <div>
+              <button type="submit" title="送信">
+                <IoSend />
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </form>
+    </>
   );
 }
 
@@ -562,9 +596,7 @@ function BBSPage() {
             <SearchArea data={threadsObject} />
           </div>
         </header>
-        <div className="under">
-          <PostForm />
-        </div>
+        <PostForm />
         <main className="thread" ref={refMain}>
           {typeof threads === "undefined"
             ? "読み込み中…"
