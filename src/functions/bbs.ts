@@ -84,6 +84,7 @@ export function GetRawThreads({
 export function ParseThreads(rawThreads: ThreadsRawType[]) {
   return rawThreads.map(args => ({
     date: args.createdAt ? new Date(args.createdAt) : undefined,
+    update: args.updatedAt ? new Date(args.updatedAt) : undefined,
     ...args,
   } as ThreadType))
 }

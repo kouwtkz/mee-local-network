@@ -13,3 +13,4 @@ type findManyProps<T> = {
   include?: any
 }
 type OrderByType = "asc" | "desc";
+type OrderByItem = {[k: string]: OrderByType};

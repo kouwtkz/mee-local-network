@@ -10,7 +10,7 @@ interface findThreadsProps {
   id?: number;
   common?: boolean;
   pinned?: boolean;
-  order?: "asc" | "desc";
+  order?: OrderByType;
 }
 
 export default function findThreads(
@@ -19,21 +19,23 @@ export default function findThreads(
   if (page) page--;
   const options = {};
   let where: any[] = [];
+  let orderBy: OrderByItem[] = []
 
   if (typeof id !== "number") {
     const wheres = setWhere(q, options);
     id = wheres.id;
     where = wheres.where;
     if (wheres.take) take = wheres.take;
+    if (wheres.orderBy.length > 0) orderBy = orderBy.concat(wheres.orderBy);
   }
   const skip = (take && page) ? take * page : 0;
+
+  orderBy.push({ date: order });
+  if (pinned) orderBy.push({ pin: "desc" });
 
   if (common) where.push(
     { draft: false, date: { lte: new Date() } }
   )
-  const orderBy: any = []
-  if (pinned) orderBy.push({ pin: "desc" })
-  orderBy.push({ date: order })
   try {
     let threadsResult: ThreadType[] = threads;
     if (id) {
@@ -71,6 +73,7 @@ function setWhere(q: string, options: WhereOptionsType) {
   const where: any[] = [];
   let id: number | undefined;
   let take: number | undefined;
+  const orderBy: OrderByItem[] = [];
   let OR = false, OR_skip = false;
   const searchArray = q.replace(/^\s+|\s+$/, "").split(/\s+/);
   searchArray.forEach((item) => {
@@ -86,7 +89,7 @@ function setWhere(q: string, options: WhereOptionsType) {
         }
       })
     } else {
-      const filterKey = item.slice(0, item.indexOf(":"));
+      const filterKey = item.slice(0, item.indexOf(":")).toLocaleLowerCase();
       const filterValue = item.slice(filterKey.length + 1);
       switch (filterKey) {
         case "id":
@@ -94,6 +97,28 @@ function setWhere(q: string, options: WhereOptionsType) {
           break;
         case "take":
           take = Number(filterValue);
+          break;
+        case "order":
+          const orderValue = filterValue.toLocaleLowerCase()
+          switch (orderValue) {
+            case "asc":
+            case "desc":
+              orderBy.push({ date: orderValue });
+              break;
+          }
+          break;
+        case "sort":
+          const sortOrder = filterValue.includes("!");
+          const sortKey = sortOrder ? filterValue.replace("!", "") : filterValue;
+          switch (sortKey) {
+            case "date":
+            case "update":
+              orderBy.push({ [sortKey]: sortOrder ? "asc" : "desc" });
+              break;
+            default:
+              orderBy.push({ [sortKey]: sortOrder ? "desc" : "asc" });
+              break;
+          }
           break;
         case "title":
         case "body":
@@ -240,5 +265,5 @@ function setWhere(q: string, options: WhereOptionsType) {
     }
   })
   options.hidden = hiddenOption;
-  return { where, id, take };
+  return { where, id, take, orderBy };
 }

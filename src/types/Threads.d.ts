@@ -8,6 +8,7 @@ interface ThreadsRawType {
 
 interface ThreadType extends ThreadsRawType {
   date?: Date;
+  update?: Date;
 }
 
 interface ThreadsDataType {
