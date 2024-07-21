@@ -115,7 +115,7 @@ function ThreadListArea() {
   const current = threadLabeledList.find(({ name }) => name == currentName);
   const list = threadLabeledList.filter(({ name }) => name !== currentName);
   return (
-    <MobileFold closed={<FaCaretDown />} opened={<FaCaretUp />}>
+    <MobileFold closed={<FaCaretDown />} opened={<FaCaretUp />} wide={true}>
       <div className="threadList">
         <span>【{current?.label}】</span>
         {list.map(({ name, label }, i) => {
@@ -444,11 +444,13 @@ function MobileFold({
   closed,
   opened,
   title = "展開",
+  wide,
 }: {
   children?: ReactNode;
   closed: ReactNode;
   opened: ReactNode;
   title?: string;
+  wide?: boolean;
 }) {
   const [isOpen, setOpen] = useState(false);
   return (
@@ -463,7 +465,7 @@ function MobileFold({
       >
         {isOpen ? opened : closed}
       </button>
-      <div className="list">{children}</div>
+      <div className={"list" + (wide ? " wide" : "")}>{children}</div>
     </div>
   );
 }

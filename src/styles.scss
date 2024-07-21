@@ -291,14 +291,17 @@ button {
   }
   @media (max-width: $mobileWidth) {
     .opener {
-      display: block!important;
+      display: inline-block!important;
     }
     > .list {
       display: none;
       position: absolute;
-      padding: 0.25rem 0.5rem;
-      left: 0;
-      right: 0;
+      padding: 0.25rem 0.25rem 0.25rem 0;
+      &.wide {
+        padding: 0.25rem 0.5rem;
+        left: 0;
+        right: 0;
+      }
     }
     &.opened > .list {
       display: flex;
