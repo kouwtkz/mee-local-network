@@ -181,6 +181,7 @@ function PostForm() {
         }
         setReloadList(currentName, true);
         setEdit();
+        setShow(false);
         form.reset();
       });
     }
@@ -220,7 +221,7 @@ function PostForm() {
         <FaPen />
       </button>
       <div
-        className="modal"
+        className="modal post"
         hidden={!show}
         ref={modalRef}
         onClick={(e) => {
@@ -262,7 +263,13 @@ function PostForm() {
               }}
             />
             <div>
-              <button type="submit" title="送信">
+              <button
+                type="submit"
+                title="送信"
+                onClick={() => {
+                  Submit();
+                }}
+              >
                 <IoSend />
               </button>
             </div>
@@ -585,10 +592,11 @@ function BBSPage() {
     if (isEdit) setEdit();
     else setEdit(id);
   }
+  const postable = current?.postable ?? true;
   return (
     <>
       {DarkThemeState.State()}
-      <div className={"bbs" + (current?.postable ?? true ? " postable" : "")}>
+      <div className="bbs">
         <header>
           <OptionButtons />
           <div className="search">
@@ -596,7 +604,7 @@ function BBSPage() {
             <SearchArea data={threadsObject} />
           </div>
         </header>
-        <PostForm />
+        {postable ? <PostForm /> : null}
         <main className="thread" ref={refMain}>
           {typeof threads === "undefined"
             ? "読み込み中…"
@@ -657,16 +665,18 @@ function BBSPage() {
                       >
                         <FaTimes />
                       </button>
-                      <button
-                        type="button"
-                        className="edit"
-                        title={isEdit ? "編集解除" : "編集する"}
-                        onClick={() => {
-                          toggleEdit(v.id, isEdit);
-                        }}
-                      >
-                        {isEdit ? <TbPencilCancel /> : <TbPencil />}
-                      </button>
+                      {postable ? (
+                        <button
+                          type="button"
+                          className="edit"
+                          title={isEdit ? "編集解除" : "編集する"}
+                          onClick={() => {
+                            toggleEdit(v.id, isEdit);
+                          }}
+                        >
+                          {isEdit ? <TbPencilCancel /> : <TbPencil />}
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 );

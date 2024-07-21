@@ -282,13 +282,11 @@ button {
 }
 
 .bbs {
-  &:not(.postable) {
-    form.post {
-      display: none;
-    }
-    .thread .item .info {
-      button.edit {
-        display: none;
+  .modal {
+    @media (max-aspect-ratio: 9/16) {
+      align-items: flex-start;
+      .box {
+        margin-top: 10dvh;
       }
     }
   }
