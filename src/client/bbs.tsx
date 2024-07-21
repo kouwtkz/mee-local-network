@@ -213,10 +213,18 @@ function PostForm() {
       .filter((v) => v);
     return list.join("\n");
   }, [search]);
+  const shared_cursor_top = useMemo(() => {
+    return search.has("link");
+  }, [search]);
   useEffect(() => {
     if (formRef.current && shared_intent) {
       const form = formRef.current;
-      form.text.value = shared_intent + "\n";
+      if (shared_cursor_top) {
+        form.text.value = "\n" + shared_intent;
+        textareaRef.current?.setSelectionRange(0, 0);
+      } else {
+        form.text.value = shared_intent + "\n";
+      }
       setShow(true);
       setSearch({}, { replace: true });
     }
