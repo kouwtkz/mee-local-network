@@ -231,6 +231,20 @@ function PostForm() {
       setSearch({}, { replace: true });
     }
   }, [shared_intent]);
+  useHotkeys(
+    "escape",
+    (e) => {
+      setShow(false);
+      if (edit !== undefined) {
+        const ti = document.querySelector(
+          `.thread .item[data-id="${edit}"`
+        ) as HTMLElement | null;
+        ti?.focus();
+      }
+      e.preventDefault();
+    },
+    { enableOnFormTags: ["TEXTAREA"] }
+  );
 
   return (
     <>
@@ -273,18 +287,6 @@ function PostForm() {
               name="text"
               placeholder="今、何してる？"
               ref={textareaRef}
-              onKeyDown={(e) => {
-                if (e.code === "Escape") {
-                  setShow(false);
-                  if (edit !== undefined) {
-                    const ti = document.querySelector(
-                      `.thread .item[data-id="${edit}"`
-                    ) as HTMLElement | null;
-                    ti?.focus();
-                  }
-                  e.preventDefault();
-                }
-              }}
             />
             <div className="buttons">
               <button
