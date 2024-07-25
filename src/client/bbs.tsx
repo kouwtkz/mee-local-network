@@ -26,6 +26,7 @@ import { TbEraser, TbPencil, TbPencilCancel, TbReload } from "react-icons/tb";
 import { getRedirectUrl } from "../functions/redirectUrl";
 import { ThemeStateClass } from "./state/ThemeSetter";
 import { CgDarkMode, CgMoon, CgSun } from "react-icons/cg";
+import PullToRefresh from "react-simple-pull-to-refresh";
 
 export const DarkThemeState = new ThemeStateClass("darktheme", [
   "light",
@@ -646,6 +647,9 @@ function BBSPage() {
   useHotkeys("escape", () => {
     if (document.activeElement) (document.activeElement as HTMLElement).blur();
   });
+  async function handleRefresh() {
+    setReloadList(currentName, true);
+  }
 
   function toggleEdit(id: number, isEdit: boolean) {
     if (isEdit) setEdit();
@@ -663,83 +667,91 @@ function BBSPage() {
           </div>
         </header>
         {postable ? <PostForm /> : null}
-        <main className="thread" ref={refMain}>
-          {typeof threads === "undefined"
-            ? "読み込み中…"
-            : threadsObject.threads.map((v, i) => {
-                const isEdit = edit === v.id;
-                return (
-                  <div
-                    className={"item" + (isEdit ? " isEdit" : "")}
-                    tabIndex={-1}
-                    data-id={v.id}
-                    onKeyDown={(e) => {
-                      if (e.target === e.currentTarget && e.code === "Enter") {
-                        setSearch({ id: v.id.toString() });
-                        e.preventDefault();
-                      } else if (e.code === "F2") {
-                        toggleEdit(v.id, isEdit);
-                        e.preventDefault();
-                      }
-                    }}
-                    onFocus={() => {
-                      setCursor(v.id);
-                    }}
-                    key={i}
-                  >
-                    <div className="body">
-                      {v.text ? <MultiParser>{v.text}</MultiParser> : null}
-                    </div>
-                    <div className="info">
-                      <span className="num">{v.id}: </span>
-                      <Link to={"?id=" + v.id}>
-                        <span className="date">
-                          {v.date ? FormatDate(v.date) : null}
-                        </span>
-                      </Link>
-                      <button
-                        type="button"
-                        className="delete"
-                        title="削除する"
-                        onClick={() => {
-                          if (
-                            confirm(
-                              "本当に削除しますか？\nid:" + v.id + " " + v.text
-                            )
-                          ) {
-                            const fd = new FormData();
-                            fd.append("id", v.id.toString());
-                            axios
-                              .delete(
-                                "/bbs/api/send/post/" +
-                                  (currentName ? currentName + "/" : ""),
-                                { data: fd }
-                              )
-                              .then(() => {
-                                setReloadList(currentName, true);
-                              });
-                          }
-                        }}
-                      >
-                        <FaTimes />
-                      </button>
-                      {postable ? (
+        <PullToRefresh onRefresh={handleRefresh} pullingContent={<></>}>
+          <main className="thread" ref={refMain}>
+            {typeof threads === "undefined"
+              ? "読み込み中…"
+              : threadsObject.threads.map((v, i) => {
+                  const isEdit = edit === v.id;
+                  return (
+                    <div
+                      className={"item" + (isEdit ? " isEdit" : "")}
+                      tabIndex={-1}
+                      data-id={v.id}
+                      onKeyDown={(e) => {
+                        if (
+                          e.target === e.currentTarget &&
+                          e.code === "Enter"
+                        ) {
+                          setSearch({ id: v.id.toString() });
+                          e.preventDefault();
+                        } else if (e.code === "F2") {
+                          toggleEdit(v.id, isEdit);
+                          e.preventDefault();
+                        }
+                      }}
+                      onFocus={() => {
+                        setCursor(v.id);
+                      }}
+                      key={i}
+                    >
+                      <div className="body">
+                        {v.text ? <MultiParser>{v.text}</MultiParser> : null}
+                      </div>
+                      <div className="info">
+                        <span className="num">{v.id}: </span>
+                        <Link to={"?id=" + v.id}>
+                          <span className="date">
+                            {v.date ? FormatDate(v.date) : null}
+                          </span>
+                        </Link>
                         <button
                           type="button"
-                          className="edit"
-                          title={isEdit ? "編集解除" : "編集する"}
+                          className="delete"
+                          title="削除する"
                           onClick={() => {
-                            toggleEdit(v.id, isEdit);
+                            if (
+                              confirm(
+                                "本当に削除しますか？\nid:" +
+                                  v.id +
+                                  " " +
+                                  v.text
+                              )
+                            ) {
+                              const fd = new FormData();
+                              fd.append("id", v.id.toString());
+                              axios
+                                .delete(
+                                  "/bbs/api/send/post/" +
+                                    (currentName ? currentName + "/" : ""),
+                                  { data: fd }
+                                )
+                                .then(() => {
+                                  setReloadList(currentName, true);
+                                });
+                            }
                           }}
                         >
-                          {isEdit ? <TbPencilCancel /> : <TbPencil />}
+                          <FaTimes />
                         </button>
-                      ) : null}
+                        {postable ? (
+                          <button
+                            type="button"
+                            className="edit"
+                            title={isEdit ? "編集解除" : "編集する"}
+                            onClick={() => {
+                              toggleEdit(v.id, isEdit);
+                            }}
+                          >
+                            {isEdit ? <TbPencilCancel /> : <TbPencil />}
+                          </button>
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-        </main>
+                  );
+                })}
+          </main>
+        </PullToRefresh>
         <TopJumpArea />
       </div>
     </>
