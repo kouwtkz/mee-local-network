@@ -9,6 +9,7 @@
     "deploy": "pwsh -c ./deploy_rs.ps1",
     "ssh": "pwsh -c ssh rs -t 'cd mee-local-network; bash --login'",
     "ssh:docker-restart": "pwsh -c ssh rs -t 'cd mee-local-network; docker compose restart'",
+    "scp:static": "scp -r ./static/ rs:~/mee-local-network/static/",
     "tsc": "npx tsc",
     "docker:up": "docker-compose up",
     "docker:build": "docker-compose build",
