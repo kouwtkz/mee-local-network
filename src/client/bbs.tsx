@@ -28,6 +28,7 @@ import { DarkTheme, DarkThemeState } from "./theme";
 import { SearchArea } from "./components/Search";
 import { DarkThemeButton } from "./components/Buttons";
 import { Loading } from "../layout/Loading";
+import { MobileFold } from "./components/MobileFold";
 
 interface ThreadsStateType {
   threadsList: {
@@ -113,8 +114,8 @@ function ThreadListArea() {
   const current = threadLabeledList.find(({ name }) => name == currentName);
   const list = threadLabeledList.filter(({ name }) => name !== currentName);
   return (
-    <MobileFold closed={<FaCaretDown />} opened={<FaCaretUp />} wide={true}>
-      <div className="threadList">
+    <MobileFold wide={true}>
+      <div className="RowList">
         <span>【{current?.label}】</span>
         {list.map(({ name, label }, i) => {
           return (
@@ -321,37 +322,6 @@ function PostForm() {
         </div>
       </div>
     </>
-  );
-}
-
-function MobileFold({
-  children,
-  closed,
-  opened,
-  title = "展開",
-  wide,
-}: {
-  children?: ReactNode;
-  closed: ReactNode;
-  opened: ReactNode;
-  title?: string;
-  wide?: boolean;
-}) {
-  const [isOpen, setOpen] = useState(false);
-  return (
-    <div className={"mobileFold" + (isOpen ? " opened" : "")}>
-      <button
-        type="button"
-        className="opener"
-        title={title}
-        onClick={() => {
-          setOpen(!isOpen);
-        }}
-      >
-        {isOpen ? opened : closed}
-      </button>
-      <div className={"list" + (wide ? " wide" : "")}>{children}</div>
-    </div>
   );
 }
 

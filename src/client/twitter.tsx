@@ -24,6 +24,7 @@ import { findMany, setWhere } from "../functions/findMany";
 import { BiSolidLeftArrow } from "react-icons/bi";
 import { TopJumpArea } from "./components/TopJump";
 import { Loading } from "../layout/Loading";
+import { MobileFold } from "./components/MobileFold";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <RouterProvider
@@ -266,7 +267,7 @@ function DefaultPage() {
 }
 
 function OptionButtons() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   return (
     <div className="buttons">
       <a className="button" title="ホームへ戻る" href="/">
@@ -275,11 +276,16 @@ function OptionButtons() {
       <Link
         className="button"
         title="一つ前へ戻る"
-        to={pathname.replace(/[^\/]*.$/, "")}
+        to={search ? pathname : pathname.replace(/[^\/]*.$/, "")}
       >
         <BiSolidLeftArrow />
       </Link>
       <DarkThemeButton />
+      <MobileFold wide={true}>
+        <div className="RowList">
+          <Link to="?q=mediaUrls%3Atrue">メディアあり</Link>
+        </div>
+      </MobileFold>
     </div>
   );
 }

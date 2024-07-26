@@ -263,6 +263,13 @@ button {
   margin: auto 0.2rem;
 }
 
+.RowList {
+  margin-left: 0.5rem;
+  > * {
+    margin-right: 0.25rem;
+  }
+}
+
 .modal {
   background-color: rgba(0, 0, 0, 0.5);
   position: fixed;
@@ -536,11 +543,6 @@ button {
       }
       border-radius: 0.1rem;
       overflow: auto;
-    }
-  }
-  .threadList {
-    > * {
-      margin-right: 0.1rem;
     }
   }
   main.list {
