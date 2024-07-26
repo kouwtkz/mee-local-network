@@ -194,47 +194,49 @@ export function TwitterState() {
         })
       );
       Promise.all(fetchData).then(async (responses) => {
-        responses.forEach(async (r) => {
-          const contentType = r.headers.get("content-type") || "";
-          const bodyString = await new Response(r.body).text();
-          if (contentType.includes("javascript")) {
-            try {
-              addDM(JSON.parse(bodyString.replace(/^[^\[]+|[^\]]+$/g, "")));
-            } catch {}
-          } else {
-            const data = JSON.parse(bodyString);
-            if (Array.isArray(data)) {
-              data.forEach((m, i) => {
-                let { message_create, ...vars } = m;
-                if (message_create) vars = { ...vars, ...message_create };
-                const id = vars.id || `${i}-${r.url}`;
-                const senderId = vars.senderId ?? vars.sender_id;
-                const recipientId =
-                  vars.recipientId ?? vars.target?.recipient_id;
-                const conversationId =
-                  senderId < recipientId
-                    ? `${senderId}-${recipientId}`
-                    : `${recipientId}-${senderId}`;
-                const text = vars.text ?? vars.message_data?.text;
-                const createdAt = vars.createdAt;
-                const date = new Date(createdAt);
-                dm.set(id, {
-                  conversationId,
-                  id,
-                  senderId,
-                  recipientId,
-                  text,
-                  createdAt,
-                  date,
-                  mediaUrls: [],
-                  urls: [],
+        await Promise.all(
+          responses.map(async (r) => {
+            const contentType = r.headers.get("content-type") || "";
+            const bodyString = await new Response(r.body).text();
+            if (contentType.includes("javascript")) {
+              try {
+                addDM(JSON.parse(bodyString.replace(/^[^\[]+|[^\]]+$/g, "")));
+              } catch {}
+            } else {
+              const data = JSON.parse(bodyString);
+              if (Array.isArray(data)) {
+                data.forEach((m, i) => {
+                  let { message_create, ...vars } = m;
+                  if (message_create) vars = { ...vars, ...message_create };
+                  const id = vars.id || `${i}-${r.url}`;
+                  const senderId = vars.senderId ?? vars.sender_id;
+                  const recipientId =
+                    vars.recipientId ?? vars.target?.recipient_id;
+                  const conversationId =
+                    senderId < recipientId
+                      ? `${senderId}-${recipientId}`
+                      : `${recipientId}-${senderId}`;
+                  const text = vars.text ?? vars.message_data?.text;
+                  const createdAt = vars.createdAt;
+                  const date = new Date(createdAt);
+                  dm.set(id, {
+                    conversationId,
+                    id,
+                    senderId,
+                    recipientId,
+                    text,
+                    createdAt,
+                    date,
+                    mediaUrls: [],
+                    urls: [],
+                  });
                 });
-              });
-              setDm(dm);
+                setDm(dm);
+              }
             }
-          }
-          setLoaded(true);
-        });
+          })
+        );
+        setLoaded(true);
       });
     }
     fetch();
