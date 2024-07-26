@@ -134,12 +134,17 @@ export function TwitterState() {
     []
   );
   const { name } = useParams();
+  const { pathname } = useLocation();
   const currentUser = useMemo(
     () => (name ? userFromUserId[name] : null),
     [userFromUserId, name]
   );
+  const notLoadUrls = useMemo(
+    () => !userLoaded || !/\/dm(\/|$)/.test(pathname),
+    [pathname, userLoaded]
+  );
   const LoadDMUrls = useMemo(() => {
-    if (!userLoaded) return [];
+    if (notLoadUrls) return [];
     let pathes = currentUser?.dmOnly ? currentUser.dmOnly : defaultDMPathes;
     if (currentUser?.dm) pathes = pathes.concat(currentUser.dm);
     const base = location.href;
@@ -148,7 +153,7 @@ export function TwitterState() {
       .filter((Url) => {
         return loadedList.findIndex((url) => url === Url.href) < 0;
       });
-  }, [userLoaded, currentUser, defaultDMPathes]);
+  }, [notLoadUrls, currentUser, defaultDMPathes]);
   function addDM(direct_messages?: DMMessagesRawType, path?: string) {
     if (direct_messages) {
       direct_messages.forEach(({ dmConversation }) => {
