@@ -39,7 +39,7 @@ function whereLoop<T>(value: T, where: findWhereType<T> | undefined): boolean {
           const cval = _value[fkey];
           if (typeof (fval) === "object") {
             const _conditions: [any, any][] = Object.entries(fval);
-            const conditions: [filterConditionsType | filterConditionsStringType, any][] = _conditions;
+            const conditions: [filterConditionsAllType, any][] = _conditions;
             return (conditions).every(([k, v]) => {
               switch (k) {
                 case "equals":
@@ -62,6 +62,11 @@ function whereLoop<T>(value: T, where: findWhereType<T> | undefined): boolean {
                   return cval < v;
                 case "lte":
                   return cval <= v;
+                case "bool":
+                  let boolVal: boolean;
+                  if (Array.isArray(cval)) boolVal = cval.length > 0;
+                  else boolVal = Boolean(cval);
+                  return v ? boolVal : !boolVal;
                 default:
                   return false;
               }
@@ -76,9 +81,8 @@ function whereLoop<T>(value: T, where: findWhereType<T> | undefined): boolean {
 }
 
 export function setWhere<T>(q: string, options: WhereOptionsType<T> = {}) {
-  const textKey = options.keys?.text || "text"
-  const fromKey = options.keys?.from || "name"
-  const hiddenOption = options.hidden || { draft: false }
+  const textKey = (typeof options.text === "object" && options.text.key) ? options.text.key : "text"
+  const fromKey = (typeof options.from === "object" && options.from.key) ? options.from.key : "from"
   const where: findWhereType<any>[] = [];
   let id: number | undefined;
   let take: number | undefined;
@@ -98,10 +102,10 @@ export function setWhere<T>(q: string, options: WhereOptionsType<T> = {}) {
         }
       })
     } else {
-      const colonIndex = item.indexOf(":");
-      const filterKey = colonIndex >= 0 ? item.slice(0, colonIndex).toLocaleLowerCase() : "";
+      const colonIndex = /^\w+:\/\//.test(item) ? -1 : item.indexOf(":");
+      const filterKey = colonIndex >= 0 ? item.slice(0, colonIndex) : "";
       const filterValue = item.slice(filterKey.length + 1);
-      switch (filterKey) {
+      switch (filterKey.toLocaleLowerCase()) {
         case "":
           if (item)
             where.push(
@@ -230,19 +234,6 @@ export function setWhere<T>(q: string, options: WhereOptionsType<T> = {}) {
                   }
                 })
               break;
-            case "default":
-              hiddenOption.draft = true;
-              where.push(
-                {
-                  AND: [
-                    {
-                      draft: {
-                        equals: false
-                      },
-                    }
-                  ]
-                })
-              break;
           }
           break;
         default:
@@ -251,12 +242,23 @@ export function setWhere<T>(q: string, options: WhereOptionsType<T> = {}) {
               where.push(options[filterKey](filterValue));
               break;
             default:
-              where.push(
-                {
-                  [options[filterKey] ?? filterKey]: {
+              const option = options[filterKey];
+              const key = option ? (typeof option === "string" ? option : option.key) : filterKey;
+              let filterEntry: filterConditionsAllKeyValue<any>;
+              switch (filterValue) {
+                case "true":
+                case "false":
+                  filterEntry = {
+                    bool: filterValue === "true"
+                  };
+                  break;
+                default:
+                  filterEntry = {
                     equals: filterValue
-                  }
-                })
+                  };
+                  break;
+              }
+              where.push({ [key]: filterEntry });
               break;
           }
           break;
@@ -281,6 +283,5 @@ export function setWhere<T>(q: string, options: WhereOptionsType<T> = {}) {
       OR = false;
     }
   })
-  options.hidden = hiddenOption;
   return { where, id, take, orderBy };
 }

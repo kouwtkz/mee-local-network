@@ -27,6 +27,7 @@ import { CgDarkMode, CgMoon, CgSun } from "react-icons/cg";
 import { DarkTheme, DarkThemeState } from "./theme";
 import { SearchArea } from "./components/Search";
 import { DarkThemeButton } from "./components/Buttons";
+import { Loading } from "../layout/Loading";
 
 interface ThreadsStateType {
   threadsList: {
@@ -550,81 +551,83 @@ function BBSPage() {
           <SearchArea maxPage={maxPage} />
         </header>
         {postable ? <PostForm /> : null}
-        <main className="list" ref={refMain}>
-          {typeof threads === "undefined"
-            ? "読み込み中…"
-            : threadsObject.threads.map((v, i) => {
-                const isEdit = edit === v.id;
-                return (
-                  <div
-                    className={"item" + (isEdit ? " isEdit" : "")}
-                    tabIndex={-1}
-                    data-id={v.id}
-                    onKeyDown={(e) => {
-                      if (e.target === e.currentTarget && e.code === "Enter") {
-                        setSearch({ id: v.id.toString() });
-                        e.preventDefault();
-                      } else if (e.code === "F2") {
-                        toggleEdit(v.id, isEdit);
-                        e.preventDefault();
-                      }
-                    }}
-                    onFocus={() => {
-                      setCursor(v.id);
-                    }}
-                    key={i}
-                  >
-                    <div className="body">
-                      {v.text ? <MultiParser>{v.text}</MultiParser> : null}
-                    </div>
-                    <div className="info">
-                      <span className="num">{v.id}:</span>
-                      <Link className="date" to={"?id=" + v.id}>
-                        {v.date ? FormatDate(v.date) : null}
-                      </Link>
+        {typeof threads === "undefined" ? (
+          <Loading />
+        ) : (
+          <main className="list" ref={refMain}>
+            {threadsObject.threads.map((v, i) => {
+              const isEdit = edit === v.id;
+              return (
+                <div
+                  className={"item" + (isEdit ? " isEdit" : "")}
+                  tabIndex={-1}
+                  data-id={v.id}
+                  onKeyDown={(e) => {
+                    if (e.target === e.currentTarget && e.code === "Enter") {
+                      setSearch({ id: v.id.toString() });
+                      e.preventDefault();
+                    } else if (e.code === "F2") {
+                      toggleEdit(v.id, isEdit);
+                      e.preventDefault();
+                    }
+                  }}
+                  onFocus={() => {
+                    setCursor(v.id);
+                  }}
+                  key={i}
+                >
+                  <div className="body">
+                    {v.text ? <MultiParser>{v.text}</MultiParser> : null}
+                  </div>
+                  <div className="info">
+                    <span className="num">{v.id}:</span>
+                    <Link className="date" to={"?id=" + v.id}>
+                      {v.date ? FormatDate(v.date) : null}
+                    </Link>
+                    <button
+                      type="button"
+                      className="delete"
+                      title="削除する"
+                      onClick={() => {
+                        if (
+                          confirm(
+                            "本当に削除しますか？\nid:" + v.id + " " + v.text
+                          )
+                        ) {
+                          const fd = new FormData();
+                          fd.append("id", v.id.toString());
+                          axios
+                            .delete(
+                              "/bbs/api/send/post/" +
+                                (currentName ? currentName + "/" : ""),
+                              { data: fd }
+                            )
+                            .then(() => {
+                              setReloadList(currentName, true);
+                            });
+                        }
+                      }}
+                    >
+                      <FaTimes />
+                    </button>
+                    {postable ? (
                       <button
                         type="button"
-                        className="delete"
-                        title="削除する"
+                        className="edit"
+                        title={isEdit ? "編集解除" : "編集する"}
                         onClick={() => {
-                          if (
-                            confirm(
-                              "本当に削除しますか？\nid:" + v.id + " " + v.text
-                            )
-                          ) {
-                            const fd = new FormData();
-                            fd.append("id", v.id.toString());
-                            axios
-                              .delete(
-                                "/bbs/api/send/post/" +
-                                  (currentName ? currentName + "/" : ""),
-                                { data: fd }
-                              )
-                              .then(() => {
-                                setReloadList(currentName, true);
-                              });
-                          }
+                          toggleEdit(v.id, isEdit);
                         }}
                       >
-                        <FaTimes />
+                        {isEdit ? <TbPencilCancel /> : <TbPencil />}
                       </button>
-                      {postable ? (
-                        <button
-                          type="button"
-                          className="edit"
-                          title={isEdit ? "編集解除" : "編集する"}
-                          onClick={() => {
-                            toggleEdit(v.id, isEdit);
-                          }}
-                        >
-                          {isEdit ? <TbPencilCancel /> : <TbPencil />}
-                        </button>
-                      ) : null}
-                    </div>
+                    ) : null}
                   </div>
-                );
-              })}
-        </main>
+                </div>
+              );
+            })}
+          </main>
+        )}
         <TopJumpArea />
       </div>
     </>

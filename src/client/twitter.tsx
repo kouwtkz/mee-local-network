@@ -185,7 +185,7 @@ export function TwitterState() {
   useEffect(() => {
     async function fetch() {
       const cache = await caches.open("twitter-data");
-      const DMPathes = import.meta.env.VITE_ADD_DM?.split(",") ?? [];
+      const DMPathes = import.meta.env.VITE_DM_PATH?.split(",") ?? [];
       const fetchData = DMPathes.map((v) =>
         cache.match(v).then(async (cachedData) => {
           if (!cachedData?.status) {
@@ -453,15 +453,15 @@ function DMPage() {
         <OptionButtons />
         <SearchArea maxPage={maxPage} />
       </header>
-      <main className="list">
-        {loaded ? (
-          filteredDmArray
-            .slice((p - 1) * take, p * take)
-            .map((v, i) => <DMMessageItem message={v} key={i} />)
-        ) : (
-          <Loading />
-        )}
-      </main>
+      {loaded ? (
+        <main className="list">
+          {filteredDmArray.slice((p - 1) * take, p * take).map((v, i) => (
+            <DMMessageItem message={v} key={i} />
+          ))}
+        </main>
+      ) : (
+        <Loading />
+      )}
       <TopJumpArea />
     </div>
   );
