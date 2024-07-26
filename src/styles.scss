@@ -547,7 +547,6 @@ button {
   }
   main.list {
     width: 100%;
-    min-height: 50%;
     margin: 3rem auto 4rem;
     max-width: 42rem;
     box-sizing: border-box;
@@ -555,7 +554,6 @@ button {
     text-align: left;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
     .item {
       padding: 0.25rem 1rem 1.25rem;
       &:focus {

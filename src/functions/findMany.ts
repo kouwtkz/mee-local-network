@@ -80,9 +80,27 @@ function whereLoop<T>(value: T, where: findWhereType<T> | undefined): boolean {
   return where ? recursion(where) : true;
 }
 
+function createFilterEntry(filterValue: string): filterConditionsAllKeyValue<any> {
+  if (/^".*"$/.test(filterValue)) {
+    return {
+      equals: filterValue.slice(1, -1)
+    };
+  } else {
+    return {
+      contains: filterValue
+    };
+  }
+
+}
+
+function getKeyFromOptions<T>(key: string, options: WhereOptionsType<T>) {
+  return (typeof options[key] === "object" && options[key].key) ? options[key].key : key
+}
+
 export function setWhere<T>(q: string, options: WhereOptionsType<T> = {}) {
-  const textKey = (typeof options.text === "object" && options.text.key) ? options.text.key : "text"
-  const fromKey = (typeof options.from === "object" && options.from.key) ? options.from.key : "from"
+  const textKey = getKeyFromOptions("text", options);
+  const fromKey = getKeyFromOptions("from", options);
+  const dateKey = getKeyFromOptions("date", options);
   const where: findWhereType<any>[] = [];
   let id: number | undefined;
   let take: number | undefined;
@@ -107,13 +125,12 @@ export function setWhere<T>(q: string, options: WhereOptionsType<T> = {}) {
       const filterValue = item.slice(filterKey.length + 1);
       switch (filterKey.toLocaleLowerCase()) {
         case "":
-          if (item)
+          if (item) {
             where.push(
               {
-                [textKey]: {
-                  contains: item
-                }
+                [textKey]: createFilterEntry(item)
               })
+          }
           break;
         case "id":
           id = Number(filterValue);
@@ -126,7 +143,7 @@ export function setWhere<T>(q: string, options: WhereOptionsType<T> = {}) {
           switch (orderValue) {
             case "asc":
             case "desc":
-              orderBy.push({ date: orderValue });
+              orderBy.push({ [dateKey]: orderValue });
               break;
           }
           break;
@@ -142,16 +159,6 @@ export function setWhere<T>(q: string, options: WhereOptionsType<T> = {}) {
               orderBy.push({ [sortKey]: sortOrder ? "desc" : "asc" });
               break;
           }
-          break;
-        case "title":
-        case "body":
-        case "text":
-          where.push(
-            {
-              [filterKey]: {
-                contains: filterValue
-              }
-            })
           break;
         case "tag":
         case "hashtag":
@@ -173,13 +180,13 @@ export function setWhere<T>(q: string, options: WhereOptionsType<T> = {}) {
         case 'since':
           where.push(
             {
-              date: { gte: AutoAllotDate({ value: String(filterValue), dayFirst: true }) }
+              [dateKey]: { gte: AutoAllotDate({ value: String(filterValue), dayFirst: true }) }
             })
           break;
         case 'until':
           where.push(
             {
-              date: { lte: AutoAllotDate({ value: String(filterValue), dayLast: true }) }
+              [dateKey]: { lte: AutoAllotDate({ value: String(filterValue), dayLast: true }) }
             })
           break;
         case 'filter':
@@ -253,9 +260,7 @@ export function setWhere<T>(q: string, options: WhereOptionsType<T> = {}) {
                   };
                   break;
                 default:
-                  filterEntry = {
-                    equals: filterValue
-                  };
+                  filterEntry = createFilterEntry(filterValue);
                   break;
               }
               where.push({ [key]: filterEntry });
