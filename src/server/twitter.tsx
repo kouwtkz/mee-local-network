@@ -11,10 +11,6 @@ function Layout() {
       title="Twitterログ"
       script={
         <>
-          <script src="/twitter/def.js" />
-          <script src="/assets/user/regist.js" />
-          <script src="/twitter/data/direct-messages.js" />
-          <script src="/twitter/data/direct-message1910.js" />
           <script
             type="module"
             src={
@@ -23,6 +19,8 @@ function Layout() {
                 : "/src/client/twitter.tsx"
             }
           />
+          <script src="/twitter/def.js" />
+          <script src="/assets/user/regist.js" />
         </>
       }
       style={<Style href={"/assets/styles.css" + stylesAddVer} />}

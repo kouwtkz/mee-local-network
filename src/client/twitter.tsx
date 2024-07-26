@@ -24,6 +24,7 @@ import { findMany, setWhere } from "../functions/findMany";
 import { BiSolidLeftArrow } from "react-icons/bi";
 import axios from "axios";
 import { TopJumpArea } from "./components/TopJump";
+import { Loading } from "../layout/Loading";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <RouterProvider
@@ -102,22 +103,19 @@ interface UserType extends UserRawType {
   date?: Date;
 }
 
-type DMMessagesRawType = KeyValueType<
-  {
-    dmConversation: {
-      conversationId: string;
-      messages: [
-        {
-          messageCreate: DMMessageRawType;
-        }
-      ];
-    };
-  }[]
->;
+type DMMessagesRawPartType = KeyValueType<DMMessagesRawType>;
+type DMMessagesRawType = {
+  dmConversation: {
+    conversationId: string;
+    messages: [
+      {
+        messageCreate: DMMessageRawType;
+      }
+    ];
+  };
+}[];
 
 declare const YTD: {
-  direct_messages?: DMMessagesRawType;
-  direct_message?: DMMessagesRawType;
   user?: {
     regist?: KeyValueType<UserRawType>;
   };
@@ -137,16 +135,18 @@ type DmMap = Map<string, DMMessageType>;
 
 interface TwitterStateType {
   dm: DmMap;
-  setDm: (dm: DmMap | null) => void;
+  setDm: (dm: DmMap | null, loaded?: boolean) => void;
   user: KeyValueType<UserType>;
   userFromUserId: KeyValueType<UserType>;
   setUser: (user: KeyValueType<UserType> | null) => void;
+  loaded: boolean;
+  setLoaded: (loading: boolean) => void;
 }
 
 export const useTwitterState = create<TwitterStateType>((set) => ({
   dm: new Map(),
-  setDm(dm) {
-    if (dm) set({ dm });
+  setDm(dm, loaded) {
+    if (dm) set({ dm, ...(typeof loaded === "boolean" ? { loaded } : {}) });
   },
   user: {},
   userFromUserId: {},
@@ -160,40 +160,47 @@ export const useTwitterState = create<TwitterStateType>((set) => ({
       set({ user, userFromUserId });
     }
   },
+  loaded: false,
+  setLoaded(loaded) {
+    set({ loaded });
+  },
 }));
+
 export function TwitterState() {
-  const { dm, setDm, setUser } = useTwitterState();
+  const { dm, setDm, setUser, setLoaded } = useTwitterState();
   function addDM(direct_messages?: DMMessagesRawType) {
     if (direct_messages) {
-      Object.entries(direct_messages).forEach(([k, v]) => {
-        v?.forEach(({ dmConversation }) => {
-          dmConversation.messages.forEach(({ messageCreate }) => {
-            if (!dm.has(messageCreate.id))
-              dm.set(messageCreate.id, {
-                date: new Date(messageCreate.createdAt),
-                conversationId: dmConversation.conversationId,
-                ...messageCreate,
-              });
-          });
+      direct_messages.forEach(({ dmConversation }) => {
+        dmConversation.messages.forEach(({ messageCreate }) => {
+          if (!dm.has(messageCreate.id))
+            dm.set(messageCreate.id, {
+              date: new Date(messageCreate.createdAt),
+              conversationId: dmConversation.conversationId,
+              ...messageCreate,
+            });
         });
       });
       setDm(dm);
     }
   }
   useEffect(() => {
-    addDM(YTD.direct_messages);
-  }, [YTD.direct_messages]);
-  useEffect(() => {
-    addDM(YTD.direct_message);
-  }, [YTD.direct_message]);
-  useEffect(() => {
-    import.meta.env.VITE_ADD_DM?.split(",").forEach((v) => {
-      axios.get(v).then((r) => {
-        if (Array.isArray(r.data)) {
+    const fetchData =
+      import.meta.env.VITE_ADD_DM?.split(",").map((v) => axios.get(v)) ?? [];
+    Promise.all(fetchData).then((list) => {
+      list.forEach((r) => {
+        if (
+          ((r.headers["content-type"] as string) || "").includes("javascript")
+        ) {
+          try {
+            addDM(
+              JSON.parse((r.data as string).replace(/^[^\[]+|[^\]]+$/g, ""))
+            );
+          } catch {}
+        } else if (Array.isArray(r.data)) {
           r.data.forEach((m, i) => {
             let { message_create, ...vars } = m;
             if (message_create) vars = { ...vars, ...message_create };
-            const id = vars.id || `${i}-${v}`;
+            const id = vars.id || `${i}-${r.config.url}`;
             const senderId = vars.senderId ?? vars.sender_id;
             const recipientId = vars.recipientId ?? vars.target?.recipient_id;
             const conversationId =
@@ -217,6 +224,7 @@ export function TwitterState() {
           });
           setDm(dm);
         }
+        setLoaded(true);
       });
     });
   }, []);
@@ -379,7 +387,7 @@ function DMMessageItem({ message }: { message: DMMessageType }) {
 }
 
 function DMPage() {
-  const { dm, userFromUserId } = useTwitterState();
+  const { dm, userFromUserId, loaded } = useTwitterState();
   const dmArray = useMemo(() => {
     const dmArray = Array.from(dm.values());
     return dmArray;
@@ -433,9 +441,13 @@ function DMPage() {
         <SearchArea maxPage={maxPage} />
       </header>
       <main className="list">
-        {filteredDmArray.slice((p - 1) * take, p * take).map((v, i) => (
-          <DMMessageItem message={v} key={i} />
-        ))}
+        {loaded ? (
+          filteredDmArray
+            .slice((p - 1) * take, p * take)
+            .map((v, i) => <DMMessageItem message={v} key={i} />)
+        ) : (
+          <Loading />
+        )}
       </main>
       <TopJumpArea />
     </div>
