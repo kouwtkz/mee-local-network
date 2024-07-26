@@ -27,9 +27,9 @@ interface UserRawType {
   accountDisplayName: string;
   img?: string;
   re?: string | RegExp;
-  listIn?: true;
+  listIn?: boolean;
   link?: string;
-  enableLink?: true;
+  enableLink?: boolean;
   index?: number;
 }
 
