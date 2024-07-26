@@ -5,6 +5,9 @@ dist
 # staticパスにプライベートなものを色々入れてる
 static
 
+# 個人の定義設定
+public/twitter/regist
+
 # データベースの情報を入れるところ
 data
 
