@@ -22,7 +22,6 @@ import { DarkThemeButton } from "./components/Buttons";
 import { FaHome } from "react-icons/fa";
 import { findMany, setWhere } from "../functions/findMany";
 import { BiSolidLeftArrow } from "react-icons/bi";
-import axios from "axios";
 import { TopJumpArea } from "./components/TopJump";
 import { Loading } from "../layout/Loading";
 
@@ -184,49 +183,61 @@ export function TwitterState() {
     }
   }
   useEffect(() => {
-    const fetchData =
-      import.meta.env.VITE_ADD_DM?.split(",").map((v) => axios.get(v)) ?? [];
-    Promise.all(fetchData).then((list) => {
-      list.forEach((r) => {
-        if (
-          ((r.headers["content-type"] as string) || "").includes("javascript")
-        ) {
-          try {
-            addDM(
-              JSON.parse((r.data as string).replace(/^[^\[]+|[^\]]+$/g, ""))
-            );
-          } catch {}
-        } else if (Array.isArray(r.data)) {
-          r.data.forEach((m, i) => {
-            let { message_create, ...vars } = m;
-            if (message_create) vars = { ...vars, ...message_create };
-            const id = vars.id || `${i}-${r.config.url}`;
-            const senderId = vars.senderId ?? vars.sender_id;
-            const recipientId = vars.recipientId ?? vars.target?.recipient_id;
-            const conversationId =
-              senderId < recipientId
-                ? `${senderId}-${recipientId}`
-                : `${recipientId}-${senderId}`;
-            const text = vars.text ?? vars.message_data?.text;
-            const createdAt = vars.createdAt;
-            const date = new Date(createdAt);
-            dm.set(id, {
-              conversationId,
-              id,
-              senderId,
-              recipientId,
-              text,
-              createdAt,
-              date,
-              mediaUrls: [],
-              urls: [],
-            });
-          });
-          setDm(dm);
-        }
-        setLoaded(true);
+    async function fetch() {
+      const cache = await caches.open("twitter-data");
+      const DMPathes = import.meta.env.VITE_ADD_DM?.split(",") ?? [];
+      const fetchData = DMPathes.map((v) =>
+        cache.match(v).then(async (cachedData) => {
+          if (!cachedData?.status) {
+            return cache.add(v).then(async () => (await cache.match(v))!);
+          } else return cachedData;
+        })
+      );
+      Promise.all(fetchData).then(async (responses) => {
+        responses.forEach(async (r) => {
+          const contentType = r.headers.get("content-type") || "";
+          const bodyString = await new Response(r.body).text();
+          if (contentType.includes("javascript")) {
+            try {
+              addDM(JSON.parse(bodyString.replace(/^[^\[]+|[^\]]+$/g, "")));
+            } catch {}
+          } else {
+            const data = JSON.parse(bodyString);
+            if (Array.isArray(data)) {
+              data.forEach((m, i) => {
+                let { message_create, ...vars } = m;
+                if (message_create) vars = { ...vars, ...message_create };
+                const id = vars.id || `${i}-${r.url}`;
+                const senderId = vars.senderId ?? vars.sender_id;
+                const recipientId =
+                  vars.recipientId ?? vars.target?.recipient_id;
+                const conversationId =
+                  senderId < recipientId
+                    ? `${senderId}-${recipientId}`
+                    : `${recipientId}-${senderId}`;
+                const text = vars.text ?? vars.message_data?.text;
+                const createdAt = vars.createdAt;
+                const date = new Date(createdAt);
+                dm.set(id, {
+                  conversationId,
+                  id,
+                  senderId,
+                  recipientId,
+                  text,
+                  createdAt,
+                  date,
+                  mediaUrls: [],
+                  urls: [],
+                });
+              });
+              setDm(dm);
+            }
+          }
+          setLoaded(true);
+        });
       });
-    });
+    }
+    fetch();
   }, []);
   useEffect(() => {
     if (YTD.user?.regist) {
