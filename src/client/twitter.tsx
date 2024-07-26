@@ -77,21 +77,31 @@ type DmMap = Map<string, DMMessageType>;
 
 interface TwitterStateType {
   dm: DmMap;
-  setDm: (dm: DmMap | null, loaded?: boolean) => void;
+  setDm: (
+    dm: DmMap | null,
+    options?: { path?: string; loaded?: boolean }
+  ) => void;
   user: KeyValueType<UserType>;
   userFromUserId: KeyValueType<UserType>;
+  userLoaded: boolean;
   setUser: (user: KeyValueType<UserType> | null) => void;
+  loadedList: string[];
   loaded: boolean;
   setLoaded: (loading: boolean) => void;
 }
 
 export const useTwitterState = create<TwitterStateType>((set) => ({
   dm: new Map(),
-  setDm(dm, loaded) {
-    if (dm) set({ dm, ...(typeof loaded === "boolean" ? { loaded } : {}) });
+  setDm(dm, { path, loaded } = {}) {
+    if (dm)
+      set((state) => {
+        if (path) state.loadedList.push(path);
+        return { dm, loaded, path };
+      });
   },
   user: {},
   userFromUserId: {},
+  userLoaded: false,
   setUser(user) {
     if (user) {
       const userFromUserId = Object.fromEntries(
@@ -99,9 +109,10 @@ export const useTwitterState = create<TwitterStateType>((set) => ({
           .map((u) => [u.username, u])
           .filter(([u]) => u)
       );
-      set({ user, userFromUserId });
+      set({ user, userFromUserId, userLoaded: true });
     }
   },
+  loadedList: [],
   loaded: false,
   setLoaded(loaded) {
     set({ loaded });
@@ -109,8 +120,36 @@ export const useTwitterState = create<TwitterStateType>((set) => ({
 }));
 
 export function TwitterState() {
-  const { dm, setDm, setUser, setLoaded } = useTwitterState();
-  function addDM(direct_messages?: DMMessagesRawType) {
+  const {
+    dm,
+    setDm,
+    userLoaded,
+    setUser,
+    userFromUserId,
+    setLoaded,
+    loadedList,
+  } = useTwitterState();
+  const defaultDMPathes = useMemo(
+    () => import.meta.env.VITE_DM_PATH?.split(",") ?? [],
+    []
+  );
+  const { name } = useParams();
+  const currentUser = useMemo(
+    () => (name ? userFromUserId[name] : null),
+    [userFromUserId, name]
+  );
+  const LoadDMUrls = useMemo(() => {
+    if (!userLoaded) return [];
+    let pathes = currentUser?.dmOnly ? currentUser.dmOnly : defaultDMPathes;
+    if (currentUser?.dm) pathes = pathes.concat(currentUser.dm);
+    const base = location.href;
+    return pathes
+      .map((path) => new URL(path, base))
+      .filter((Url) => {
+        return loadedList.findIndex((url) => url === Url.href) < 0;
+      });
+  }, [userLoaded, currentUser, defaultDMPathes]);
+  function addDM(direct_messages?: DMMessagesRawType, path?: string) {
     if (direct_messages) {
       direct_messages.forEach(({ dmConversation }) => {
         dmConversation.messages.forEach(({ messageCreate }) => {
@@ -122,14 +161,15 @@ export function TwitterState() {
             });
         });
       });
-      setDm(dm);
+      setDm(dm, { path });
     }
   }
   useEffect(() => {
     async function fetch() {
+      if (LoadDMUrls.length === 0) return;
       const cache = await caches.open("twitter-data");
-      const DMPathes = import.meta.env.VITE_DM_PATH?.split(",") ?? [];
-      const fetchData = DMPathes.map((v) =>
+      setLoaded(false);
+      const fetchData = LoadDMUrls.map((v) =>
         cache.match(v).then(async (cachedData) => {
           if (!cachedData?.status) {
             return cache.add(v).then(async () => (await cache.match(v))!);
@@ -143,7 +183,10 @@ export function TwitterState() {
             const bodyString = await new Response(r.body).text();
             if (contentType.includes("javascript")) {
               try {
-                addDM(JSON.parse(bodyString.replace(/^[^\[]+|[^\]]+$/g, "")));
+                addDM(
+                  JSON.parse(bodyString.replace(/^[^\[]+|[^\]]+$/g, "")),
+                  r.url
+                );
               } catch {}
             } else {
               const data = JSON.parse(bodyString);
@@ -174,7 +217,7 @@ export function TwitterState() {
                     urls: [],
                   });
                 });
-                setDm(dm);
+                setDm(dm, { path: r.url });
               }
             }
           })
@@ -183,7 +226,7 @@ export function TwitterState() {
       });
     }
     fetch();
-  }, []);
+  }, [LoadDMUrls]);
   useEffect(() => {
     if (YTD.user?.regist) {
       const user: KeyValueType<UserType> = YTD.user?.regist;
@@ -355,7 +398,7 @@ function DMPage() {
   }, [dm.size]);
 
   const nav = useNavigate();
-  const params = useParams();
+  const { name } = useParams();
   const [search] = useSearchParams();
   const take = 100;
   const q = useMemo(() => search.get("q") || "", [search]);
@@ -380,9 +423,9 @@ function DMPage() {
   }, [wheres.orderBy]);
   const where = useMemo(() => {
     const where = wheres.where as findWhereType<DMMessageType>[];
-    if (params.name) return where.concat(userIdWhere(params.name));
+    if (name) return where.concat(userIdWhere(name));
     else return where;
-  }, [wheres.where, params.name]);
+  }, [wheres.where, name]);
   const filteredDmArray = findMany({
     list: dmArray,
     where: {

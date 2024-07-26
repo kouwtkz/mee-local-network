@@ -31,6 +31,8 @@ interface UserRawType {
   link?: string;
   enableLink?: boolean;
   index?: number;
+  dm?: string[];
+  dmOnly?: string[];
 }
 
 interface UserType extends UserRawType {
