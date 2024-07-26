@@ -14,6 +14,11 @@ export function TopJumpArea() {
       }
   }
   useEffect(() => {
+    setTimeout(() => {
+      if (ref.current) ref.current.classList.add("working");
+    }, 100);
+  }, [ref.current]);
+  useEffect(() => {
     handleScroll();
     window.addEventListener("scroll", handleScroll);
     return () => {

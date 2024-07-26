@@ -226,9 +226,11 @@ ul.links {
 }
 
 .topJump {
+  &.working {
+    visibility: visible;
+  }
   &.hide {
     opacity: 0;
-    visibility: hidden;
     pointer-events: none;
   }
   svg {
@@ -242,6 +244,7 @@ ul.links {
     margin-left: 2rem;
   }
   opacity: 1;
+  visibility: hidden;
   transition: 250ms;
   cursor: pointer;
   position: fixed;
