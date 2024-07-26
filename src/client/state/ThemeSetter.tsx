@@ -50,7 +50,7 @@ export class ThemeStateClass {
     this.themes = themes;
     this.use = createThemeState(this.themes);
   }
-  State() {
+  state() {
     const { index, theme, list, setIndex } = this.use();
     const [cookies, setCookie, removeCookie] = useCookies([this.cookieKey]);
     const isSet = useRef(false);
@@ -83,4 +83,11 @@ export class ThemeStateClass {
     });
     return <></>;
   }
+}
+export function CreateThemeState(cookieKey: string, themes: string[]) {
+  const Theme = new ThemeStateClass(cookieKey, themes);
+  function ThemeState() {
+    return <>{Theme.state()}</>;
+  }
+  return { Theme, ThemeState };
 }

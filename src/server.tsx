@@ -1,5 +1,5 @@
 import React, { Children } from "react";
-import { DefaultLayout, Style } from "./layout";
+import { DefaultLayout, LinksList, Style } from "./layout/default";
 import { CommonContext, CommonHono } from "./types/HonoCustomType";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
@@ -22,6 +22,7 @@ import {
 import { LoginPage, SettingPage } from "./server/SettingPage";
 import { app_bbs } from "./server/bbs";
 import { getIsLogin, LoginRedirect } from "./server/LoginCheck";
+import { app_twitter } from "./server/twitter";
 
 const title = import.meta.env.VITE_TITLE;
 
@@ -160,44 +161,24 @@ export function ServerCommon(app: CommonHono) {
     );
   });
 
-  ["private/*", "twitter/*", "offline/*"].forEach((path) => {
+  ["private/*", "offline/*"].forEach((path) => {
     app.get(path, LoginRedirect);
   });
   app.route("/bbs", app_bbs);
+  app.route("/twitter", app_twitter);
 
   app.get("*", serveStatic({ root: publicPath }));
   app.get("*", serveStatic({ root: staticPath }));
   app.get("*", async (c, next) => {
     const path = c.req.path;
-    const StaticAddPath = `${staticPath}${c.req.path}`;
+    const StaticAddPath = `${staticPath}${path}`;
     if (existsSync(StaticAddPath)) {
       let files = readdirSync(StaticAddPath);
       files = files.filter((f) => !/^\.|archive|\.php$/.test(f));
       return c.html(
         RenderMainLayout({
           c,
-          children: (
-            <>
-              <ul className="links">
-                {files.map((file, i) => {
-                  let dir = path.endsWith("/") ? path : path + "/";
-                  let href = dir + file;
-                  if (/\/.[^.]+[^\/]$/.test(href)) href = href + "/";
-                  return (
-                    <li key={i}>
-                      <a href={href}>{file}</a>
-                    </li>
-                  );
-                })}
-              </ul>
-              <p>
-                <a href="../">一つ上に戻る</a>
-              </p>
-              <p>
-                <a href="/">ホームへ戻る</a>
-              </p>
-            </>
-          ),
+          children: <LinksList root={path} pathes={files} />,
         })
       );
     } else {

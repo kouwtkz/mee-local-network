@@ -1,6 +1,6 @@
 import React from "react";
 import { CommonHono } from "../types/HonoCustomType";
-import { DefaultLayout, Style } from "../layout";
+import { DefaultLayout, Style } from "../layout/default";
 import { renderToString } from "react-dom/server";
 import { Hono } from "hono";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
@@ -42,7 +42,7 @@ export const bbsOptions = {
   data_dir: import.meta.env.PROD ? "../data/" : "./data/",
 };
 
-const threads_list = ["", "/:name"];
+const pathes = ["", "/:name"];
 
 const app_api = new Hono<MeeBindings>({ strict: false });
 {
@@ -80,7 +80,7 @@ const app_api = new Hono<MeeBindings>({ strict: false });
     }
   }
 
-  threads_list.forEach((n) => {
+  pathes.forEach((n) => {
     app.get("*", Unauthorized);
     app.get("get/threads" + n, (c) => {
       const threads = ReadThreads(c.req.param("name"));
@@ -163,7 +163,7 @@ const app_api = new Hono<MeeBindings>({ strict: false });
 const app = new Hono<MeeBindings>();
 app.get("*", LoginRedirect);
 app.route("api", app_api);
-threads_list.forEach((n) => {
+pathes.forEach((n) => {
   app.get(n, async (c, next) => {
     if (/^[^\/]+\.[^\/]+$/.test(c.req.param("name") ?? "")) next();
     else return c.html(bbs_layout());

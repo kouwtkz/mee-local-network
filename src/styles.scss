@@ -12,12 +12,15 @@ $delete-color: #b46868;
 $delete-hover: #a64444;
 $background-color: #f1f6df;
 $background-dark: #282a27;
+$gray-color: #696c5f;
+$gray-dark-mode: #bec1b5;
 
 @import url("https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap");
 $font-KosugiMaru: "Kosugi Maru";
 
 @mixin darkMode() {
   --background-color: #{$background-dark};
+  --gray-color: #{$gray-dark-mode};
   scrollbar-color: $soft-color transparent;
   body,
   header {
@@ -39,6 +42,7 @@ $font-KosugiMaru: "Kosugi Maru";
   scrollbar-width: thin;
   scrollbar-color: $soft-color transparent;
   --background-color: #{$background-color};
+  --gray-color: #{$gray-color};
   body,
   header {
     color: black;
@@ -71,9 +75,11 @@ body {
   overflow-y: scroll;
   font: 1em $font-KosugiMaru, "Lucida Grande", Helvetica, Arial, sans-serif;
   line-height: 1.25;
-  .simple & {
-    padding: 2% 0% 0% 4%;
-  }
+}
+
+.simple body,
+div.simple {
+  padding: 2% 0% 0% 4%;
 }
 
 input,
@@ -513,7 +519,7 @@ button {
       margin-right: 0.1rem;
     }
   }
-  .thread {
+  main.list {
     width: 100%;
     margin: 3rem auto 4rem;
     max-width: 42rem;
@@ -521,13 +527,29 @@ button {
     word-break: break-word;
     text-align: left;
     .item {
-      padding: 0.1rem 1rem 1.5rem;
+      padding: 0.25rem 1rem 1.25rem;
       &:focus {
         outline: none;
         background-color: $soft-color-fluo;
       }
       &.isEdit {
         outline: solid 2px $soft-color;
+      }
+      .icon {
+        margin: 0.25rem;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 100%;
+      }
+      .container {
+        display: flex;
+        .icon {
+          margin-top: 1rem;
+        }
+        .body {
+          flex: 1;
+          padding: 0 1rem;
+        }
       }
       .body {
         white-space: pre-line;
@@ -536,17 +558,30 @@ button {
           max-height: 16em;
         }
       }
+      .media {
+        display: flex;
+        img,
+        video {
+          object-fit: cover;
+          object-position: 50% 40%;
+          max-height: 50vh;
+          width: 100%;
+        }
+      }
       .info {
         text-align: right;
         > * {
           vertical-align: middle;
+          margin-right: 0.5rem;
         }
         a {
-          margin-right: 0.2rem;
           text-decoration-line: none;
           &:hover {
             text-decoration-line: underline;
           }
+        }
+        span.date {
+          color: var(--gray-color);
         }
         button {
           background-color: transparent;
@@ -572,4 +607,8 @@ button {
       }
     }
   }
+}
+
+.dm {
+  @extend .bbs;
 }

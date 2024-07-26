@@ -20,6 +20,7 @@ export default defineConfig(({ mode }) => {
             // './src/client.tsx',
             './src/styles.scss',
             './src/client/bbs.tsx',
+            './src/client/twitter.tsx',
             './src/client/uploader.ts',
           ],
           output: {

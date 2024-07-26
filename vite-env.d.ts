@@ -8,6 +8,8 @@ interface ImportMetaEnv {
   readonly VITE_USER_NAME?: string
   readonly VITE_LOGIN_PASSWORD?: string
   readonly VITE_COOKIE_VALUE?: string
+  readonly VITE_ADD_DM?: string
+  readonly VITE_TWITTER_MEDIA?: string
 }
 
 interface ImportMeta {

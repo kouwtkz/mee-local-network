@@ -13,8 +13,7 @@ import {
 import ErrorPage from "./routes/ErrorPage";
 import { FormatDate } from "../functions/DateFunctions";
 import { Base } from "./routes/Root";
-import { GetThreads, ParseThreads } from "../functions/bbs";
-import { MdArrowBackIosNew, MdArrowForwardIos } from "react-icons/md";
+import { ParseThreads } from "../functions/bbs";
 import { TopJumpArea } from "./components/TopJump";
 import findThreads from "../functions/findThreads";
 import MultiParser from "./components/MultiParser";
@@ -24,13 +23,10 @@ import { create } from "zustand";
 import { useHotkeys } from "react-hotkeys-hook";
 import { TbEraser, TbPencil, TbPencilCancel, TbReload } from "react-icons/tb";
 import { getRedirectUrl } from "../functions/redirectUrl";
-import { ThemeStateClass } from "./state/ThemeSetter";
 import { CgDarkMode, CgMoon, CgSun } from "react-icons/cg";
-
-export const DarkThemeState = new ThemeStateClass("darktheme", [
-  "light",
-  "dark",
-]);
+import { DarkTheme, DarkThemeState } from "./theme";
+import { SearchArea } from "./components/Search";
+import { DarkThemeButton } from "./components/Buttons";
 
 interface ThreadsStateType {
   threadsList: {
@@ -79,6 +75,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         element: (
           <>
             <ScrollRestoration />
+            <DarkThemeState />
             <Base>
               <Outlet />
             </Base>
@@ -243,7 +240,7 @@ function PostForm() {
       setShow(false);
       if (edit !== undefined) {
         const ti = document.querySelector(
-          `.thread .item[data-id="${edit}"`
+          `main.list .item[data-id="${edit}"`
         ) as HTMLElement | null;
         ti?.focus();
       }
@@ -323,127 +320,6 @@ function PostForm() {
         </div>
       </div>
     </>
-  );
-}
-
-function SearchArea({ data }: { data: ThreadsDataType }) {
-  const [search, setSearch] = useSearchParams();
-  const refInput = useRef<HTMLInputElement>(null);
-  const p = useMemo(() => Number(search.get("p") ?? 1), [search]);
-  const q = useMemo(() => search.get("q") ?? "", [search]);
-  useHotkeys(
-    "escape",
-    (e) => {
-      if (document.activeElement === refInput.current) {
-        refInput.current?.blur();
-        e.preventDefault();
-      }
-    },
-    { enableOnFormTags: ["INPUT"] }
-  );
-  useHotkeys("slash", (e) => {
-    refInput.current?.focus();
-    e.preventDefault();
-  });
-  useHotkeys("o", (e) => {
-    paging(-1);
-    e.preventDefault();
-  });
-  useHotkeys("p", (e) => {
-    paging(1);
-    e.preventDefault();
-  });
-  const maxPage = useMemo(
-    () => (data.take ? Math.ceil(data.length / data.take) : 1),
-    [data]
-  );
-  function paging(go: number) {
-    let np = p + go;
-    if (np > maxPage) np = maxPage;
-    if (np < 1) np = 1;
-    if (np !== p) {
-      const searchObject: { [k: string]: string } = {
-        ...Object.fromEntries(search),
-        p: np.toString(),
-      };
-      if (searchObject.p === "1") delete searchObject.p;
-      setSearch(searchObject, { preventScrollReset: false });
-    }
-  }
-  useEffect(() => {
-    if (refInput.current) refInput.current.value = q;
-  }, [q]);
-  return (
-    <div className="list">
-      <form
-        className="search"
-        method="get"
-        autoComplete="off"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const nq = (e.target as HTMLFormElement).q.value;
-          if (nq !== q) {
-            if (nq) setSearch({ q: nq });
-            else setSearch();
-          }
-        }}
-      >
-        <input
-          type="search"
-          title="検索"
-          name="q"
-          ref={refInput}
-          placeholder="キーワード検索"
-          defaultValue={q}
-        />
-        <button type="submit" className="submit button">
-          検索
-        </button>
-      </form>
-      <div className="paging">
-        <button
-          type="button"
-          className="left"
-          title="前のページに戻る"
-          disabled={p <= 1}
-          onClick={() => paging(-1)}
-          onContextMenu={(e) => {
-            e.preventDefault();
-            paging(-1e6);
-          }}
-        >
-          <MdArrowBackIosNew />
-        </button>
-        <button
-          type="button"
-          className="right"
-          title="次のページに進む"
-          disabled={p >= maxPage}
-          onClick={() => paging(1)}
-          onContextMenu={(e) => {
-            e.preventDefault();
-            paging(1e6);
-          }}
-        >
-          <MdArrowForwardIos />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function DarkThemeButton() {
-  const { theme: darktheme, next } = DarkThemeState.use();
-  return (
-    <button type="button" title="ダークテーマ切替" onClick={next}>
-      {darktheme === "light" ? (
-        <CgSun />
-      ) : darktheme === "dark" ? (
-        <CgMoon />
-      ) : (
-        <CgDarkMode />
-      )}
-    </button>
   );
 }
 
@@ -585,7 +461,7 @@ function BBSPage() {
         setKp(page);
         setCursor(0);
         const ti = document.querySelector(
-          ".thread .item[tabindex]"
+          "main.list .item[tabindex]"
         ) as HTMLElement | null;
         if (ti) {
           ti.focus();
@@ -593,7 +469,7 @@ function BBSPage() {
         }
       } else {
         const ti = document.querySelector(
-          `.thread .item[data-id="${cursor}"`
+          `main.list .item[data-id="${cursor}"`
         ) as HTMLElement | null;
         ti?.focus();
       }
@@ -635,9 +511,9 @@ function BBSPage() {
       nextTarget?.focus();
     } else {
       if (cursor)
-        current = document.querySelector(`.thread .item[data-id="${cursor}"`);
+        current = document.querySelector(`main.list .item[data-id="${cursor}"`);
       if (!current)
-        current = document.querySelector(".thread .item[tabindex]") as any;
+        current = document.querySelector("main.list .item[tabindex]") as any;
       current?.focus();
     }
   }
@@ -652,9 +528,14 @@ function BBSPage() {
   useHotkeys("escape", () => {
     if (document.activeElement) (document.activeElement as HTMLElement).blur();
   });
-  async function handleRefresh() {
-    setReloadList(currentName, true);
-  }
+
+  const maxPage = useMemo(
+    () =>
+      threadsObject.take
+        ? Math.ceil(threadsObject.length / threadsObject.take)
+        : 1,
+    [threadsObject]
+  );
 
   function toggleEdit(id: number, isEdit: boolean) {
     if (isEdit) setEdit();
@@ -663,16 +544,13 @@ function BBSPage() {
   const postable = current?.postable ?? true;
   return (
     <>
-      {DarkThemeState.State()}
       <div className="bbs">
         <header>
           <OptionButtons />
-          <div className="search">
-            <SearchArea data={threadsObject} />
-          </div>
+          <SearchArea maxPage={maxPage} />
         </header>
         {postable ? <PostForm /> : null}
-        <main className="thread" ref={refMain}>
+        <main className="list" ref={refMain}>
           {typeof threads === "undefined"
             ? "読み込み中…"
             : threadsObject.threads.map((v, i) => {
@@ -700,11 +578,9 @@ function BBSPage() {
                       {v.text ? <MultiParser>{v.text}</MultiParser> : null}
                     </div>
                     <div className="info">
-                      <span className="num">{v.id}: </span>
-                      <Link to={"?id=" + v.id}>
-                        <span className="date">
-                          {v.date ? FormatDate(v.date) : null}
-                        </span>
+                      <span className="num">{v.id}:</span>
+                      <Link className="date" to={"?id=" + v.id}>
+                        {v.date ? FormatDate(v.date) : null}
                       </Link>
                       <button
                         type="button"

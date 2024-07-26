@@ -1,5 +1,5 @@
-import React from "react";
-import { stylesAddVer } from "./server/env";
+import React, { ReactNode } from "react";
+import { stylesAddVer } from "../server/env";
 
 const defaultStyle = <Style href={"/assets/styles.css" + stylesAddVer} />;
 
@@ -53,5 +53,47 @@ export function DefaultLayout({
         {script}
       </body>
     </html>
+  );
+}
+
+interface AnchorProps {
+  href: string;
+  path: string;
+  dir: string;
+}
+
+export function LinksList({
+  pathes,
+  root = "",
+  anchor,
+}: {
+  pathes: string[];
+  root?: string;
+  anchor?: (args: AnchorProps) => ReactNode;
+}) {
+  return (
+    <>
+      <ul className="links">
+        {pathes.map((path, i) => {
+          let dir =
+            (root.startsWith("/") ? "" : "/") +
+            root +
+            (root.endsWith("/") ? "" : "/");
+          let href = dir + path;
+          if (/\/.[^.]+[^\/]$/.test(href)) href = href + "/";
+          return (
+            <li key={i}>
+              {anchor ? anchor({ href, path, dir }) : <a href={href}>{path}</a>}
+            </li>
+          );
+        })}
+      </ul>
+      <p>
+        <a href="../">一つ上に戻る</a>
+      </p>
+      <p>
+        <a href="/">ホームへ戻る</a>
+      </p>
+    </>
   );
 }

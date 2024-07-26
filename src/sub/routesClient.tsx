@@ -2,7 +2,7 @@ import React from "react";
 import { renderToString } from "react-dom/server";
 import { RoutingList } from "../client/routes/RoutingList";
 import { CommonHono } from "../types/HonoCustomType";
-import { DefaultLayout } from "../layout";
+import { DefaultLayout } from "../layout/default";
 
 export function RoutesClient(app: CommonHono) {
   RoutingList.forEach((path) => {
