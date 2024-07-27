@@ -170,17 +170,22 @@ export function TwitterState() {
     }
   }
   useEffect(() => {
-    async function fetch() {
+    async function Fetch() {
       if (LoadDMUrls.length === 0) return;
-      const cache = await caches.open("twitter-data");
       setLoaded(false);
-      const fetchData = LoadDMUrls.map((v) =>
-        cache.match(v).then(async (cachedData) => {
-          if (!cachedData?.status) {
-            return cache.add(v).then(async () => (await cache.match(v))!);
-          } else return cachedData;
-        })
-      );
+      let fetchData: Promise<Response>[];
+      if (typeof caches !== "undefined") {
+        const cache = await caches.open("twitter-data");
+        fetchData = LoadDMUrls.map((v) =>
+          cache.match(v).then(async (cachedData) => {
+            if (!cachedData?.status) {
+              return cache.add(v).then(async () => (await cache.match(v))!);
+            } else return cachedData;
+          })
+        );
+      } else {
+        fetchData = LoadDMUrls.map((v) => fetch(v));
+      }
       Promise.all(fetchData).then(async (responses) => {
         await Promise.all(
           responses.map(async (r) => {
@@ -230,7 +235,7 @@ export function TwitterState() {
         setLoaded(true);
       });
     }
-    fetch();
+    Fetch();
   }, [LoadDMUrls]);
   useEffect(() => {
     if (YTD.user?.regist) {
