@@ -101,11 +101,11 @@ function createFilterEntry(filterValue: string): filterConditionsAllKeyValue<any
 
 }
 
-function getKeyFromOptions<T>(key: string, options: WhereOptionsType<T>) {
+function getKeyFromOptions<T>(key: string, options: WhereOptionsKvType<T>) {
   return (typeof options[key] === "object" && options[key].key) ? options[key].key : key
 }
 
-export function setWhere<T>(q: string, options: WhereOptionsType<T> = {}) {
+export function setWhere<T>(q: string, options: WhereOptionsKvType<T> = {}) {
   const textKey = getKeyFromOptions("text", options);
   const fromKey = getKeyFromOptions("from", options);
   const dateKey = getKeyFromOptions("date", options);
@@ -131,6 +131,22 @@ export function setWhere<T>(q: string, options: WhereOptionsType<T> = {}) {
       const colonIndex = /^\w+:\/\//.test(item) ? -1 : item.indexOf(":");
       const filterKey = colonIndex >= 0 ? item.slice(0, colonIndex) : "";
       const filterValue = item.slice(filterKey.length + 1);
+      let filterOptions: WhereOptionsType<T>;
+      switch (typeof options[filterKey]) {
+        case "object":
+          filterOptions = options[filterKey];
+          break;
+        case "function":
+          filterOptions = { where: options[filterKey] };
+          break;
+        case "undefined":
+          filterOptions = {};
+          break;
+        default:
+          filterOptions = { key: options[filterKey] };
+          break;
+      }
+      let filterTake = filterOptions.take;
       switch (filterKey.toLocaleLowerCase()) {
         case "":
           if (item) {
@@ -252,29 +268,28 @@ export function setWhere<T>(q: string, options: WhereOptionsType<T> = {}) {
           }
           break;
         default:
-          switch (typeof options[filterKey]) {
-            case "function":
-              where.push(options[filterKey](filterValue));
-              break;
-            default:
-              const option = options[filterKey];
-              const key = option ? (typeof option === "string" ? option : option.key) : filterKey;
-              let filterEntry: filterConditionsAllKeyValue<any>;
-              switch (filterValue) {
-                case "true":
-                case "false":
-                  filterEntry = {
-                    bool: filterValue === "true"
-                  };
-                  break;
-                default:
-                  filterEntry = createFilterEntry(filterValue);
-                  break;
-              }
-              where.push({ [key]: filterEntry });
-              break;
+          if (filterOptions.where) {
+            where.push(filterOptions.where(filterValue));
+          } else {
+            const key = filterOptions.key ?? filterKey;
+            let filterEntry: filterConditionsAllKeyValue<any>;
+            switch (filterValue) {
+              case "true":
+              case "false":
+                const bool = filterValue === "true";
+                if (!bool && filterTake) filterTake = undefined;
+                filterEntry = { bool };
+                break;
+              default:
+                filterEntry = createFilterEntry(filterValue);
+                break;
+            }
+            where.push({ [key]: filterEntry });
           }
           break;
+      }
+      if (typeof take !== "number" && typeof filterTake === "number") {
+        take = filterTake;
       }
     }
     if (OR_skip) {

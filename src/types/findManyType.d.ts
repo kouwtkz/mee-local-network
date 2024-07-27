@@ -19,8 +19,16 @@ type findManyProps<T> = {
 type OrderByType = "asc" | "desc";
 type OrderByItem = { [k: string]: OrderByType };
 
+type findWhereFunction<T> = (v: string) => findWhereType<T>;
+
 interface WhereOptionsType<T> {
-  [k: string]: string
-  | findWhereFunction
-  | { key?: string, hidden?: boolean };
+  key?: string;
+  where?: findWhereFunction<T>;
+  take?: number;
+  hidden?: boolean;
 }
+interface WhereOptionsKvType<T> {
+  [k: string]: string
+  | findWhereFunction<T>
+  | WhereOptionsType<T>;
+};

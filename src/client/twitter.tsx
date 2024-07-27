@@ -428,15 +428,16 @@ function DMPage() {
     if (q && userFromUserId[q])
       nav("/twitter/dm/" + q + "/", { replace: true });
   }, [q, userFromUserId]);
-  function userIdWhere(v: string) {
+  const userIdWhere: findWhereFunction<DMMessageType> = (v: string) => {
     return {
       conversationId: { contains: userFromUserId[v]?.accountId ?? v },
-    } as findWhereType<DMMessageType>;
-  }
+    };
+  };
   const wheres = useMemo(
     () =>
-      setWhere(q, {
+      setWhere<DMMessageType>(q, {
         user: userIdWhere,
+        mediaUrls: { take: 25 },
       }),
     [q, userFromUserId]
   );
