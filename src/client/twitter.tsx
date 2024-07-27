@@ -357,10 +357,23 @@ function DMMessageItem({ message }: { message: DMMessageType }) {
             ) : null}
           </a>
         </div>
-        <div>
-          <p className="body">
-            {message.text.replace(/\shttps:\/\/t.co\/\S+/g, "")}
+        <div className="body">
+          <p className="text">
+            {message.text.replace(/(^|\s)https:\/\/t.co\/\S+/g, "")}
           </p>
+          {message.urls
+            ?.filter((u) => {
+              return !/^https:\/\/(twitter|x).com\/messages\/media\//.test(
+                u.expanded
+              );
+            })
+            .map(({ expanded }, i) => (
+              <p key={i}>
+                <a href={expanded} target="_blank">
+                  {expanded}
+                </a>
+              </p>
+            ))}
           <div className="media">
             {message.mediaUrls
               .map((url) => mediaLocalUrl(url, message.id))
