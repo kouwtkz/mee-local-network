@@ -310,7 +310,13 @@ function mediaLocalUrl(media: string, id = "") {
   return "";
 }
 
-function DMMessageItem({ message }: { message: DMMessageType }) {
+function DMMessageItem({
+  message,
+  index = 0,
+}: {
+  message: DMMessageType;
+  index?: number;
+}) {
   const { user } = useTwitterState();
   const account: UserType = useMemo(() => {
     const accountId = message.senderId;
@@ -391,7 +397,11 @@ function DMMessageItem({ message }: { message: DMMessageType }) {
                   default:
                     return (
                       <a href={url} target="_blank" key={i}>
-                        <img src={url} alt={url} />
+                        <img
+                          src={url}
+                          alt={url}
+                          loading={index < 5 ? "eager" : "lazy"}
+                        />
                       </a>
                     );
                 }
@@ -471,7 +481,7 @@ function DMPage() {
       {loaded ? (
         <main className="list">
           {filteredDmArray.slice((p - 1) * take, p * take).map((v, i) => (
-            <DMMessageItem message={v} key={i} />
+            <DMMessageItem message={v} index={i} key={i} />
           ))}
         </main>
       ) : (
