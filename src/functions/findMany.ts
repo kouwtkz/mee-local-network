@@ -2,7 +2,14 @@ import { AutoAllotDate } from "./DateFunctions";
 
 export function findMany<T>({ list, where, take, orderBy, skip = 0 }: findManyProps<T>): T[] {
   if (!list) return [];
-  orderBy?.reverse().forEach((args) =>
+  orderBy?.reduce((a, c) => {
+    Object.entries(c).forEach(([k, v]) => {
+      if (a.findIndex(f => k in f) < 0) {
+        if (c) a.push({ [k]: v as OrderByType });
+      }
+    })
+    return a;
+  }, [] as { [k: string]: OrderByType }[]).reverse().forEach((args) => {
     Object.entries(args).forEach(([k, v]) => {
       switch (v) {
         case "asc":
@@ -15,6 +22,7 @@ export function findMany<T>({ list, where, take, orderBy, skip = 0 }: findManyPr
           break;
       }
     })
+  }
   );
   let i = 0;
   return list.filter((value) => {

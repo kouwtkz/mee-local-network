@@ -452,7 +452,7 @@ function BBSPage() {
   const threads = threadsList[currentName];
   const threadsObject = useMemo(() => {
     return findThreads({
-      threads: (threads ?? []).concat(),
+      threads: threads ?? [],
       take,
       page,
       q,

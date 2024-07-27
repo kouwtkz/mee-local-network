@@ -31,13 +31,13 @@ export default function findThreads(
   const skip = (take && page) ? take * page : 0;
 
   orderBy.push({ date: order });
-  if (pinned) orderBy.push({ pin: "desc" });
+  if (pinned) orderBy.unshift({ pin: "desc" });
 
   if (common) where.push(
     { draft: false, date: { lte: new Date() } }
   )
   try {
-    let threadsResult: ThreadType[] = threads;
+    let threadsResult: ThreadType[] = threads.concat();
     if (id) {
       const item = threads.find((item) => item.id == id)
       threadsResult = item ? [item] : [];
