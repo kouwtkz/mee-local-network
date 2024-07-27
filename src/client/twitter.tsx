@@ -423,7 +423,6 @@ function DMPage() {
   const nav = useNavigate();
   const { name } = useParams();
   const [search] = useSearchParams();
-  const take = 100;
   const q = useMemo(() => search.get("q") || "", [search]);
   useEffect(() => {
     if (q && userFromUserId[q])
@@ -441,6 +440,7 @@ function DMPage() {
       }),
     [q, userFromUserId]
   );
+  const take = wheres.take ?? 100;
   let orderBy: OrderByItem[] = useMemo(() => {
     return wheres.orderBy.concat({ date: "desc" });
   }, [wheres.orderBy]);
