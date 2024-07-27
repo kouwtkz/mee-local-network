@@ -173,10 +173,10 @@ export function TwitterState() {
     async function Fetch() {
       if (LoadDMUrls.length === 0) return;
       setLoaded(false);
-      let fetchData: Promise<Response>[];
+      let fetchList: Promise<Response>[];
       if (typeof caches !== "undefined") {
         const cache = await caches.open("twitter-data");
-        fetchData = LoadDMUrls.map((v) =>
+        fetchList = LoadDMUrls.map((v) =>
           cache.match(v).then(async (cachedData) => {
             if (!cachedData?.status) {
               return cache.add(v).then(async () => (await cache.match(v))!);
@@ -184,17 +184,22 @@ export function TwitterState() {
           })
         );
       } else {
-        fetchData = LoadDMUrls.map((v) => fetch(v));
+        fetchList = LoadDMUrls.map((v) => fetch(v));
       }
-      Promise.all(fetchData).then(async (responses) => {
-        await Promise.all(
-          responses.map(async (r) => {
+      await Promise.all(
+        fetchList.map((f) =>
+          f.then(async (r) => {
             const contentType = r.headers.get("content-type") || "";
             const bodyString = await new Response(r.body).text();
             if (contentType.includes("javascript")) {
               try {
                 addDM(
-                  JSON.parse(bodyString.replace(/^[^\[]+|[^\]]+$/g, "")),
+                  JSON.parse(
+                    bodyString.slice(
+                      bodyString.indexOf("["),
+                      bodyString.lastIndexOf("]") + 1
+                    )
+                  ),
                   r.url
                 );
               } catch {}
@@ -231,9 +236,9 @@ export function TwitterState() {
               }
             }
           })
-        );
-        setLoaded(true);
-      });
+        )
+      );
+      setLoaded(true);
     }
     Fetch();
   }, [LoadDMUrls]);
