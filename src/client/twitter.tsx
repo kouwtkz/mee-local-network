@@ -25,6 +25,7 @@ import { BiSolidLeftArrow } from "react-icons/bi";
 import { TopJumpArea } from "./components/TopJump";
 import { Loading } from "../layout/Loading";
 import { MobileFold } from "./components/MobileFold";
+import { RiDownloadLine } from "react-icons/ri";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <RouterProvider
@@ -271,12 +272,30 @@ function OptionButtons() {
   const [searchParams] = useSearchParams();
   const q = searchParams.get("q") ?? "";
   const sq = q.split(/\s+/).filter((v) => v);
-  function qLink(keyword: string) {
-    const _sq = sq.concat();
+  function QLink({
+    keyword,
+    children,
+    exist,
+  }: {
+    keyword: string;
+    children: ReactNode;
+    exist?: ReactNode;
+  }) {
+    let _sq = sq.concat();
     const foundIndex = _sq.findIndex((v) => v === keyword);
-    if (foundIndex < 0) _sq.push(keyword);
+    if (foundIndex < 0) {
+      _sq.push(keyword);
+    } else if (exist) {
+      _sq.splice(foundIndex, 1);
+    }
+    const searchLink =
+      _sq.length > 0
+        ? "?" +
+          new URLSearchParams(Object.entries({ q: _sq.join(" ") })).toString()
+        : "";
+    const Url = new URL(searchLink, location.origin + location.pathname);
     return (
-      "?" + new URLSearchParams(Object.entries({ q: _sq.join(" ") })).toString()
+      <Link to={Url.href}>{foundIndex >= 0 && exist ? exist : children}</Link>
     );
   }
   return (
@@ -292,11 +311,11 @@ function OptionButtons() {
         <BiSolidLeftArrow />
       </Link>
       <DarkThemeButton />
-      <MobileFold wide={true}>
-        <div className="RowList">
-          <Link to={qLink("mediaUrls:true")}>メディア</Link>
-          <Link to={qLink("order:asc")}>古い順</Link>
-        </div>
+      <MobileFold className="RowList" wide={true}>
+        <QLink keyword="mediaUrls:true">メディア</QLink>
+        <QLink keyword="order:asc" exist="新着順にする">
+          古い順にする
+        </QLink>
       </MobileFold>
     </div>
   );

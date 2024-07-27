@@ -29,7 +29,7 @@ export function TopJumpArea() {
     <button
       type="button"
       className="topJump"
-      title="ホームへ戻る"
+      title="一番上へ飛ぶ"
       ref={ref}
       onClick={() => {
         scrollTo({ top: 0, behavior: "smooth" });

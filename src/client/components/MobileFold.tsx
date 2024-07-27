@@ -7,12 +7,14 @@ export function MobileFold({
   opened = <FaCaretUp />,
   title = "展開",
   wide,
+  className,
 }: {
   children?: ReactNode;
   closed?: ReactNode;
   opened?: ReactNode;
   title?: string;
   wide?: boolean;
+  className?: string;
 }) {
   const [isOpen, setOpen] = useState(false);
   return (
@@ -27,7 +29,15 @@ export function MobileFold({
       >
         {isOpen ? opened : closed}
       </button>
-      <div className={"list" + (wide ? " wide" : "")}>{children}</div>
+      <div
+        className={
+          "list" +
+          (className ? " " + className : "") +
+          (wide ? " wide" : "")
+        }
+      >
+        {children}
+      </div>
     </div>
   );
 }
