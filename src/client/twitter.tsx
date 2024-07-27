@@ -263,6 +263,17 @@ function DefaultPage() {
 
 function OptionButtons() {
   const { pathname, search } = useLocation();
+  const [searchParams] = useSearchParams();
+  const q = searchParams.get("q") ?? "";
+  const sq = q.split(/\s+/).filter((v) => v);
+  function qLink(keyword: string) {
+    const _sq = sq.concat();
+    const foundIndex = _sq.findIndex((v) => v === keyword);
+    if (foundIndex < 0) _sq.push(keyword);
+    return (
+      "?" + new URLSearchParams(Object.entries({ q: _sq.join(" ") })).toString()
+    );
+  }
   return (
     <div className="buttons">
       <a className="button" title="ホームへ戻る" href="/">
@@ -278,7 +289,8 @@ function OptionButtons() {
       <DarkThemeButton />
       <MobileFold wide={true}>
         <div className="RowList">
-          <Link to="?q=mediaUrls%3Atrue">メディアあり</Link>
+          <Link to={qLink("mediaUrls:true")}>メディア</Link>
+          <Link to={qLink("order:asc")}>古い順</Link>
         </div>
       </MobileFold>
     </div>
