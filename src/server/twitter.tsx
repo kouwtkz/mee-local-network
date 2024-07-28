@@ -20,7 +20,7 @@ function Layout() {
             }
           />
           <script src="/twitter/def.js" />
-          <script src="/twitter/regist/users.js" />
+          <script src="/twitter/data/users.js" />
         </>
       }
       style={<Style href={"/assets/styles.css" + stylesAddVer} />}

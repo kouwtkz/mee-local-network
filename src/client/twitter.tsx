@@ -82,13 +82,16 @@ interface TwitterStateType {
     dm: DmMap | null,
     options?: { path?: string; loaded?: boolean }
   ) => void;
+  filteredDm: DMMessageType[];
+  setFilteredDm: (list: DMMessageType[]) => void;
   user: KeyValueType<UserType>;
   userFromUserId: KeyValueType<UserType>;
   userLoaded: boolean;
   setUser: (user: KeyValueType<UserType> | null) => void;
   loadedList: string[];
   loaded: boolean;
-  setLoaded: (loading: boolean) => void;
+  errored: boolean;
+  setLoaded: (loading: boolean, errored?: boolean) => void;
 }
 
 export const useTwitterState = create<TwitterStateType>((set) => ({
@@ -99,6 +102,10 @@ export const useTwitterState = create<TwitterStateType>((set) => ({
         if (path) state.loadedList.push(path);
         return { dm, loaded, path };
       });
+  },
+  filteredDm: [],
+  setFilteredDm(list) {
+    set({ filteredDm: list });
   },
   user: {},
   userFromUserId: {},
@@ -115,8 +122,9 @@ export const useTwitterState = create<TwitterStateType>((set) => ({
   },
   loadedList: [],
   loaded: false,
-  setLoaded(loaded) {
-    set({ loaded });
+  errored: false,
+  setLoaded(loaded, errored) {
+    set({ loaded, errored });
   },
 }));
 
@@ -173,7 +181,7 @@ export function TwitterState() {
   useEffect(() => {
     async function Fetch() {
       if (LoadDMUrls.length === 0) return;
-      setLoaded(false);
+      setLoaded(false, false);
       let fetchList: Promise<Response>[];
       if (typeof caches !== "undefined") {
         const cache = await caches.open("twitter-data");
@@ -234,12 +242,27 @@ export function TwitterState() {
                   });
                 });
                 setDm(dm, { path: r.url });
+              } else if ("list" in data && Array.isArray(data.list)) {
+                (data.list as DMMessageType[]).forEach(
+                  ({ date, ...messageCreate }) => {
+                    if (!dm.has(messageCreate.id))
+                      dm.set(messageCreate.id, {
+                        date: new Date(messageCreate.createdAt),
+                        ...messageCreate,
+                      });
+                  }
+                );
               }
             }
           })
         )
-      );
-      setLoaded(true);
+      )
+        .then(() => {
+          setLoaded(true, false);
+        })
+        .catch((e) => {
+          setLoaded(true, true);
+        });
     }
     Fetch();
   }, [LoadDMUrls]);
@@ -264,6 +287,33 @@ function DefaultPage() {
         anchor={({ href, path }) => <Link to={href}>{path}</Link>}
       />
     </div>
+  );
+}
+
+function DownloadDm() {
+  const { filteredDm } = useTwitterState();
+  return (
+    <button
+      className="link"
+      type="button"
+      title="JSONダウンロード"
+      onClick={() => {
+        if (confirm("現在の条件のJsonファイルを取得しますか？")) {
+          const now = new Date();
+          const list = filteredDm.map(({ date, ...args }) => args);
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(
+            new Blob([JSON.stringify({ createdAt: now, version: 1, list })], {
+              type: "application/octet-stream",
+            })
+          );
+          link.download = "direct-messages.json";
+          link.click();
+        }
+      }}
+    >
+      <RiDownloadLine />
+    </button>
   );
 }
 
@@ -312,6 +362,7 @@ function OptionButtons() {
       </Link>
       <DarkThemeButton />
       <MobileFold className="RowList" wide={true}>
+        <DownloadDm />
         <QLink keyword="mediaUrls:true">メディア</QLink>
         <QLink keyword="order:asc" exist="新着順にする">
           古い順にする
@@ -397,7 +448,7 @@ function DMMessageItem({
             {accountImg ? (
               <img
                 className="icon"
-                src={"/twitter/regist/img/" + accountImg}
+                src={"/twitter/data/img/" + accountImg}
                 title={account.accountDisplayName || account.accountId}
                 alt={account.accountDisplayName || account.accountId}
               />
@@ -460,7 +511,8 @@ function DMMessageItem({
 }
 
 function DMPage() {
-  const { dm, userFromUserId, loaded } = useTwitterState();
+  const { dm, userFromUserId, loaded, errored, filteredDm, setFilteredDm } =
+    useTwitterState();
   const dmArray = useMemo(() => {
     const dmArray = Array.from(dm.values());
     return dmArray;
@@ -496,17 +548,21 @@ function DMPage() {
     if (name) return where.concat(userIdWhere(name));
     else return where;
   }, [wheres.where, name]);
-  const filteredDmArray = findMany({
-    list: dmArray,
-    where: {
-      AND: where,
-    },
-    orderBy,
-  });
+  useEffect(() => {
+    setFilteredDm(
+      findMany({
+        list: dmArray,
+        where: {
+          AND: where,
+        },
+        orderBy,
+      })
+    );
+  }, [dmArray, where, orderBy]);
   const p = useMemo(() => Number(search.get("p") || 1), [search]);
   const maxPage = useMemo(
-    () => Math.ceil(filteredDmArray.length / take),
-    [filteredDmArray]
+    () => Math.ceil(filteredDm.length / take),
+    [filteredDm]
   );
   return (
     <div className="dm">
@@ -515,11 +571,18 @@ function DMPage() {
         <SearchArea maxPage={maxPage} />
       </header>
       {loaded ? (
-        <main className="list">
-          {filteredDmArray.slice((p - 1) * take, p * take).map((v, i) => (
-            <DMMessageItem message={v} index={i} key={i} />
-          ))}
-        </main>
+        dm.size === 0 && errored ? (
+          <div className="loadingWindow">
+            <p>読み込みに失敗しました</p>
+            <p>ファイル名が正しいか確認してください</p>
+          </div>
+        ) : (
+          <main className="list">
+            {filteredDm.slice((p - 1) * take, p * take).map((v, i) => (
+              <DMMessageItem message={v} index={i} key={i} />
+            ))}
+          </main>
+        )
       ) : (
         <Loading />
       )}
