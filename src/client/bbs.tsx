@@ -121,24 +121,22 @@ function ThreadListArea() {
   const { setReloadList } = useThreadsState();
   return (
     <MobileFold wide={true}>
-      <div className="RowList">
-        <ReloadButton
-          className="link"
-          onClick={() => {
-            setReloadList(currentName, true);
-          }}
-          cacheSession={cacheSessionName}
-          cacheOptions={{ path: root }}
-        />
-        <span>【{current?.label}】</span>
-        {list.map(({ name, label }, i) => {
-          return (
-            <Link key={i} to={"/bbs" + (name ? "/" + name : "") + "/"}>
-              &gt;{label}
-            </Link>
-          );
-        })}
-      </div>
+      <ReloadButton
+        className="link"
+        onClick={() => {
+          setReloadList(currentName, true);
+        }}
+        cacheSession={cacheSessionName}
+        cacheOptions={{ path: root }}
+      />
+      <span>【{current?.label}】</span>
+      {list.map(({ name, label }, i) => {
+        return (
+          <Link key={i} to={"/bbs" + (name ? "/" + name : "") + "/"}>
+            &gt;{label}
+          </Link>
+        );
+      })}
     </MobileFold>
   );
 }

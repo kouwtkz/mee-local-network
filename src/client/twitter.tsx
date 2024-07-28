@@ -389,7 +389,7 @@ function OptionButtons() {
       </a>
       <BackUrlButton root={root} />
       <DarkThemeButton />
-      <MobileFold className="RowList" wide={true}>
+      <MobileFold wide={true}>
         <ReloadButton
           className="link"
           cacheSession={cacheSessionName}
