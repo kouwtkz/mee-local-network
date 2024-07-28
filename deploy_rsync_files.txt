@@ -1,0 +1,6 @@
+.env
+.env.local
+docker-compose.yml
+Dockerfile
+package.json
+tsconfig.json
