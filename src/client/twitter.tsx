@@ -26,6 +26,8 @@ import { TopJumpArea } from "./components/TopJump";
 import { Loading } from "../layout/Loading";
 import { MobileFold } from "./components/MobileFold";
 import { RiDownloadLine } from "react-icons/ri";
+import { useCookies } from "react-cookie";
+import { TbReload } from "react-icons/tb";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <RouterProvider
@@ -73,6 +75,10 @@ const defaultEmojiDic: KeyValueType<string> = {
   agree: "👍",
   disagree: "👎",
 };
+
+const cacheName = "twitter-data";
+const cacheSessionName = "twitter-data-session";
+const cookiePath = "/twitter/";
 
 type DmMap = Map<string, DMMessageType>;
 
@@ -138,6 +144,7 @@ export function TwitterState() {
     setLoaded,
     loadedList,
   } = useTwitterState();
+  const [cookies, setCookie] = useCookies();
   const defaultDMPathes = useMemo(
     () => import.meta.env.VITE_DM_PATH?.split(",") ?? [],
     []
@@ -184,7 +191,14 @@ export function TwitterState() {
       setLoaded(false, false);
       let fetchList: Promise<Response>[];
       if (typeof caches !== "undefined") {
-        const cache = await caches.open("twitter-data");
+        if (!(cacheSessionName in cookies)) {
+          await caches.delete(cacheName);
+          setCookie(cacheSessionName, Date.now(), {
+            path: cookiePath,
+            maxAge: 60 * 60 * 24 * 30,
+          });
+        }
+        const cache = await caches.open(cacheName);
         fetchList = LoadDMUrls.map((v) =>
           cache.match(v).then(async (cachedData) => {
             if (!cachedData?.status) {
@@ -227,8 +241,28 @@ export function TwitterState() {
                       ? `${senderId}-${recipientId}`
                       : `${recipientId}-${senderId}`;
                   const text = vars.text ?? vars.message_data?.text;
-                  const createdAt = vars.createdAt;
-                  const date = new Date(createdAt);
+                  const date = new Date(
+                    vars.createdAt ?? Number(vars.created_timestamp)
+                  );
+                  let urls: DMMessageUrlType[] = [];
+                  let mediaUrls: string[] = [];
+                  if (vars.message_data) {
+                    const md = vars.message_data;
+                    ((md.entities?.urls as any[]) ?? []).forEach((e) => {
+                      urls.push({
+                        url: e.url,
+                        display: e.display_url ?? e.display,
+                        expanded: e.expanded_url ?? e.expanded,
+                      });
+                    });
+                    if (md.attachment?.media?.media_url) {
+                      const mediaUrl = md.attachment.media.media_url;
+                      mediaUrls.push(
+                        mediaUrl.slice(mediaUrl.lastIndexOf("/") + 1)
+                      );
+                    }
+                  }
+                  const createdAt = date.toISOString();
                   dm.set(id, {
                     conversationId,
                     id,
@@ -237,8 +271,8 @@ export function TwitterState() {
                     text,
                     createdAt,
                     date,
-                    mediaUrls: [],
-                    urls: [],
+                    mediaUrls,
+                    urls,
                   });
                 });
                 setDm(dm, { path: r.url });
@@ -252,6 +286,7 @@ export function TwitterState() {
                       });
                   }
                 );
+                setDm(dm, { path: r.url });
               }
             }
           })
@@ -287,6 +322,27 @@ function DefaultPage() {
         anchor={({ href, path }) => <Link to={href}>{path}</Link>}
       />
     </div>
+  );
+}
+
+function ReloadDm() {
+  const deleteCookie = useCookies()[2];
+  return (
+    <button
+      type="button"
+      title="読み込み"
+      className="link"
+      onClick={() => {
+        location.reload();
+      }}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        deleteCookie(cacheSessionName, { path: cookiePath });
+        location.reload();
+      }}
+    >
+      <TbReload />
+    </button>
   );
 }
 
@@ -362,6 +418,7 @@ function OptionButtons() {
       </Link>
       <DarkThemeButton />
       <MobileFold className="RowList" wide={true}>
+        <ReloadDm />
         <DownloadDm />
         <QLink keyword="mediaUrls:true">メディア</QLink>
         <QLink keyword="order:asc" exist="新着順にする">

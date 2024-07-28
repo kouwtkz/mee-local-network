@@ -4,11 +4,7 @@ interface DMMessageRawType {
   recipientId: string;
   createdAt: string;
   text: string;
-  urls?: {
-    display: string;
-    expanded: string;
-    url: string;
-  }[];
+  urls?: DMMessageUrlType[];
   mediaUrls: string[];
   reactions?:
   {
@@ -17,6 +13,12 @@ interface DMMessageRawType {
     eventId: string;
     createdAt: string;
   }[];
+}
+
+interface DMMessageUrlType {
+  display: string;
+  expanded: string;
+  url: string;
 }
 
 interface DMMessageType extends DMMessageRawType {

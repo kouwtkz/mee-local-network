@@ -245,8 +245,9 @@ button.topJump {
   svg {
     height: 1.5rem;
     width: 1.5rem;
-    margin: 1rem;
+    margin: 0;
   }
+  padding: 1rem;
   margin: 0.5rem 0.5rem 1.5rem 1.5rem;
   margin-bottom: 1.5rem;
   @media (min-width: $tabletWidth) {
@@ -259,7 +260,6 @@ button.topJump {
   position: fixed;
   bottom: 0;
   left: 0;
-  padding: 0;
   z-index: 10;
   border: 0;
   border-radius: 100%;
@@ -286,8 +286,9 @@ button,
   background-color: $high-color;
   border: none;
   margin: 0 0.1rem;
-  padding: 0;
+  padding: 0.1rem 0.3rem;
   border-radius: 0.1rem;
+  font-size: 1rem;
   &:disabled {
     cursor: auto;
     background-color: $disabled-color2;
@@ -298,7 +299,7 @@ button,
   svg {
     height: 1.25rem;
     width: 1.25rem;
-    margin: 0.1rem 0.3rem;
+    margin: 0;
   }
 }
 
