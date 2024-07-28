@@ -17,18 +17,23 @@ import { ParseThreads } from "../functions/bbs";
 import { TopJumpArea } from "./components/TopJump";
 import findThreads from "../functions/findThreads";
 import MultiParser from "./components/MultiParser";
-import { FaCaretDown, FaCaretUp, FaHome, FaPen, FaTimes } from "react-icons/fa";
+import { FaHome, FaPen, FaTimes } from "react-icons/fa";
 import { IoSend } from "react-icons/io5";
 import { create } from "zustand";
 import { useHotkeys } from "react-hotkeys-hook";
-import { TbEraser, TbPencil, TbPencilCancel, TbReload } from "react-icons/tb";
+import { TbEraser, TbPencil, TbPencilCancel } from "react-icons/tb";
 import { getRedirectUrl } from "../functions/redirectUrl";
-import { CgDarkMode, CgMoon, CgSun } from "react-icons/cg";
-import { DarkTheme, DarkThemeState } from "./theme";
+import { DarkThemeState } from "./theme";
 import { SearchArea } from "./components/Search";
-import { DarkThemeButton } from "./components/Buttons";
+import { BackUrlButton, DarkThemeButton } from "./components/Buttons";
 import { Loading } from "../layout/Loading";
 import { MobileFold } from "./components/MobileFold";
+import { ReloadButton } from "./components/Reload";
+import { useCookies } from "react-cookie";
+
+const root = "/bbs/";
+const cacheName = "bbs-data";
+const cacheSessionName = "bbs-data-session";
 
 interface ThreadsStateType {
   threadsList: {
@@ -73,7 +78,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <RouterProvider
     router={createBrowserRouter([
       {
-        path: "bbs",
+        path: root,
         element: (
           <>
             <ScrollRestoration />
@@ -113,9 +118,18 @@ function ThreadListArea() {
   const currentName = useParams().name ?? "";
   const current = threadLabeledList.find(({ name }) => name == currentName);
   const list = threadLabeledList.filter(({ name }) => name !== currentName);
+  const { setReloadList } = useThreadsState();
   return (
     <MobileFold wide={true}>
       <div className="RowList">
+        <ReloadButton
+          className="link"
+          onClick={() => {
+            setReloadList(currentName, true);
+          }}
+          cacheSession={cacheSessionName}
+          cacheOptions={{ path: root }}
+        />
         <span>【{current?.label}】</span>
         {list.map(({ name, label }, i) => {
           return (
@@ -326,27 +340,13 @@ function PostForm() {
 }
 
 function OptionButtons() {
-  const currentName = useParams().name ?? "";
-  const { setReloadList } = useThreadsState();
   return (
     <div className="buttons">
       <a className="button" title="ホームへ戻る" href="/">
         <FaHome />
       </a>
+      <BackUrlButton root={root} />
       <DarkThemeButton />
-      <button
-        type="button"
-        title="読み込み"
-        onClick={() => {
-          setReloadList(currentName, true);
-        }}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          location.reload();
-        }}
-      >
-        <TbReload />
-      </button>
       <ThreadListArea />
     </div>
   );
@@ -355,7 +355,9 @@ function OptionButtons() {
 function BBSPage() {
   const currentName = useParams().name ?? "";
   const current = threadLabeledList.find(({ name }) => name == currentName);
+  const postable = useMemo(() => current?.postable ?? true, [current]);
   const refMain = useRef<HTMLElement>(null);
+  const [cookies, setCookie] = useCookies();
   const [search, setSearch] = useSearchParams();
   const {
     threadsList,
@@ -385,17 +387,47 @@ function BBSPage() {
       typeof threadsList[currentName] === "undefined" ||
       reloadList[currentName]
     ) {
-      axios
-        .get("/bbs/api/get/threads/" + (currentName ? currentName + "/" : ""))
-        .then((r) => {
-          const rawData: ThreadsRawType[] = r.data;
-          setThreadsList(currentName, ParseThreads(rawData));
-        })
-        .catch((r: AxiosError) => {
-          if (r.response?.status === 401) {
-            location.href = getRedirectUrl(location.href);
-          } else setThreadsList(currentName, null);
-        });
+      async function Fetch() {
+        if (!(cacheSessionName in cookies)) {
+          await caches.delete(cacheName);
+          setCookie(cacheSessionName, Date.now(), {
+            path: root,
+            maxAge: 60 * 60 * 24 * 30,
+          });
+        }
+        let response: Promise<Response>;
+        const url =
+          "/bbs/api/get/threads/" + (currentName ? currentName + "/" : "");
+        if (!postable && typeof caches !== "undefined") {
+          if (!(cacheSessionName in cookies)) {
+            await caches.delete(cacheName);
+            setCookie(cacheSessionName, Date.now(), {
+              path: root,
+              maxAge: 60 * 60 * 24 * 30,
+            });
+          }
+          const cache = await caches.open(cacheName);
+          response = cache.match(url).then(async (cachedData) => {
+            if (!cachedData?.status) {
+              return cache.add(url).then(async () => (await cache.match(url))!);
+            } else return cachedData;
+          });
+        } else {
+          response = fetch(url);
+        }
+        response
+          .then(async (r) => {
+            const bodyString = await new Response(r.body).text();
+            const rawData: ThreadsRawType[] = JSON.parse(bodyString);
+            setThreadsList(currentName, ParseThreads(rawData));
+          })
+          .catch((r: AxiosError) => {
+            if (r.response?.status === 401) {
+              location.href = getRedirectUrl(location.href);
+            } else setThreadsList(currentName, null);
+          });
+      }
+      Fetch();
     }
   }, [currentName, reloadList]);
   useEffect(() => {
@@ -512,7 +544,6 @@ function BBSPage() {
     if (isEdit) setEdit();
     else setEdit(id);
   }
-  const postable = current?.postable ?? true;
   return (
     <>
       <div className="bbs">

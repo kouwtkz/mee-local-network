@@ -18,22 +18,26 @@ import { DarkThemeState } from "./theme";
 import { create } from "zustand";
 import { FormatDate } from "../functions/DateFunctions";
 import { SearchArea } from "./components/Search";
-import { DarkThemeButton } from "./components/Buttons";
+import { BackUrlButton, DarkThemeButton } from "./components/Buttons";
 import { FaHome } from "react-icons/fa";
 import { findMany, setWhere } from "../functions/findMany";
-import { BiConversation, BiSolidLeftArrow, BiUserPin } from "react-icons/bi";
+import { BiConversation, BiUserPin } from "react-icons/bi";
 import { TopJumpArea } from "./components/TopJump";
 import { Loading } from "../layout/Loading";
 import { MobileFold } from "./components/MobileFold";
 import { RiDownloadLine } from "react-icons/ri";
 import { useCookies } from "react-cookie";
-import { TbReload } from "react-icons/tb";
+import { ReloadButton } from "./components/Reload";
+
+const root = "/twitter/";
+const cacheName = "twitter-data";
+const cacheSessionName = "twitter-data-session";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <RouterProvider
     router={createBrowserRouter([
       {
-        path: "twitter",
+        path: root,
         element: (
           <>
             <ScrollRestoration />
@@ -75,10 +79,6 @@ const defaultEmojiDic: KeyValueType<string> = {
   agree: "👍",
   disagree: "👎",
 };
-
-const cacheName = "twitter-data";
-const cacheSessionName = "twitter-data-session";
-const cookiePath = "/twitter/";
 
 type DmMap = Map<string, DMMessageType>;
 
@@ -194,7 +194,7 @@ export function TwitterState() {
         if (!(cacheSessionName in cookies)) {
           await caches.delete(cacheName);
           setCookie(cacheSessionName, Date.now(), {
-            path: cookiePath,
+            path: root,
             maxAge: 60 * 60 * 24 * 30,
           });
         }
@@ -325,27 +325,6 @@ function DefaultPage() {
   );
 }
 
-function ReloadDm() {
-  const deleteCookie = useCookies()[2];
-  return (
-    <button
-      type="button"
-      title="読み込み"
-      className="link"
-      onClick={() => {
-        location.reload();
-      }}
-      onContextMenu={(e) => {
-        e.preventDefault();
-        deleteCookie(cacheSessionName, { path: cookiePath });
-        location.reload();
-      }}
-    >
-      <TbReload />
-    </button>
-  );
-}
-
 function DownloadDm() {
   const { filteredDm } = useTwitterState();
   return (
@@ -374,7 +353,6 @@ function DownloadDm() {
 }
 
 function OptionButtons() {
-  const { pathname, search } = useLocation();
   const [searchParams] = useSearchParams();
   const q = searchParams.get("q") ?? "";
   const sq = q.split(/\s+/).filter((v) => v);
@@ -409,16 +387,14 @@ function OptionButtons() {
       <a className="button" title="ホームへ戻る" href="/">
         <FaHome />
       </a>
-      <Link
-        className="button"
-        title="一つ前へ戻る"
-        to={search ? pathname : pathname.replace(/[^\/]*.$/, "")}
-      >
-        <BiSolidLeftArrow />
-      </Link>
+      <BackUrlButton root={root} />
       <DarkThemeButton />
       <MobileFold className="RowList" wide={true}>
-        <ReloadDm />
+        <ReloadButton
+          className="link"
+          cacheSession={cacheSessionName}
+          cacheOptions={{ path: root }}
+        />
         <DownloadDm />
         <QLink keyword="mediaUrls:true">メディア</QLink>
         <QLink keyword="order:asc" exist="新着順にする">
