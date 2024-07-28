@@ -1,4 +1,4 @@
-type logicalConditionsType = "AND" | "OR";
+type logicalConditionsType = "AND" | "OR" | "NOT";
 type filterConditionsType = "equals" | "gt" | "gte" | "lt" | "lte" | "not" | "in";
 type filterConditionsStringType = "contains" | "startsWith" | "endsWith";
 type filterConditionsBoolType = "bool";
