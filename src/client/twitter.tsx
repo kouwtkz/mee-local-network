@@ -461,6 +461,7 @@ function DMMessageItem({
   message: DMMessageType;
   index?: number;
 }) {
+  const { name } = useParams();
   const { user } = useTwitterState();
   const account: UserType = useMemo(() => {
     const accountId = message.senderId;
@@ -554,18 +555,26 @@ function DMMessageItem({
         </div>
       </div>
       <div className="info">
-        <Link
-          to={"?q=user:" + (account.username || account.accountId)}
-          title="ユーザーとの会話を開く"
-        >
-          <BiUserPin />
-        </Link>
-        <Link
-          to={"?q=conversationId:" + message.conversationId}
-          title="この会話を開く"
-        >
-          <BiConversation />
-        </Link>
+        {!name ? (
+          <>
+            <Link
+              to={
+                account.username
+                  ? "/twitter/dm/" + account.username
+                  : "?q=user:" + account.accountId
+              }
+              title="ユーザーとの会話を開く"
+            >
+              <BiUserPin />
+            </Link>
+            <Link
+              to={"?q=conversationId:" + message.conversationId}
+              title="この会話を開く"
+            >
+              <BiConversation />
+            </Link>
+          </>
+        ) : null}
         <span className="reactions">
           {message.reactions
             ?.map(({ reactionKey }) => defaultEmojiDic[reactionKey])
