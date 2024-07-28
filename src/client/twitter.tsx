@@ -473,7 +473,6 @@ function DMMessageItem({
       }
     );
   }, [user, message.senderId]);
-  console.log(message.conversationId);
   const accountImg: string | undefined = useMemo(() => {
     return account.img || user["0"].img;
   }, [user, account]);
