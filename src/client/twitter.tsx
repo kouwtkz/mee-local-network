@@ -21,7 +21,7 @@ import { SearchArea } from "./components/Search";
 import { DarkThemeButton } from "./components/Buttons";
 import { FaHome } from "react-icons/fa";
 import { findMany, setWhere } from "../functions/findMany";
-import { BiSolidLeftArrow } from "react-icons/bi";
+import { BiConversation, BiSolidLeftArrow, BiUserPin } from "react-icons/bi";
 import { TopJumpArea } from "./components/TopJump";
 import { Loading } from "../layout/Loading";
 import { MobileFold } from "./components/MobileFold";
@@ -473,6 +473,7 @@ function DMMessageItem({
       }
     );
   }, [user, message.senderId]);
+  console.log(message.conversationId);
   const accountImg: string | undefined = useMemo(() => {
     return account.img || user["0"].img;
   }, [user, account]);
@@ -554,6 +555,18 @@ function DMMessageItem({
         </div>
       </div>
       <div className="info">
+        <Link
+          to={"?q=user:" + (account.username || account.accountId)}
+          title="ユーザーとの会話を開く"
+        >
+          <BiUserPin />
+        </Link>
+        <Link
+          to={"?q=conversationId:" + message.conversationId}
+          title="この会話を開く"
+        >
+          <BiConversation />
+        </Link>
         <span className="reactions">
           {message.reactions
             ?.map(({ reactionKey }) => defaultEmojiDic[reactionKey])
