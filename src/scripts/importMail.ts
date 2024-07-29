@@ -9,6 +9,7 @@ export interface importMailOptions {
   dir: string;
   idList?: { [k: string]: string | undefined };
   idDefault?: string;
+  idAutoOnly?: boolean;
   output?: string;
   outputParent?: string;
   mediaParent?: string;
@@ -19,6 +20,7 @@ export async function importMail({
   dir,
   idList = {},
   idDefault = "mail",
+  idAutoOnly = true,
   output: _output,
   outputParent = "./import/result/",
   mediaParent = "./import/media/",
@@ -52,7 +54,7 @@ export async function importMail({
       mails.map((pm) =>
         pm.then((mail) => {
           const date = mail.date ?? new Date(0);
-          const id = mail.messageId
+          const id = (!idAutoOnly && mail.messageId)
             ? mail.messageId.slice(1, -1).replace(/[@.]/g, "_")
             : idDefault + "_" + FormatDate(date, "Ymd_His");
           let mediaUrls: string[] = [];
