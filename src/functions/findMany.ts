@@ -152,8 +152,11 @@ export function setWhere<T>(q: string, options: WhereOptionsKvType<T> = {}) {
         };
       } else {
         const colonIndex = /^\w+:\/\//.test(item) ? -1 : item.indexOf(":");
-        const filterKey = colonIndex >= 0 ? item.slice(0, colonIndex) : "";
-        const filterValue = item.slice(filterKey.length + 1);
+        const _filterKey = colonIndex >= 0 ? item.slice(0, colonIndex) : "";
+        const switchKey = _filterKey.toLocaleLowerCase();
+        const UNDER = _filterKey.startsWith("_");
+        const filterKey = UNDER ? _filterKey.slice(1) : _filterKey;
+        const filterValue = item.slice(_filterKey.length + 1);
         let filterOptions: WhereOptionsType<T>;
         switch (typeof options[filterKey]) {
           case "object":
@@ -170,7 +173,7 @@ export function setWhere<T>(q: string, options: WhereOptionsKvType<T> = {}) {
             break;
         }
         let filterTake = filterOptions.take;
-        switch (filterKey.toLocaleLowerCase()) {
+        switch (switchKey) {
           case "":
             if (item) {
               whereItem = {
@@ -306,6 +309,7 @@ export function setWhere<T>(q: string, options: WhereOptionsKvType<T> = {}) {
                   break;
                 default:
                   filterEntry = createFilterEntry(filterValue);
+                  console.log(filterEntry)
                   break;
               }
               whereItem = { [key]: filterEntry };
