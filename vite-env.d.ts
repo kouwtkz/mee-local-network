@@ -1,5 +1,3 @@
-/// <reference types="vite/client" />
-
 interface ImportMetaEnv {
   readonly VITE_BUILD_TIME?: string
   readonly VITE_STYLES_TIME?: string
@@ -9,6 +7,7 @@ interface ImportMetaEnv {
   readonly VITE_LOGIN_PASSWORD?: string
   readonly VITE_COOKIE_VALUE?: string
   readonly VITE_DM_PATH?: string
+  readonly VITE_DM_LINK_LIST?: string[]
   readonly VITE_TWITTER_MEDIA?: string
 }
 
