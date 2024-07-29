@@ -6,7 +6,10 @@ const cookieKey = "localToken";
 const cookieValue = import.meta.env.VITE_COOKIE_VALUE;
 
 export function getIsLogin(c: CommonContext) {
-  return getCookie(c, cookieKey) === cookieValue;
+  return (
+    (import.meta.env.DEV && new URL(c.req.url).hostname === "localhost") ||
+    getCookie(c, cookieKey) === cookieValue
+  );
 }
 
 export async function LoginRedirect(c: CommonContext, next: Next) {
