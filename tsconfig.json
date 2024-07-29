@@ -1,5 +1,5 @@
 {
-  "exclude": ["node_modules", "static", "dist"],
+  "include": ["src", "import", "**/*.d.ts"],
   "compilerOptions": {
     "target": "es2017",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
@@ -15,8 +15,8 @@
     "allowJs": true,
     "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"],
-      "#/*": ["/*"]
+      "@/*": ["src/*"]
     }
-  }
+  },
+  "references": [{ "path": "./tsconfig.vite.json" }]
 }
