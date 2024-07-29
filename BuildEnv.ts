@@ -22,22 +22,44 @@ export function SetBuildDate(env: EnvType) {
 }
 
 // envファイルのtrueやfalseをbooleanに変換する
-export const envStringToBoolean = () => ({
-  name: 'env-string-to-boolean',
-  configResolved(config: any) {
-    const entries = Object.entries(config.env as Record<string, string>).map(([key, value]) => {
-      const target = typeof value === 'string' ? value.toLowerCase() : value
-      const results = {
-        true: true,
-        false: false,
-        null: null
-      } as any;
-      return [key, results[target] === undefined ? value : results[target]]
-    })
-    config.env = Object.fromEntries(entries)
-    return config
+export function envStringToBoolean() {
+  return {
+    name: 'env-string-to-boolean',
+    configResolved(config: any) {
+      const entries = Object.entries(config.env as Record<string, string>).map(([key, value]) => {
+        const target = typeof value === 'string' ? value.toLowerCase() : value
+        const results = {
+          true: true,
+          false: false,
+          null: null
+        } as any;
+        return [key, results[target] === undefined ? value : results[target]]
+      })
+      config.env = Object.fromEntries(entries)
+      return config
+    }
   }
-})
+}
+
+// envファイルの{}や[]に囲まれたものをJSONに変換する
+export function envStringToObject() {
+  return {
+    name: 'env-string-to-object',
+    configResolved(config: any) {
+      const entries = Object.entries(config.env as Record<string, string>).map(([key, value]) => {
+        if (typeof value === 'string' && (
+          (value.startsWith("[") && value.endsWith("]"))
+          || (value.startsWith("{") && value.endsWith("}"))
+        )) {
+          value = JSON.parse(value);
+        }
+        return [key, value];
+      })
+      config.env = Object.fromEntries(entries)
+      return config
+    }
+  }
+}
 
 export function setBuildEnv(mode: string) {
   const envLocalPath = `.env.${mode}.local`;
