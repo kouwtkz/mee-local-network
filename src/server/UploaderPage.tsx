@@ -37,7 +37,7 @@ function get_filelist(dir: string) {
         };
       })
       .filter((item) => item.isFile);
-    list.sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
+    list.sort((a, b) => b.mtimeMs - a.mtimeMs);
     Object.assign(args, { list: list });
   } else {
     args.error = "※アップロードパスが存在してません！";
