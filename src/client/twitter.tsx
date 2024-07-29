@@ -412,6 +412,17 @@ function OptionButtons() {
         <QLink keyword="order:asc" exist="新着順にする">
           古い順にする
         </QLink>
+        {import.meta.env.VITE_DM_LINK_LIST?.map((link, i) => {
+          const Url = new URL("/twitter/dm/" + link, location.href);
+          if (!Url.pathname.endsWith("/")) Url.pathname = Url.pathname + "/";
+          if (location.href === Url.href) return null;
+          else
+            return (
+              <Link to={Url.href} key={i}>
+                {link}
+              </Link>
+            );
+        })}
       </MobileFold>
     </div>
   );
