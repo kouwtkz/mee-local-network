@@ -395,15 +395,19 @@ button,
     }
   }
   header {
-    display: flex;
-    justify-content: space-around;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     z-index: 10;
-    > * {
-      padding: 0.1rem;
+    > .list {
+      max-width: 60rem;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      > * {
+        padding: 0.1rem;
+      }
     }
   }
   .buttons {
