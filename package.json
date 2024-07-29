@@ -6,7 +6,7 @@
     "dev": "vite --host",
     "preview": "cd dist && node ./index.js",
     "build": "npm run build:client && npm run build:server",
-    "deploy": "pwsh -c ./deploy_rs.ps1",
+    "deploy": "node deploy.mjs",
     "ssh": "pwsh -c ssh rs -t 'cd mee-local-network; bash --login'",
     "ssh:docker-restart": "pwsh -c ssh rs -t 'cd mee-local-network; docker compose restart'",
     "scp:static": "scp -r ./static/ rs:~/mee-local-network/static/",
