@@ -61,3 +61,9 @@ declare const YTD: {
     regist?: KeyValueType<UserRawType>;
   };
 };
+
+interface ExportDMType {
+  createdAt: string,
+  version: number,
+  list: DMMessageRawType[]
+}

@@ -1,15 +1,18 @@
-node_modules
-dist
+/node_modules
+/dist
 .dev.vars
 
 # staticパスにプライベートなものを色々入れてる
-static
+/static
+
+# 個人的なデータのインポート用
+/import
 
 # 個人のデータ
-public/twitter/data
+/public/twitter/data
 
 # データベースの情報を入れるところ
-data
+/data
 
 # Change them to your taste:
 package-lock.json

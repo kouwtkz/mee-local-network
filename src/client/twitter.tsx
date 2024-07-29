@@ -28,6 +28,7 @@ import { MobileFold } from "./components/MobileFold";
 import { RiDownloadLine } from "react-icons/ri";
 import { useCookies } from "react-cookie";
 import { ReloadButton } from "./components/Reload";
+import { getConversationId } from "@/functions/twitter";
 
 const root = "/twitter/";
 const cacheName = "twitter-data";
@@ -236,10 +237,10 @@ export function TwitterState() {
                   const senderId = vars.senderId ?? vars.sender_id;
                   const recipientId =
                     vars.recipientId ?? vars.target?.recipient_id;
-                  const conversationId =
-                    senderId < recipientId
-                      ? `${senderId}-${recipientId}`
-                      : `${recipientId}-${senderId}`;
+                  const conversationId = getConversationId(
+                    senderId,
+                    recipientId
+                  );
                   const text = vars.text ?? vars.message_data?.text;
                   const date = new Date(
                     vars.createdAt ?? Number(vars.created_timestamp)
@@ -335,12 +336,23 @@ function DownloadDm() {
       onClick={() => {
         if (confirm("現在の条件のJsonファイルを取得しますか？")) {
           const now = new Date();
-          const list = filteredDm.map(({ date, ...args }) => args);
+          const list = filteredDm.map(
+            ({ date, ...args }) => args as DMMessageRawType
+          );
           const link = document.createElement("a");
           link.href = URL.createObjectURL(
-            new Blob([JSON.stringify({ createdAt: now, version: 1, list })], {
-              type: "application/octet-stream",
-            })
+            new Blob(
+              [
+                JSON.stringify({
+                  createdAt: now.toISOString(),
+                  version: 1,
+                  list,
+                } as ExportDMType),
+              ],
+              {
+                type: "application/octet-stream",
+              }
+            )
           );
           link.download = "direct-messages.json";
           link.click();
