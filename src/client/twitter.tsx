@@ -29,6 +29,7 @@ import { RiDownloadLine } from "react-icons/ri";
 import { useCookies } from "react-cookie";
 import { ReloadButton } from "./components/Reload";
 import { getConversationId } from "@/functions/twitter";
+import { getRelativeUrl } from "@/functions/url";
 
 const root = "/twitter/";
 const cacheName = "twitter-data";
@@ -413,8 +414,7 @@ function OptionButtons() {
           古い順にする
         </QLink>
         {import.meta.env.VITE_DM_LINK_LIST?.map((link, i) => {
-          const Url = new URL("/twitter/dm/" + link, location.href);
-          if (!Url.pathname.endsWith("/")) Url.pathname = Url.pathname + "/";
+          const Url = getRelativeUrl("/twitter/dm/" + link, true);
           if (location.href === Url.href) return null;
           else
             return (
@@ -557,11 +557,12 @@ function DMMessageItem({
         {!name ? (
           <>
             <Link
-              to={
+              to={getRelativeUrl(
                 account.username
                   ? "/twitter/dm/" + account.username
-                  : "?q=user:" + account.accountId
-              }
+                  : "?q=user:" + account.accountId,
+                true
+              ).href}
               title="ユーザーとの会話を開く"
             >
               <BiUserPin />
@@ -644,8 +645,10 @@ function DMPage() {
   return (
     <div className="dm">
       <header>
-        <OptionButtons />
-        <SearchArea maxPage={maxPage} />
+        <div className="list">
+          <OptionButtons />
+          <SearchArea maxPage={maxPage} />
+        </div>
       </header>
       {loaded ? (
         dm.size === 0 && errored ? (

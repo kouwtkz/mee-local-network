@@ -546,8 +546,10 @@ function BBSPage() {
     <>
       <div className="bbs">
         <header>
-          <OptionButtons />
-          <SearchArea maxPage={maxPage} />
+          <div className="list">
+            <OptionButtons />
+            <SearchArea maxPage={maxPage} />
+          </div>
         </header>
         {postable ? <PostForm /> : null}
         {typeof threads === "undefined" ? (
