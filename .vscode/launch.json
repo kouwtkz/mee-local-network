@@ -9,7 +9,7 @@
       "serverReadyAction": {
         "pattern": "//localhost.+m([0-9]+)",
         "uriFormat": "http://localhost:%s",
-        "action": "openExternally"
+        "action": "debugWithChrome"
       }
     },
     {
