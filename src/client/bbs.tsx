@@ -387,7 +387,7 @@ function BBSPage() {
     ) {
       async function Fetch() {
         if (!(cacheSessionName in cookies)) {
-          await caches.delete(cacheName);
+          if (typeof caches !== "undefined") await caches.delete(cacheName);
           setCookie(cacheSessionName, Date.now(), {
             path: root,
             maxAge: 60 * 60 * 24 * 30,
