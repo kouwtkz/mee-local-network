@@ -15,6 +15,7 @@
       }
     ],
     "apple-touch-icons": "off",
-    "manifest-file-extension": "off"
+    "manifest-file-extension": "off",
+    "typescript-config/is-valid": "off"
   }
 }
