@@ -26,7 +26,14 @@ export async function importLINEfromText({
     let files = dirent.filter((f) => f.isFile());
     return files.map((file) =>
       path.resolve(file.parentPath + "/" + file.name)
-    );
+    ).filter(filepath => {
+      switch (path.extname(filepath)) {
+        case ".txt":
+          return true;
+        default:
+          return false;
+      }
+    });
   }).then((pathes) =>
     pathes.map(
       (path) =>
