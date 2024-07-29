@@ -309,7 +309,6 @@ export function setWhere<T>(q: string, options: WhereOptionsKvType<T> = {}) {
                   break;
                 default:
                   filterEntry = createFilterEntry(filterValue);
-                  console.log(filterEntry)
                   break;
               }
               whereItem = { [key]: filterEntry };
