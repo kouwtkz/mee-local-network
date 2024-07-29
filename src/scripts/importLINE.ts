@@ -24,16 +24,16 @@ export async function importLINEfromText({
   mkdirTry(outputParent);
   readdirAsync(dir, true).then(dirent => {
     let files = dirent.filter((f) => f.isFile());
-    return files.map((file) =>
-      path.resolve(file.parentPath + "/" + file.name)
-    ).filter(filepath => {
-      switch (path.extname(filepath)) {
+    return files.filter(({ name }) => {
+      switch (path.extname(name).toLocaleLowerCase()) {
         case ".txt":
           return true;
         default:
           return false;
       }
-    });
+    }).map((file) =>
+      path.resolve(file.parentPath + "/" + file.name)
+    );
   }).then((pathes) =>
     pathes.map(
       (path) =>

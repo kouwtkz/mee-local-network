@@ -31,7 +31,14 @@ export async function importMail({
   return readdirAsync(dir, true)
     .then((dirent) => {
       let files = dirent.filter((f) => f.isFile());
-      return files.map((file) =>
+      return files.filter(({ name }) => {
+        switch (path.extname(name).toLocaleLowerCase()) {
+          case ".eml":
+            return true;
+          default:
+            return false;
+        }
+      }).map((file) =>
         path.resolve(file.parentPath + "/" + file.name)
       );
     })
