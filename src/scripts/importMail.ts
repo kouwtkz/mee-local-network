@@ -1,46 +1,36 @@
 import { FormatDate } from "@/functions/DateFunctions";
+import { mkdirTry, readdirAsync, readFileAsync } from "@/functions/fileSystem";
 import { getConversationId } from "@/functions/twitter";
-import { Dirent, mkdirSync, readdir, readFile, writeFileSync } from "fs";
-import { ParsedMail, simpleParser } from "mailparser";
+import { existsSync, writeFileSync } from "fs";
+import { simpleParser } from "mailparser";
 import path from "path";
 
 export interface importMailOptions {
   dir: string;
-  take?: number;
-  page?: number;
   idList?: { [k: string]: string | undefined };
+  idDefault?: string;
   output?: string;
   outputParent?: string;
   mediaParent?: string;
+  mediaDir?: string;
 }
 
 export async function importMail({
   dir,
-  take,
-  page = 0,
   idList = {},
+  idDefault = "mail",
   output: _output,
   outputParent = "./import/result/",
   mediaParent = "./import/media/",
+  mediaDir = "",
 }: importMailOptions) {
   const now = new Date();
-  const output = _output ?? "mail_" + FormatDate(now, "Ymd_His") + ".json";
-  try {
-    mkdirSync(outputParent, { recursive: true });
-  } catch { }
-  try {
-    mkdirSync(mediaParent, { recursive: true });
-  } catch { }
-  return await new Promise<Dirent[]>((resolve, reject) => {
-    readdir(dir, { recursive: true, withFileTypes: true }, (err, files) => {
-      if (err) reject(err);
-      else resolve(files);
-    });
-  })
+  const output = _output ?? idDefault + "_" + FormatDate(now, "Ymd_His") + ".json";
+  mkdirTry(outputParent);
+  mkdirTry(path.resolve(mediaParent, mediaDir));
+  return readdirAsync(dir, true)
     .then((dirent) => {
       let files = dirent.filter((f) => f.isFile());
-      if (take !== undefined)
-        files = files.slice(page * take, (page + 1) * take);
       return files.map((file) =>
         path.resolve(file.parentPath + "/" + file.name)
       );
@@ -48,33 +38,22 @@ export async function importMail({
     .then((pathes) =>
       pathes.map(
         (path) =>
-          new Promise<ParsedMail>((resolve, reject) => {
-            readFile(path, (e, brob) => {
-              if (e) reject(e);
-              simpleParser(brob)
-                .then((mail) => {
-                  resolve(mail);
-                })
-                .catch((e) => {
-                  reject(e);
-                });
-            });
-          })
+          readFileAsync(path).then(buf => simpleParser(buf))
       )
     )
     .then((mails) =>
-      mails.map((pm, i) =>
+      mails.map((pm) =>
         pm.then((mail) => {
           const date = mail.date ?? new Date(0);
           const id = mail.messageId
             ? mail.messageId.slice(1, -1).replace(/[@.]/g, "_")
-            : "mail_" + FormatDate(date, "Ymd_His");
+            : idDefault + "_" + FormatDate(date, "Ymd_His");
           let mediaUrls: string[] = [];
           mail.attachments.forEach((v) => {
             const filename = (id ? id + "-" : "") + v.filename;
-            const fullpath = path.resolve(mediaParent, filename);
-            writeFileSync(fullpath, v.content);
-            mediaUrls.push(filename);
+            const fullpath = path.resolve(mediaParent, mediaDir, filename);
+            if (!existsSync(fullpath)) writeFileSync(fullpath, v.content);
+            mediaUrls.push((mediaDir ? mediaDir + "/" : "") + filename);
           });
           const from = mail.from?.text ?? "";
           const senderId = idList[from] ?? from;
