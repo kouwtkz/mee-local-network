@@ -1,9 +1,6 @@
 import { statSync, writeFileSync } from "fs";
 import { configDotenv } from 'dotenv'
 
-export function DateUTCString(date: Date = new Date()) {
-  return date.toLocaleString("sv-SE", { timeZone: "UTC" }).replace(" ", "T") + "Z";
-}
 export type EnvType = { [k: string]: string | undefined };
 export function readEnv(path: string): EnvType {
   const parsed = configDotenv({ path }).parsed;
@@ -12,11 +9,12 @@ export function readEnv(path: string): EnvType {
 export function writeEnv(path: string, env: EnvType) {
   writeFileSync(path, Object.entries(env).map(([k, v]) => `${k}=${v}`).join("\n"));
 }
+
 export function SetBuildDate(env: EnvType) {
-  env.VITE_BUILD_TIME = DateUTCString();
+  env.VITE_BUILD_TIME = new Date().toISOString();
   const cssFile = "./src/styles.scss";
   try {
-    env.VITE_STYLES_TIME = DateUTCString(statSync(cssFile).mtime);
+    env.VITE_STYLES_TIME = new Date(statSync(cssFile).mtimeMs).toISOString();
   } catch { }
   return env;
 }
