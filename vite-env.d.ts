@@ -7,7 +7,7 @@ interface ImportMetaEnv {
   readonly VITE_LOGIN_PASSWORD?: string
   readonly VITE_COOKIE_VALUE?: string
   readonly VITE_DM_PATH?: string
-  readonly VITE_DM_LINK_LIST?: string[]
+  readonly VITE_DM_LINKS?: string
   readonly VITE_TWITTER_MEDIA?: string
 }
 

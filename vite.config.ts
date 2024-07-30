@@ -4,12 +4,12 @@ import devServer from '@hono/vite-dev-server'
 import { VitePluginNode } from 'vite-plugin-node';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import ssgBuild from '@hono/vite-ssg';
-import { envStringToBoolean, envStringToObject, setBuildEnv } from './BuildEnv';
+import { setBuildEnv } from './BuildEnv';
 
 export default defineConfig(({ mode }) => {
   if (mode !== "development") setBuildEnv(mode);
   let config: UserConfig = {
-    plugins: [tsconfigPaths(), envStringToBoolean(), envStringToObject()]
+    plugins: [tsconfigPaths()]
   };
   switch (mode) {
     case "client":

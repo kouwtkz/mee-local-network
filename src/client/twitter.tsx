@@ -413,7 +413,7 @@ function OptionButtons() {
         <QLink keyword="order:asc" exist="新着順にする">
           古い順にする
         </QLink>
-        {import.meta.env.VITE_DM_LINK_LIST?.map((link, i) => {
+        {import.meta.env.VITE_DM_LINKS?.split(",").map((link, i) => {
           const Url = getRelativeUrl("/twitter/dm/" + link, true);
           if (location.href === Url.href) return null;
           else
@@ -557,12 +557,14 @@ function DMMessageItem({
         {!name ? (
           <>
             <Link
-              to={getRelativeUrl(
-                account.username
-                  ? "/twitter/dm/" + account.username
-                  : "?q=user:" + account.accountId,
-                true
-              ).href}
+              to={
+                getRelativeUrl(
+                  account.username
+                    ? "/twitter/dm/" + account.username
+                    : "?q=user:" + account.accountId,
+                  true
+                ).href
+              }
               title="ユーザーとの会話を開く"
             >
               <BiUserPin />
