@@ -3,7 +3,7 @@ import { getCookie } from "hono/cookie";
 import { CommonContext } from "../types/HonoCustomType";
 import { getRedirectUrl } from "../functions/redirectUrl";
 const cookieKey = "localToken";
-const cookieValue = import.meta.env.VITE_COOKIE_VALUE;
+const cookieValue = process.env.COOKIE_VALUE;
 
 export function getIsLogin(c: CommonContext) {
   return (

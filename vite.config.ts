@@ -4,9 +4,17 @@ import devServer from '@hono/vite-dev-server'
 import { VitePluginNode } from 'vite-plugin-node';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import ssgBuild from '@hono/vite-ssg';
-import { setBuildEnv } from './BuildEnv';
+import { setBuildEnv, writeEnv } from './BuildEnv';
+import { configDotenv } from 'dotenv';
+import path from 'path';
+
+const outDir = "dist";
 
 export default defineConfig(({ mode }) => {
+  let env: { [k: string]: string } = {
+    ...configDotenv().parsed,
+    ...configDotenv({ path: ".env.local" }).parsed
+  };
   if (mode !== "development") setBuildEnv(mode);
   let config: UserConfig = {
     plugins: [tsconfigPaths()]
@@ -15,6 +23,7 @@ export default defineConfig(({ mode }) => {
     case "client":
       config.plugins!.push(react())
       config.build = {
+        outDir,
         rollupOptions: {
           input: [
             // './src/client.tsx',
@@ -43,6 +52,10 @@ export default defineConfig(({ mode }) => {
       }
       break;
     case "production":
+      env = Object.fromEntries(
+        Object.entries(env).filter(([k]) => !k.startsWith("VITE_"))
+      )
+      writeEnv(path.resolve(outDir, ".env"), env);
       config.plugins!.push([...VitePluginNode({
         adapter({ app, server, req, res, next }) {
           app(res, res);
@@ -54,6 +67,7 @@ export default defineConfig(({ mode }) => {
       config = {
         ...config,
         build: {
+          outDir,
           emptyOutDir: false,
         },
         ssr: { external: ['axios', 'react', 'react-dom'] },

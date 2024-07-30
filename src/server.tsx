@@ -60,8 +60,8 @@ export function ServerCommon(app: CommonHono) {
   const staticPath = import.meta.env.PROD ? "../static" : "static";
 
   const cookieKey = "localToken";
-  const cookieValue = import.meta.env.VITE_COOKIE_VALUE;
-  const password = import.meta.env.VITE_LOGIN_PASSWORD;
+  const cookieValue = process.env.COOKIE_VALUE;
+  const password = process.env.LOGIN_PASSWORD;
 
   app.get("/", (c) => {
     return c.html(

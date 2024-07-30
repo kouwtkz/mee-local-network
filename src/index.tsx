@@ -1,6 +1,9 @@
+import "@/server/dotenv";
+
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { ServerCommon } from "./server";
+
 const app = new Hono<MeeBindings>({ strict: false });
 
 ServerCommon(app);
