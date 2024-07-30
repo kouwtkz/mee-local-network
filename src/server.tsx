@@ -13,7 +13,7 @@ import {
 } from "fs";
 import { renderToString } from "react-dom/server";
 import { LogPage } from "./server/LogPage";
-import { TopPage } from "./server/Home";
+import { OtherPage, TopPage } from "./server/Home";
 import {
   uploaderOptions,
   UploaderPage,
@@ -71,6 +71,15 @@ export function ServerCommon(app: CommonHono) {
       })
     );
   });
+  app.get("other", (c) => {
+    return c.html(
+      RenderMainLayout({
+        children: <OtherPage title={title + " - その他"} />,
+        c,
+      })
+    );
+  });
+
   app.get("login", (c) => {
     return c.html(RenderMainLayout({ c, children: <LoginPage c={c} /> }));
   });
