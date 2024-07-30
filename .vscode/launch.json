@@ -13,10 +13,10 @@
       }
     },
     {
-      "name": "preview",
+      "name": "start",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run preview",
+      "command": "npm start",
       "serverReadyAction": {
         "pattern": "listening on port ([0-9]+)",
         "uriFormat": "http://localhost:%s",
