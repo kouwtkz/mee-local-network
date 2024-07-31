@@ -8,7 +8,7 @@ import { GetRawThreads } from "@/functions/MeeLogue";
 import { buildAddVer, stylesAddVer } from "@/server/env";
 import { LoginRedirect, Unauthorized } from "@/server/LoginCheck";
 
-function bbs_layout(title = import.meta.env.VITE_BBS_TITLE) {
+function logueLayout(title = import.meta.env.VITE_LOGUE_TITLE) {
   return renderToString(
     <DefaultLayout
       title={title}
@@ -37,8 +37,8 @@ function bbs_layout(title = import.meta.env.VITE_BBS_TITLE) {
   );
 }
 
-export const bbsOptions = {
-  title: import.meta.env.VITE_BBS_TITLE ?? import.meta.env.VITE_TITLE,
+export const logueOptions = {
+  title: import.meta.env.VITE_LOGUE_TITLE ?? import.meta.env.VITE_TITLE,
   data_dir: import.meta.env.PROD ? "../data/" : "./data/",
 };
 
@@ -49,7 +49,7 @@ const app_api = new Hono<MeeBindings>({ strict: false });
   const app = app_api;
   app.get("get/files", (c) => {
     try {
-      return c.json(readdirSync(bbsOptions.data_dir));
+      return c.json(readdirSync(logueOptions.data_dir));
     } catch {
       return c.json([]);
     }
@@ -64,7 +64,7 @@ const app_api = new Hono<MeeBindings>({ strict: false });
     let posts: MeeLoguePostRawType[] | null = null;
     try {
       posts = JSON.parse(
-        readFileSync(bbsOptions.data_dir + filename).toString()
+        readFileSync(logueOptions.data_dir + filename).toString()
       );
     } catch {}
     return posts;
@@ -73,7 +73,7 @@ const app_api = new Hono<MeeBindings>({ strict: false });
   function WritePosts(posts: MeeLoguePostRawType[], name?: string) {
     const filename = GetPostsFilename(name);
     try {
-      writeFileSync(bbsOptions.data_dir + filename, JSON.stringify(posts));
+      writeFileSync(logueOptions.data_dir + filename, JSON.stringify(posts));
       return true;
     } catch {
       return false;
@@ -166,7 +166,7 @@ app.route("api", app_api);
 pathes.forEach((n) => {
   app.get(n, async (c, next) => {
     if (/^[^\/]+\.[^\/]+$/.test(c.req.param("name") ?? "")) next();
-    else return c.html(bbs_layout());
+    else return c.html(logueLayout());
   });
 });
 

@@ -8,7 +8,7 @@ app.get("/manifest/MeeLogue.json", async (c) => {
   return c.json({
     name: import.meta.env.DEV
       ? "開発中"
-      : import.meta.env.VITE_BBS_TITLE ?? import.meta.env.VITE_TITLE,
+      : import.meta.env.VITE_LOGUE_TITLE ?? import.meta.env.VITE_TITLE,
     display: "standalone",
     scope: "/logue/",
     start_url: "/logue/",

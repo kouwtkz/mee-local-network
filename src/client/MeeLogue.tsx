@@ -92,12 +92,12 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         children: [
           {
             index: true,
-            element: <BBSPage />,
+            element: <LoguePage />,
           },
           {
             path: ":name",
             index: true,
-            element: <BBSPage />,
+            element: <LoguePage />,
           },
         ],
       },
@@ -350,7 +350,7 @@ function OptionButtons() {
   );
 }
 
-function BBSPage() {
+function LoguePage() {
   const currentName = useParams().name ?? "";
   const current = threadLabeledList.find(({ name }) => name == currentName);
   const postable = useMemo(() => current?.postable ?? true, [current]);
