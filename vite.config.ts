@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => {
           input: [
             // './src/client.tsx',
             './src/styles.scss',
-            './src/client/bbs.tsx',
+            './src/client/MeeLogue.tsx',
             './src/client/twitter.tsx',
             './src/client/uploader.ts',
           ],

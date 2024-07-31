@@ -385,7 +385,7 @@ button,
   }
 }
 
-.bbs {
+.logue {
   .modal {
     @media (max-aspect-ratio: 9/16) {
       align-items: flex-start;
@@ -647,5 +647,5 @@ button,
 }
 
 .dm {
-  @extend .bbs;
+  @extend .logue;
 }

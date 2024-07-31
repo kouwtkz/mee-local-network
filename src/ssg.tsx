@@ -4,14 +4,14 @@ import { renderToString } from "react-dom/server";
 
 const app = new Hono<MeeBindings>({ strict: true });
 
-app.get("/manifest/bbs.json", async (c) => {
+app.get("/manifest/MeeLogue.json", async (c) => {
   return c.json({
     name: import.meta.env.DEV
       ? "開発中"
       : import.meta.env.VITE_BBS_TITLE ?? import.meta.env.VITE_TITLE,
     display: "standalone",
-    scope: "/bbs/",
-    start_url: "/bbs/",
+    scope: "/logue/",
+    start_url: "/logue/",
     icons: [
       {
         src: "/images/top/SiteTop1812-150x150.png",
@@ -20,7 +20,7 @@ app.get("/manifest/bbs.json", async (c) => {
       },
     ],
     share_target: {
-      action: "/bbs/",
+      action: "/logue/",
       params: {
         title: "name",
         text: "description",

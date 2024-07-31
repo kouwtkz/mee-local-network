@@ -10,39 +10,39 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
-import ErrorPage from "./routes/ErrorPage";
-import { FormatDate } from "../functions/DateFunctions";
-import { Base } from "./routes/Root";
-import { ParseThreads } from "../functions/bbs";
-import { TopJumpArea } from "./components/TopJump";
-import findThreads from "../functions/findThreads";
-import MultiParser from "./components/MultiParser";
+import ErrorPage from "@/client/routes/ErrorPage";
+import { FormatDate } from "@/functions/DateFunctions";
+import { Base } from "@/client/routes/Root";
+import { ParseThreads } from "@/functions/MeeLogue";
+import { TopJumpArea } from "@/client/components/TopJump";
+import findThreads from "@/functions/findThreads";
+import MultiParser from "@/client/components/MultiParser";
 import { FaHome, FaPen, FaTimes } from "react-icons/fa";
 import { IoSend } from "react-icons/io5";
 import { create } from "zustand";
 import { useHotkeys } from "react-hotkeys-hook";
 import { TbEraser, TbPencil, TbPencilCancel } from "react-icons/tb";
-import { getRedirectUrl } from "../functions/redirectUrl";
-import { DarkThemeState } from "./theme";
-import { SearchArea } from "./components/Search";
-import { BackUrlButton, DarkThemeButton } from "./components/Buttons";
-import { Loading } from "../layout/Loading";
-import { MobileFold } from "./components/MobileFold";
-import { ReloadButton } from "./components/Reload";
+import { getRedirectUrl } from "@/functions/redirectUrl";
+import { DarkThemeState } from "@/client/theme";
+import { SearchArea } from "@/client/components/Search";
+import { BackUrlButton, DarkThemeButton } from "@/client/components/Buttons";
+import { Loading } from "@/layout/Loading";
+import { MobileFold } from "@/client/components/MobileFold";
+import { ReloadButton } from "@/client/components/Reload";
 import { useCookies } from "react-cookie";
 
-const root = "/bbs/";
-const cacheName = "bbs-data";
-const cacheSessionName = "bbs-data-session";
+const root = "/logue/";
+const cacheName = "logue-data";
+const cacheSessionName = "logue-data-session";
 
 interface ThreadsStateType {
   threadsList: {
-    [k: string]: ThreadType[] | null | undefined;
+    [k: string]: MeeLoguePostType[] | null | undefined;
   };
   reloadList: {
     [k: string]: boolean;
   };
-  setThreadsList: (name: string, list: ThreadType[] | null) => void;
+  setThreadsList: (name: string, list: MeeLoguePostType[] | null) => void;
   setReloadList: (name: string, flag: boolean) => void;
   edit?: number;
   setEdit: (edit?: number) => void;
@@ -132,7 +132,7 @@ function ThreadListArea() {
       <span>【{current?.label}】</span>
       {list.map(({ name, label }, i) => {
         return (
-          <Link key={i} to={"/bbs" + (name ? "/" + name : "") + "/"}>
+          <Link key={i} to={"/logue" + (name ? "/" + name : "") + "/"}>
             &gt;{label}
           </Link>
         );
@@ -289,7 +289,7 @@ function PostForm() {
             method="post"
             className="post"
             action={
-              "/bbs/api/send/post/" + (currentName ? currentName + "/" : "")
+              "/logue/api/send/post/" + (currentName ? currentName + "/" : "")
             }
             encType="multipart/form-data"
             ref={formRef}
@@ -395,7 +395,7 @@ function BBSPage() {
         }
         let response: Promise<Response>;
         const url =
-          "/bbs/api/get/threads/" + (currentName ? currentName + "/" : "");
+          "/logue/api/get/posts/" + (currentName ? currentName + "/" : "");
         if (!postable && typeof caches !== "undefined") {
           if (!(cacheSessionName in cookies)) {
             await caches.delete(cacheName);
@@ -416,7 +416,7 @@ function BBSPage() {
         response
           .then(async (r) => {
             const bodyString = await new Response(r.body).text();
-            const rawData: ThreadsRawType[] = JSON.parse(bodyString);
+            const rawData: MeeLoguePostRawType[] = JSON.parse(bodyString);
             setThreadsList(currentName, ParseThreads(rawData));
           })
           .catch((r: AxiosError) => {
@@ -430,7 +430,7 @@ function BBSPage() {
   }, [currentName, reloadList]);
   useEffect(() => {
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/bbs/sw.js").then((reg) => {
+      navigator.serviceWorker.register("/logue/sw.js").then((reg) => {
         // console.log("SW registered.", reg);
       });
     }
@@ -479,17 +479,17 @@ function BBSPage() {
   useEffect(() => {
     setKp(page);
   }, [currentName]);
-  const threads = threadsList[currentName];
+  const posts = threadsList[currentName];
   const threadsObject = useMemo(() => {
     return findThreads({
-      threads: threads ?? [],
+      posts: posts ?? [],
       take,
       page,
       q,
       order,
       id,
     });
-  }, [threads, search]);
+  }, [posts, search]);
   function cursoring(n: number) {
     let current: HTMLElement | null = null;
     const flag1 = refMain.current?.contains(document.activeElement);
@@ -544,7 +544,7 @@ function BBSPage() {
   }
   return (
     <>
-      <div className="bbs">
+      <div className="logue">
         <header>
           <div className="list">
             <OptionButtons />
@@ -552,11 +552,11 @@ function BBSPage() {
           </div>
         </header>
         {postable ? <PostForm /> : null}
-        {typeof threads === "undefined" ? (
+        {typeof posts === "undefined" ? (
           <Loading />
         ) : (
           <main className="list" ref={refMain}>
-            {threadsObject.threads.map((v, i) => {
+            {threadsObject.posts.map((v, i) => {
               const isEdit = edit === v.id;
               return (
                 <div
@@ -599,7 +599,7 @@ function BBSPage() {
                           fd.append("id", v.id.toString());
                           axios
                             .delete(
-                              "/bbs/api/send/post/" +
+                              "/logue/api/send/post/" +
                                 (currentName ? currentName + "/" : ""),
                               { data: fd }
                             )

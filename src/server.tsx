@@ -20,7 +20,7 @@ import {
   UploaderViewerPage,
 } from "./server/UploaderPage";
 import { LoginPage, SettingPage } from "./server/SettingPage";
-import { app_bbs } from "./server/bbs";
+import { app_logue } from "@/server/MeeLogue";
 import { getIsLogin, LoginRedirect } from "./server/LoginCheck";
 import { app_twitter } from "./server/twitter";
 
@@ -173,7 +173,7 @@ export function ServerCommon(app: CommonHono) {
   ["private/*", "offline/*"].forEach((path) => {
     app.get(path, LoginRedirect);
   });
-  app.route("/bbs", app_bbs);
+  app.route("/logue", app_logue);
   app.route("/twitter", app_twitter);
 
   app.get("*", serveStatic({ root: publicPath }));

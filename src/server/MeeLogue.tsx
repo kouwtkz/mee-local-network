@@ -1,12 +1,12 @@
 import React from "react";
-import { CommonHono } from "../types/HonoCustomType";
-import { DefaultLayout, Style } from "../layout/default";
+import { CommonHono } from "@/types/HonoCustomType";
+import { DefaultLayout, Style } from "@/layout/default";
 import { renderToString } from "react-dom/server";
 import { Hono } from "hono";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
-import { GetRawThreads } from "../functions/bbs";
-import { buildAddVer, stylesAddVer } from "./env";
-import { LoginRedirect, Unauthorized } from "./LoginCheck";
+import { GetRawThreads } from "@/functions/MeeLogue";
+import { buildAddVer, stylesAddVer } from "@/server/env";
+import { LoginRedirect, Unauthorized } from "@/server/LoginCheck";
 
 function bbs_layout(title = import.meta.env.VITE_BBS_TITLE) {
   return renderToString(
@@ -18,15 +18,15 @@ function bbs_layout(title = import.meta.env.VITE_BBS_TITLE) {
           type="module"
           src={
             import.meta.env.PROD
-              ? "/assets/bbs.js" + buildAddVer
-              : "/src/client/bbs.tsx"
+              ? "/assets/MeeLogue.js" + buildAddVer
+              : "/src/client/MeeLogue.tsx"
           }
         />
       }
       meta={
         <link
           rel="manifest"
-          href={"/manifest/bbs.json" + buildAddVer}
+          href={"/manifest/MeeLogue.json" + buildAddVer}
           crossOrigin="use-credentials"
         />
       }
@@ -55,25 +55,25 @@ const app_api = new Hono<MeeBindings>({ strict: false });
     }
   });
 
-  function GetThreadsFilename(name?: string) {
-    return (name ? name + "_" : "") + "threads.json";
+  function GetPostsFilename(name?: string) {
+    return (name ? name + "_" : "") + "posts.json";
   }
 
-  function ReadThreads(name?: string) {
-    const filename = GetThreadsFilename(name);
-    let threads: ThreadsRawType[] | null = null;
+  function ReadPosts(name?: string) {
+    const filename = GetPostsFilename(name);
+    let posts: MeeLoguePostRawType[] | null = null;
     try {
-      threads = JSON.parse(
+      posts = JSON.parse(
         readFileSync(bbsOptions.data_dir + filename).toString()
       );
     } catch {}
-    return threads;
+    return posts;
   }
 
-  function WriteThreads(threads: ThreadsRawType[], name?: string) {
-    const filename = GetThreadsFilename(name);
+  function WritePosts(posts: MeeLoguePostRawType[], name?: string) {
+    const filename = GetPostsFilename(name);
     try {
-      writeFileSync(bbsOptions.data_dir + filename, JSON.stringify(threads));
+      writeFileSync(bbsOptions.data_dir + filename, JSON.stringify(posts));
       return true;
     } catch {
       return false;
@@ -82,25 +82,25 @@ const app_api = new Hono<MeeBindings>({ strict: false });
 
   pathes.forEach((n) => {
     app.get("*", Unauthorized);
-    app.get("get/threads" + n, (c) => {
-      const threads = ReadThreads(c.req.param("name"));
-      if (!threads) return c.json(null, 400);
-      else return c.json(threads);
+    app.get("get/posts" + n, (c) => {
+      const posts = ReadPosts(c.req.param("name"));
+      if (!posts) return c.json(null, 400);
+      else return c.json(posts);
     });
-    app.get("get/threads/filter" + n, (c) => {
+    app.get("get/posts/filter" + n, (c) => {
       const Url = new URL(c.req.url);
       const search = Object.fromEntries(Url.searchParams);
-      const threads = ReadThreads(c.req.param("name"));
-      if (!threads) return c.json(null, 400);
+      const posts = ReadPosts(c.req.param("name"));
+      if (!posts) return c.json(null, 400);
       return c.json(
         GetRawThreads({
-          threads,
+          posts,
           ...search,
         })
       );
     });
     app.post("send/post" + n, async (c) => {
-      let rawThreads = ReadThreads(c.req.param("name")) ?? [];
+      let rawThreads = ReadPosts(c.req.param("name")) ?? [];
       const v = await c.req.parseBody();
       const currentDate = new Date();
       const text = ((v.text as string) ?? "").replace(/^\s+|\s+$/g, "");
@@ -114,7 +114,7 @@ const app_api = new Hono<MeeBindings>({ strict: false });
             updatedAt: currentDate.toISOString(),
           };
         }
-        let data: ThreadType;
+        let data: MeeLoguePostType;
         if (v.edit === "") {
           data = newData();
           rawThreads.push(data);
@@ -134,20 +134,20 @@ const app_api = new Hono<MeeBindings>({ strict: false });
             rawThreads.push(data);
           }
         }
-        WriteThreads(rawThreads);
+        WritePosts(rawThreads);
         return c.json(data);
       } else {
         return c.text("本文が入力されていません", 401);
       }
     });
     app.delete("send/post" + n, async (c) => {
-      let rawThreads = ReadThreads(c.req.param("name"));
+      let rawThreads = ReadPosts(c.req.param("name"));
       if (!rawThreads) return c.text("スレッドがありません", 400);
       const v = await c.req.parseBody();
       if ("id" in v) {
         const id = Number(v.id as string);
         rawThreads = rawThreads.filter((item) => item.id !== id);
-        WriteThreads(rawThreads);
+        WritePosts(rawThreads);
         return c.json({ id });
       } else {
         return c.text("IDが入力されていません", 401);
@@ -170,4 +170,4 @@ pathes.forEach((n) => {
   });
 });
 
-export const app_bbs = app;
+export const app_logue = app;

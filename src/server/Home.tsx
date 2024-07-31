@@ -10,7 +10,7 @@ export function TopPage({ title }: { title?: string }) {
             <a href="/uploader/">簡易あぷろだ</a>
           </li>
           <li>
-            <a href="/bbs/">めぇのつぶやき</a>
+            <a href="/logue/">めぇのつぶやき</a>
           </li>
           <li>
             <a href="/log/">ログ一覧</a>

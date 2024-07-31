@@ -2,7 +2,7 @@ import { AutoAllotDate } from "./DateFunctions";
 import { findMany, setWhere } from "./findMany";
 
 interface findThreadsProps {
-  threads: ThreadType[];
+  posts: MeeLoguePostType[];
   update?: boolean;
   take?: number;
   page?: number;
@@ -14,8 +14,8 @@ interface findThreadsProps {
 }
 
 export default function findThreads(
-  { threads, take, page, common, q = "", id, pinned = false, order = "desc" }
-    : findThreadsProps): ThreadsDataType {
+  { posts, take, page, common, q = "", id, pinned = false, order = "desc" }
+    : findThreadsProps): MeeLogueDataType {
   if (page) page--;
   const options = {};
   let where: any[] = [];
@@ -37,13 +37,13 @@ export default function findThreads(
     { draft: false, date: { lte: new Date() } }
   )
   try {
-    let threadsResult: ThreadType[] = threads.concat();
+    let threadsResult: MeeLoguePostType[] = posts.concat();
     if (id) {
-      const item = threads.find((item) => item.id == id)
+      const item = posts.find((item) => item.id == id)
       threadsResult = item ? [item] : [];
     } else {
       threadsResult = findMany({
-        list: threads,
+        list: posts,
         where: {
           AND: where,
         },
@@ -55,9 +55,9 @@ export default function findThreads(
       if (take !== undefined && i >= (take + skip)) return false;
       return ++i > skip;
     })
-    return { threads: threadsResult, length, take };
+    return { posts: threadsResult, length, take };
   } catch (e) {
     console.log(e);
-    return { threads: [], length: 0, take }
+    return { posts: [], length: 0, take }
   }
 }
