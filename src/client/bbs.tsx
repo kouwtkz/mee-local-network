@@ -386,33 +386,11 @@ function BBSPage() {
       reloadList[currentName]
     ) {
       async function Fetch() {
-        if (!(cacheSessionName in cookies)) {
-          if (typeof caches !== "undefined") await caches.delete(cacheName);
-          setCookie(cacheSessionName, Date.now(), {
-            path: root,
-            maxAge: 60 * 60 * 24 * 30,
-          });
-        }
+        if (typeof caches !== "undefined") await caches.delete(cacheName);
         let response: Promise<Response>;
         const url =
           "/bbs/api/get/threads/" + (currentName ? currentName + "/" : "");
-        if (!postable && typeof caches !== "undefined") {
-          if (!(cacheSessionName in cookies)) {
-            await caches.delete(cacheName);
-            setCookie(cacheSessionName, Date.now(), {
-              path: root,
-              maxAge: 60 * 60 * 24 * 30,
-            });
-          }
-          const cache = await caches.open(cacheName);
-          response = cache.match(url).then(async (cachedData) => {
-            if (!cachedData?.status) {
-              return cache.add(url).then(async () => (await cache.match(url))!);
-            } else return cachedData;
-          });
-        } else {
-          response = fetch(url);
-        }
+        response = fetch(url);
         response
           .then(async (r) => {
             const bodyString = await new Response(r.body).text();
