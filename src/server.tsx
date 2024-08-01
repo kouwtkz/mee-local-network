@@ -81,7 +81,9 @@ export function ServerCommon(app: CommonHono) {
   });
 
   app.get("login", (c) => {
-    return c.html(RenderMainLayout({ c, children: <LoginPage c={c} /> }));
+    return c.html(RenderMainLayout({ c, children: <LoginPage c={c} /> }), {
+      status: 203,
+    });
   });
   app.post("login", async (c) => {
     const body = await c.req.parseBody();
