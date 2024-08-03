@@ -7,6 +7,8 @@ import {
   Outlet,
   RouterProvider,
   ScrollRestoration,
+  useLocation,
+  useNavigate,
   useParams,
   useSearchParams,
 } from "react-router-dom";
@@ -149,8 +151,28 @@ function PostForm() {
   const { threadsList, setReloadList, edit, setEdit, setCursor } =
     useThreadsState();
   const currentThread = threadsList[currentName];
-  const [search, setSearch] = useSearchParams();
-  const [show, setShow] = useState(false);
+  const [searchParams, setSearch] = useSearchParams();
+  const { hash, state, pathname, search } = useLocation();
+  const nav = useNavigate();
+  function setShow(v: boolean) {
+    if (v)
+      nav(
+        { pathname, search, hash: "post" },
+        { preventScrollReset: true, state: { show: true } }
+      );
+    else if (state?.show) nav(-1);
+    else
+      nav(
+        { pathname, search },
+        { preventScrollReset: true, state: { show: true } }
+      );
+  }
+  const show = useMemo(
+    function () {
+      return hash === "#post";
+    },
+    [hash]
+  );
   const editThread = useMemo(
     () =>
       currentThread && typeof edit === "number"
@@ -177,12 +199,12 @@ function PostForm() {
       const fd = new FormData(form);
       axios.postForm(form.action, fd).then(() => {
         if (edit === undefined) {
-          if (search.has("id")) {
+          if (searchParams.has("id")) {
             setCursor(0);
             setSearch();
           } else {
-            const hasP = search.has("p");
-            const obj = Object.fromEntries(search);
+            const hasP = searchParams.has("p");
+            const obj = Object.fromEntries(searchParams);
             if (hasP) {
               delete obj.p;
               setSearch(obj);
@@ -204,7 +226,6 @@ function PostForm() {
     (e) => {
       if (document.activeElement === textareaRef.current) {
         e.preventDefault();
-        setShow(false);
         Submit();
       }
     },
@@ -228,13 +249,13 @@ function PostForm() {
   }, [show]);
   const shared_intent = useMemo(() => {
     const list = ["name", "description", "link"]
-      .map((v) => search.get(v) ?? "")
+      .map((v) => searchParams.get(v) ?? "")
       .filter((v) => v);
     return list.join("\n");
-  }, [search]);
+  }, [searchParams]);
   const shared_cursor_top = useMemo(() => {
-    return search.has("link");
-  }, [search]);
+    return searchParams.has("link");
+  }, [searchParams]);
   useEffect(() => {
     if (formRef.current && shared_intent) {
       const form = formRef.current;
