@@ -24,7 +24,7 @@ export default function findThreads(
   if (typeof id !== "number") {
     const wheres = setWhere(q, options);
     id = wheres.id;
-    where = wheres.where;
+    where = [wheres.where];
     if (wheres.take) take = wheres.take;
     if (wheres.orderBy.length > 0) orderBy = orderBy.concat(wheres.orderBy);
   }

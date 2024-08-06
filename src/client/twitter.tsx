@@ -624,7 +624,7 @@ function DMPage() {
     return wheres.orderBy.concat({ date: "desc" });
   }, [wheres.orderBy]);
   const where = useMemo(() => {
-    const where = wheres.where as findWhereType<DMMessageType>[];
+    const where = [wheres.where] as findWhereType<DMMessageType>[];
     if (name) return where.concat(userIdWhere(name));
     else return where;
   }, [wheres.where, name]);
