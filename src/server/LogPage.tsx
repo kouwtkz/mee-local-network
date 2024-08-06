@@ -9,9 +9,6 @@ export function LogPage() {
           <a href="/Miiverse/">Miiverseログ</a>
         </li>
         <li>
-          <a href="/twitter/">Twitterログ</a>
-        </li>
-        <li>
           <a href="/private/money/">Moneyログ</a>
         </li>
       </ul>

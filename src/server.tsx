@@ -22,7 +22,6 @@ import {
 import { LoginPage, SettingPage } from "./server/SettingPage";
 import { app_logue } from "@/server/MeeLogue";
 import { getIsLogin, LoginRedirect } from "./server/LoginCheck";
-import { app_twitter } from "./server/twitter";
 
 const title = import.meta.env.VITE_TITLE;
 
@@ -176,7 +175,6 @@ export function ServerCommon(app: CommonHono) {
     app.get(path, LoginRedirect);
   });
   app.route("/logue", app_logue);
-  app.route("/twitter", app_twitter);
 
   app.get("*", serveStatic({ root: publicPath }));
   app.get("*", serveStatic({ root: staticPath }));
