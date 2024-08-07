@@ -18,7 +18,7 @@ import { Base } from "@/client/routes/Root";
 import { ParseThreads } from "@/functions/MeeLogue";
 import { TopJumpArea } from "@/client/components/TopJump";
 import findThreads from "@/functions/findThreads";
-import MultiParser from "@/client/components/MultiParser";
+import { MultiParser } from "@/client/components/MultiParser";
 import { FaHome, FaPen, FaTimes } from "react-icons/fa";
 import { IoSend } from "react-icons/io5";
 import { create } from "zustand";

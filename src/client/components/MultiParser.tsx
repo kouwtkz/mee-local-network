@@ -15,24 +15,32 @@ import {
   useSearchParams,
 } from "react-router-dom";
 
-type MultiParserOptions = {
+export interface MultiParserOptions {
   markdown?: boolean;
   toDom?: boolean;
   detailsClosable?: boolean;
   linkPush?: boolean;
   hashtag?: boolean;
-};
-type MultiParserProps = MultiParserOptions &
-  HTMLReactParserOptions & {
-    only?: MultiParserOptions;
-    className?: string;
-    detailsOpen?: boolean;
-    tag?: string;
-    children?: React.ReactNode;
-    parsedClassName?: string;
-  };
+}
+export interface MultiParserProps
+  extends MultiParserOptions,
+    HTMLReactParserOptions {
+  only?: MultiParserOptions;
+  className?: string;
+  detailsOpen?: boolean;
+  tag?: string;
+  children?: React.ReactNode;
+  parsedClassName?: string;
+  replaceFunctions?: (args: MultiParserReplaceProps) => ChildNode | undefined;
+}
 
-function MultiParser({
+export interface MultiParserReplaceProps {
+  linkPush: boolean;
+  a: ChildNode[];
+  n: ChildNode;
+}
+
+export function MultiParser({
   markdown = true,
   toDom = true,
   linkPush = true,
@@ -48,10 +56,11 @@ function MultiParser({
   htmlparser2,
   library,
   transform,
+  replaceFunctions,
   children,
 }: MultiParserProps) {
   const nav = useNavigate();
-  const [search, setSearch] = useSearchParams();
+  const setSearch = useSearchParams()[1];
   if (only) {
     markdown = only.markdown ?? false;
     toDom = only.toDom ?? false;
@@ -131,6 +140,7 @@ function MultiParser({
                   if (typeof location === "undefined" || !(hashtag || linkPush))
                     return;
                   const newChildren = v.children.reduce((a, n) => {
+                    let _n: ChildNode | undefined = n;
                     if (hashtag && n.type === "text") {
                       if (!/^a$/.test(currentTag) && !/^\s*$/.test(n.data)) {
                         const replaced = n.data.replace(
@@ -145,8 +155,10 @@ function MultiParser({
                           return a;
                         }
                       }
+                    } else if (replaceFunctions) {
+                      _n = replaceFunctions({ linkPush, a, n });
                     }
-                    a.push(n);
+                    if (_n) a.push(_n);
                     return a;
                   }, [] as ChildNode[]);
                   v.children = newChildren;
@@ -161,5 +173,3 @@ function MultiParser({
   className = (className ? `${className} ` : "") + parsedClassName;
   return React.createElement(tag, { className }, children);
 }
-
-export default MultiParser;
