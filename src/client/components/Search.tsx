@@ -60,6 +60,7 @@ export function SearchArea({ maxPage = 1 }: { maxPage?: number }) {
               if (nq) setSearch({ q: nq });
               else setSearch();
             }
+            (document.activeElement as HTMLElement)?.blur();
           }}
         >
           <input
