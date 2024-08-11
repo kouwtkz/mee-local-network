@@ -23,14 +23,15 @@ import { LoginPage, SettingPage } from "./server/SettingPage";
 import { app_logue } from "@/server/MeeLogue";
 import { getIsLogin, LoginRedirect } from "./server/LoginCheck";
 
-const title = import.meta.env.VITE_TITLE;
+const siteTitle = import.meta.env.VITE_TITLE;
 
 interface RenderBaseLayoutProps {
   children?: React.ReactNode;
   script?: string | string[];
   dark?: string;
+  title?: string;
 }
-function RenderBaseLayout({ children, script, dark }: RenderBaseLayoutProps) {
+function RenderBaseLayout({ children, script, dark, title = siteTitle }: RenderBaseLayoutProps) {
   const scripts = script
     ? (Array.isArray(script) ? script : [script]).map((src, i) => (
         <script key={i} src={src} />
@@ -65,7 +66,7 @@ export function ServerCommon(app: CommonHono) {
   app.get("/", (c) => {
     return c.html(
       RenderMainLayout({
-        children: <TopPage title={title} />,
+        children: <TopPage title={siteTitle} />,
         c,
       })
     );
@@ -73,7 +74,7 @@ export function ServerCommon(app: CommonHono) {
   app.get("other", (c) => {
     return c.html(
       RenderMainLayout({
-        children: <OtherPage title={title + " - その他"} />,
+        children: <OtherPage title={siteTitle + " - その他"} />,
         c,
       })
     );
@@ -123,7 +124,7 @@ export function ServerCommon(app: CommonHono) {
         console.log(file);
       }
     } catch {}
-    return c.redirect(".");
+    return c.redirect("/uploader/");
   });
   app.delete("uploader", async (c) => {
     const fd = await c.req.formData();
@@ -140,6 +141,7 @@ export function ServerCommon(app: CommonHono) {
     return c.html(
       RenderMainLayout({
         c,
+        title: "簡易あぷろだ",
         children: <UploaderPage c={c} />,
         script: uploaderScript,
       })
