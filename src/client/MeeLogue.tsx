@@ -153,6 +153,7 @@ function PostForm() {
   const currentThread = threadsList[currentName];
   const [searchParams, setSearch] = useSearchParams();
   const { hash, state, pathname, search } = useLocation();
+  const [isBusy, setIsBusy] = useState(false);
   const nav = useNavigate();
   function setShow(v: boolean) {
     if (v)
@@ -194,31 +195,37 @@ function PostForm() {
     }
   }, [editThread]);
   function Submit() {
-    if (formRef.current) {
+    if (formRef.current && !isBusy) {
+      setIsBusy(true);
       const form = formRef.current;
       const fd = new FormData(form);
-      axios.postForm(form.action, fd).then(() => {
-        if (edit === undefined) {
-          if (searchParams.has("id")) {
-            setCursor(0);
-            setSearch();
-          } else {
-            const hasP = searchParams.has("p");
-            const obj = Object.fromEntries(searchParams);
-            if (hasP) {
-              delete obj.p;
-              setSearch(obj);
-            } else {
-              document.body.scrollTo({ top: 0 });
+      axios
+        .postForm(form.action, fd)
+        .then(() => {
+          if (edit === undefined) {
+            if (searchParams.has("id")) {
               setCursor(0);
+              setSearch();
+            } else {
+              const hasP = searchParams.has("p");
+              const obj = Object.fromEntries(searchParams);
+              if (hasP) {
+                delete obj.p;
+                setSearch(obj);
+              } else {
+                document.body.scrollTo({ top: 0 });
+                setCursor(0);
+              }
             }
           }
-        }
-        setReloadList(currentName, true);
-        setEdit();
-        setShow(false);
-        form.reset();
-      });
+          setReloadList(currentName, true);
+          setEdit();
+          setShow(false);
+          form.reset();
+        })
+        .finally(() => {
+          setIsBusy(false);
+        });
     }
   }
   useHotkeys(
@@ -344,6 +351,7 @@ function PostForm() {
               <button
                 type="submit"
                 title="送信"
+                disabled={isBusy}
                 onClick={() => {
                   Submit();
                 }}
