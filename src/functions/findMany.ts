@@ -157,7 +157,7 @@ function whereFromKey(key: string | string[], value: findWhereWithConditionsType
   }
 }
 
-export function setWhere<T>(q: string = "", options: WhereOptionsKvType<T> = {}) {
+export function setWhere<T = any>(q: string = "", options: WhereOptionsKvType<T> = {}) {
   const textKey = getKeyFromOptions("text", options);
   const fromKey = getKeyFromOptions("from", options);
   const dateKey = getKeyFromOptions("date", options);
@@ -179,7 +179,7 @@ export function setWhere<T>(q: string = "", options: WhereOptionsKvType<T> = {})
     doubleQuoteDic[key] = m1;
     return `"${key}"`;
   })
-  const searchArray = q.replace(/^\s+|\s+$/, "").split(/\s+/);
+  const searchArray = q.trim().split(/\s+/);
   searchArray.forEach((item) => {
     if (item === "OR") {
       OR = true;
@@ -391,7 +391,7 @@ export function setWhere<T>(q: string = "", options: WhereOptionsKvType<T> = {})
       }
     }
   });
-  const where = whereList.length > 1 ? { AND: whereList } : (whereList[0] ?? {});
+  const where: findWhereType<T> = whereList.length > 1 ? { AND: whereList } : (whereList[0] ?? {});
   return { where, id, take, orderBy };
 }
 
