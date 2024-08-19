@@ -32,6 +32,8 @@ import { Loading } from "@/layout/Loading";
 import { MobileFold } from "@/client/components/MobileFold";
 import { ReloadButton } from "@/client/components/Reload";
 import { useCookies } from "react-cookie";
+import { FieldValues, useForm } from "react-hook-form";
+import SetRegister from "./components/hook/SetRegister";
 
 const root = "/logue/";
 const cacheName = "logue-data";
@@ -143,6 +145,7 @@ function ThreadListArea() {
   );
 }
 
+const defaultValues = { text: "", edit: "" };
 function PostForm() {
   const modalRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -154,6 +157,12 @@ function PostForm() {
   const [searchParams, setSearch] = useSearchParams();
   const { hash, state, pathname, search } = useLocation();
   const [isBusy, setIsBusy] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { isDirty },
+  } = useForm<FieldValues>({ defaultValues });
   const nav = useNavigate();
   function setShow(v: boolean) {
     if (v)
@@ -182,20 +191,15 @@ function PostForm() {
     [edit, currentThread]
   );
   useEffect(() => {
-    if (formRef.current) {
-      const form = formRef.current;
-      if (form.edit.value !== "" && !editThread) {
-        form.edit.value = "";
-        form.reset();
-      } else if (editThread) {
-        form.edit.value = editThread.id;
-        form.text.value = editThread.text ?? "";
-        form.text.focus();
-      }
+    if (editThread) {
+      reset({ edit: editThread.id, text: editThread.text ?? "" });
+      textareaRef.current?.focus();
+    } else {
+      reset(defaultValues);
     }
   }, [editThread]);
   function Submit() {
-    if (formRef.current && !isBusy) {
+    if (formRef.current && !isBusy && isDirty) {
       setIsBusy(true);
       const form = formRef.current;
       const fd = new FormData(form);
@@ -321,17 +325,17 @@ function PostForm() {
             }
             encType="multipart/form-data"
             ref={formRef}
-            onSubmit={(e) => {
-              e.preventDefault();
-              Submit();
-            }}
+            onSubmit={handleSubmit(Submit)}
           >
-            <input type="hidden" name="edit" />
+            <input type="hidden" {...register("edit")} />
             <textarea
               title="本文"
-              name="text"
               placeholder="今、何してる？"
-              ref={textareaRef}
+              {...SetRegister({
+                name: "text",
+                ref: textareaRef,
+                register,
+              })}
             />
             <div className="buttons">
               <button
@@ -341,7 +345,7 @@ function PostForm() {
                 onClick={() => {
                   if (confirm("入力内容をリセットしますか？")) {
                     setEdit();
-                    formRef.current?.reset();
+                    reset(defaultValues);
                     if (show) textareaRef.current?.focus();
                   }
                 }}
@@ -351,7 +355,7 @@ function PostForm() {
               <button
                 type="submit"
                 title="送信"
-                disabled={isBusy}
+                disabled={!isDirty || isBusy}
                 onClick={() => {
                   Submit();
                 }}

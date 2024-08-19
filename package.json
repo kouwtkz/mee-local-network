@@ -20,12 +20,13 @@
   "dependencies": {
     "@hono/node-server": "^1.12.0",
     "axios": "^1.7.2",
+    "dotenv": "^16.4.5",
     "hono": "^4.4.11",
     "html-react-parser": "^5.1.10",
     "marked": "^13.0.2",
     "react-dom": "^18.3.1",
-    "react-icons": "^5.0.1",
-    "dotenv": "^16.4.5"
+    "react-hook-form": "^7.52.2",
+    "react-icons": "^5.0.1"
   },
   "devDependencies": {
     "@hono/vite-dev-server": "^0.12.2",
