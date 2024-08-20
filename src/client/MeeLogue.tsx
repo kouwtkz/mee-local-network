@@ -34,6 +34,16 @@ import { ReloadButton } from "@/client/components/Reload";
 import { useCookies } from "react-cookie";
 import { FieldValues, useForm } from "react-hook-form";
 import SetRegister from "./components/hook/SetRegister";
+import {
+  PostEditSelectDecoration,
+  PostEditSelectInsert,
+  PostEditSelectMedia,
+} from "./components/dropdown/PostEditSelect";
+import {
+  MdOutlineAddLink,
+  MdOutlinePlaylistAdd,
+  MdOutlinePostAdd,
+} from "react-icons/md";
 
 const root = "/logue/";
 const cacheName = "logue-data";
@@ -312,8 +322,10 @@ function PostForm() {
         hidden={!show}
         ref={modalRef}
         onClick={(e) => {
-          if (e.target === modalRef.current) setShow(false);
-          e.preventDefault();
+          if (e.target === modalRef.current) {
+            setShow(false);
+            e.preventDefault();
+          }
         }}
       >
         <div className="box">
@@ -340,7 +352,7 @@ function PostForm() {
             <div className="buttons">
               <button
                 type="button"
-                className="reset"
+                className="modifier"
                 title="リセット"
                 onClick={() => {
                   if (confirm("入力内容をリセットしますか？")) {
@@ -352,6 +364,21 @@ function PostForm() {
               >
                 <TbEraser />
               </button>
+              <PostEditSelectInsert
+                textarea={textareaRef.current}
+                MenuButtonClassName="modifier"
+                MenuButton={<MdOutlinePlaylistAdd />}
+              />
+              <PostEditSelectDecoration
+                textarea={textareaRef.current}
+                MenuButtonClassName="modifier"
+                MenuButton={<MdOutlinePostAdd />}
+              />
+              <PostEditSelectMedia
+                textarea={textareaRef.current}
+                MenuButtonClassName="modifier"
+                MenuButton={<MdOutlineAddLink />}
+              />
               <button
                 type="submit"
                 title="送信"

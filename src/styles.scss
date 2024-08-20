@@ -519,7 +519,7 @@ button,
         height: 1.25rem;
         margin: 0.25rem;
       }
-      &.reset {
+      &.modifier {
         color: $high-hover;
         background-color: transparent;
         &:hover {
@@ -648,4 +648,39 @@ button,
 
 .dm {
   @extend .logue;
+}
+
+.dropdown {
+  position: relative;
+  > button,
+  > .button {
+    padding: 0.25em 0.5em;
+  }
+  .list {
+    position: absolute;
+    background-color: var(--background-color);
+    left: 0;
+    z-index: 100;
+    text-align: left;
+    width: max-content;
+    display: flex;
+    flex-direction: column;
+    :focus {
+      outline: none;
+      background-color: $soft-color;
+    }
+    & > *:nth-child(n) {
+      padding: 0.25em 0.5em;
+      cursor: pointer;
+      &:hover {
+        background-color: $soft-color;
+      }
+    }
+  }
+}
+
+input.colorChanger.withDropdown {
+  pointer-events: none;
+  opacity: 0;
+  position: absolute;
 }
