@@ -1,12 +1,12 @@
 import React from "react";
-import { CommonHono } from "@/types/HonoCustomType";
-import { DefaultLayout, Style } from "@/layout/default";
+import { CommonHono } from "#/types/HonoCustomType";
+import { DefaultLayout, Style } from "#/layout/default";
 import { renderToString } from "react-dom/server";
 import { Hono } from "hono";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
-import { GetRawThreads } from "@/functions/MeeLogue";
-import { buildAddVer, stylesAddVer } from "@/server/env";
-import { LoginRedirect, Unauthorized } from "@/server/LoginCheck";
+import { GetRawThreads } from "#/functions/MeeLogue";
+import { buildAddVer, stylesAddVer } from "#/server/env";
+import { LoginRedirect, Unauthorized } from "#/server/LoginCheck";
 
 function logueLayout(title = import.meta.env.VITE_LOGUE_TITLE) {
   return renderToString(

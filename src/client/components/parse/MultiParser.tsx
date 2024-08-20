@@ -60,7 +60,7 @@ export function MultiParser({
   children,
 }: MultiParserProps) {
   const nav = useNavigate();
-  const setSearch = useSearchParams()[1];
+  const setSearchParams = useSearchParams()[1];
   if (only) {
     markdown = only.markdown ?? false;
     toDom = only.toDom ?? false;
@@ -82,6 +82,8 @@ export function MultiParser({
           switch (v.type) {
             case "tag":
               switch (v.name) {
+                case "code":
+                  break;
                 case "a":
                   if (linkPush) {
                     currentTag = v.name;
@@ -108,7 +110,9 @@ export function MultiParser({
                             ...query,
                           };
                           if (query.p) delete query.p;
-                          setSearch(query, { preventScrollReset: !scroll });
+                          setSearchParams(query, {
+                            preventScrollReset: !scroll,
+                          });
                         } else {
                           nav(url);
                         }
@@ -131,6 +135,7 @@ export function MultiParser({
                             e.target.parentElement.removeAttribute("open");
                           }) as any,
                           title: "折りたたむ",
+                          type: "button",
                         },
                         [new NodeText("たたむ")]
                       )

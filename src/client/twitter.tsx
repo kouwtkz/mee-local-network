@@ -28,8 +28,8 @@ import { MobileFold } from "./components/MobileFold";
 import { RiDownloadLine } from "react-icons/ri";
 import { useCookies } from "react-cookie";
 import { ReloadButton } from "./components/Reload";
-import { getConversationId } from "@/functions/twitter";
-import { getRelativeUrl } from "@/functions/url";
+import { getConversationId } from "#/functions/twitter";
+import { getRelativeUrl } from "#/functions/url";
 
 const root = "/twitter/";
 const cacheName = "twitter-data";
@@ -620,7 +620,7 @@ function DMPage() {
     [q, userFromUserId]
   );
   const take = wheres.take ?? 100;
-  let orderBy: OrderByItem[] = useMemo(() => {
+  let orderBy: OrderByItem<DMMessageType>[] = useMemo(() => {
     return wheres.orderBy.concat({ date: "desc" });
   }, [wheres.orderBy]);
   const where = useMemo(() => {

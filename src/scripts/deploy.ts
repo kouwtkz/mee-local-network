@@ -1,3 +1,3 @@
-import { streamProcess } from "@/scripts/streamProcess";
+import { streamProcess } from "#/scripts/streamProcess";
 
 await streamProcess("deploy.bash");

@@ -12,28 +12,28 @@ import {
   useParams,
   useSearchParams,
 } from "react-router-dom";
-import ErrorPage from "@/client/routes/ErrorPage";
-import { FormatDate } from "@/functions/DateFunctions";
-import { Base } from "@/client/routes/Root";
-import { ParseThreads } from "@/functions/MeeLogue";
-import { TopJumpArea } from "@/client/components/TopJump";
-import findThreads from "@/functions/findThreads";
-import { MultiParser } from "@/client/components/MultiParser";
+import ErrorPage from "@/routes/ErrorPage";
+import { FormatDate } from "#/functions/DateFunctions";
+import { Base } from "@/routes/Root";
+import { ParseThreads } from "#/functions/MeeLogue";
+import { TopJumpArea } from "@/components/TopJump";
+import findThreads from "#/functions/findThreads";
+import { MultiParser } from "@/components/parse/MultiParser";
 import { FaHome, FaPen, FaTimes } from "react-icons/fa";
 import { IoSend } from "react-icons/io5";
 import { create } from "zustand";
 import { useHotkeys } from "react-hotkeys-hook";
 import { TbEraser, TbPencil, TbPencilCancel } from "react-icons/tb";
-import { getRedirectUrl } from "@/functions/redirectUrl";
-import { DarkThemeState } from "@/client/theme";
-import { SearchArea } from "@/client/components/Search";
-import { BackUrlButton, DarkThemeButton } from "@/client/components/Buttons";
-import { Loading } from "@/layout/Loading";
-import { MobileFold } from "@/client/components/MobileFold";
-import { ReloadButton } from "@/client/components/Reload";
+import { getRedirectUrl } from "#/functions/redirectUrl";
+import { DarkThemeState } from "@/theme";
+import { SearchArea } from "@/components/Search";
+import { BackUrlButton, DarkThemeButton } from "@/components/Buttons";
+import { Loading } from "#/layout/Loading";
+import { MobileFold } from "@/components/MobileFold";
+import { ReloadButton } from "@/components/Reload";
 import { useCookies } from "react-cookie";
 import { FieldValues, useForm } from "react-hook-form";
-import SetRegister from "./components/hook/SetRegister";
+import SetRegister from "@/components/hook/SetRegister";
 import {
   PostEditSelectDecoration,
   PostEditSelectInsert,

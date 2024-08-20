@@ -20,7 +20,7 @@ import {
   UploaderViewerPage,
 } from "./server/UploaderPage";
 import { LoginPage, SettingPage } from "./server/SettingPage";
-import { app_logue } from "@/server/MeeLogue";
+import { app_logue } from "#/server/MeeLogue";
 import { getIsLogin, LoginRedirect } from "./server/LoginCheck";
 
 const siteTitle = import.meta.env.VITE_TITLE;

@@ -1,6 +1,6 @@
-import { FormatDate } from "@/functions/DateFunctions";
-import { mkdirTry, readdirAsync, readFileAsync } from "@/functions/fileSystem";
-import { getConversationId } from "@/functions/twitter";
+import { FormatDate } from "#/functions/DateFunctions";
+import { mkdirTry, readdirAsync, readFileAsync } from "#/functions/fileSystem";
+import { getConversationId } from "#/functions/twitter";
 import { existsSync, writeFileSync } from "fs";
 import { simpleParser } from "mailparser";
 import path from "path";
