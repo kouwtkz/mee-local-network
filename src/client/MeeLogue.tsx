@@ -46,10 +46,11 @@ import {
   MdOutlinePlaylistAdd,
   MdOutlinePostAdd,
 } from "react-icons/md";
-import { useAtom } from "jotai";
+import { atom, useAtom } from "jotai";
 import { pageIsCompleteAtom, siteIsFirstAtom } from "./state/DataState";
 import { PostTextarea, usePreviewMode } from "./components/parse/PostTextarea";
 import { scrollLock } from "@/components/hook/ScrollLock";
+import { codeToHighlight } from "./components/parse/CodeCheck";
 
 const root = "/logue/";
 const cacheName = "logue-data";
@@ -167,6 +168,7 @@ function ThreadListArea() {
   );
 }
 
+const isSendingAtom = atom(false);
 const defaultValues = { text: "", edit: "" };
 function PostForm() {
   const modalRef = useRef<HTMLDivElement>(null);
@@ -178,7 +180,8 @@ function PostForm() {
   const currentThread = postsList[currentName];
   const [searchParams, setSearch] = useSearchParams();
   const { hash, state, pathname, search } = useLocation();
-  const [isBusy, setIsBusy] = useState(false);
+  const [isSending, setIsSending] = useAtom(isSendingAtom);
+  const isBusy = useMemo(() => isSending, [isSending]);
   const {
     register,
     handleSubmit,
@@ -227,7 +230,7 @@ function PostForm() {
   }, [editThread]);
   function Submit() {
     if (formRef.current && !isBusy && isDirty) {
-      setIsBusy(true);
+      setIsSending(true);
       const form = formRef.current;
       const fd = new FormData(form);
       axios
@@ -252,10 +255,10 @@ function PostForm() {
           setReloadList(currentName, true);
           setEdit();
           setShow(false);
-          form.reset();
+          reset();
         })
         .finally(() => {
-          setIsBusy(false);
+          setIsSending(false);
         });
     }
   }
@@ -576,7 +579,7 @@ function LoguePage() {
     setKp(page);
   }, [currentName]);
   const posts = postsList[currentName];
-  const threadsObject = useMemo(() => {
+  const postsObject = useMemo(() => {
     return findThreads({
       posts: posts ?? [],
       take,
@@ -628,16 +631,30 @@ function LoguePage() {
 
   const maxPage = useMemo(
     () =>
-      threadsObject.take
-        ? Math.ceil(threadsObject.length / threadsObject.take)
-        : 1,
-    [threadsObject]
+      postsObject.take ? Math.ceil(postsObject.length / postsObject.take) : 1,
+    [postsObject]
   );
 
   function toggleEdit(id: number, isEdit: boolean) {
     if (isEdit) setEdit();
     else setEdit(id);
   }
+  const [isSending, setIsSending] = useAtom(isSendingAtom);
+  const isSendingRef = useRef(false);
+  const isHighlightWaitRef = useRef(false);
+  useEffect(() => {
+    if (isSendingRef.current && !isSending) {
+      isHighlightWaitRef.current = true;
+    }
+    isSendingRef.current = isSending;
+  }, [isSending]);
+  useEffect(() => {
+    if (isHighlightWaitRef.current) {
+      codeToHighlight({ force: true });
+      isHighlightWaitRef.current = false;
+    }
+  }, [postsObject.posts]);
+
   return (
     <>
       <div className="logue">
@@ -652,7 +669,7 @@ function LoguePage() {
           <Loading />
         ) : (
           <main className="list" ref={refMain}>
-            {threadsObject.posts.map((v, i) => {
+            {postsObject.posts.map((v, i) => {
               const isEdit = edit === v.id;
               return (
                 <div
@@ -691,6 +708,7 @@ function LoguePage() {
                             "本当に削除しますか？\nid:" + v.id + " " + v.text
                           )
                         ) {
+                          setIsSending(true);
                           const fd = new FormData();
                           fd.append("id", v.id.toString());
                           axios
@@ -701,6 +719,9 @@ function LoguePage() {
                             )
                             .then(() => {
                               setReloadList(currentName, true);
+                            })
+                            .finally(() => {
+                              setIsSending(false);
                             });
                         }
                       }}
