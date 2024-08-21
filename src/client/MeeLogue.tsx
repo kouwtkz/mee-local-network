@@ -44,33 +44,38 @@ import {
   MdOutlinePlaylistAdd,
   MdOutlinePostAdd,
 } from "react-icons/md";
+import { useAtom } from "jotai";
+import { pageIsCompleteAtom, siteIsFirstAtom } from "./state/DataState";
 
 const root = "/logue/";
 const cacheName = "logue-data";
 const cacheSessionName = "logue-data-session";
 
-interface ThreadsStateType {
-  threadsList: {
+interface PostsStateType {
+  postsList: {
     [k: string]: MeeLoguePostType[] | null | undefined;
   };
   reloadList: {
     [k: string]: boolean;
   };
-  setThreadsList: (name: string, list: MeeLoguePostType[] | null) => void;
+  setPostsList: (name: string, list: MeeLoguePostType[] | null) => void;
   setReloadList: (name: string, flag: boolean) => void;
   edit?: number;
   setEdit: (edit?: number) => void;
   cursor: number;
   setCursor: (cursor: number) => void;
+  isSet: boolean;
+  setIsSet: (value: boolean) => void;
 }
-export const useThreadsState = create<ThreadsStateType>((set) => ({
-  threadsList: {},
+export const usePostsState = create<PostsStateType>((set) => ({
+  postsList: {},
   reloadList: {},
-  setThreadsList(name, list) {
+  setPostsList(name, list) {
     set((state) => {
       return {
-        threadsList: { ...state.threadsList, [name]: list },
+        postsList: { ...state.postsList, [name]: list },
         reloadList: { ...state.reloadList, [name]: false },
+        isSet: true,
       };
     });
   },
@@ -80,11 +85,15 @@ export const useThreadsState = create<ThreadsStateType>((set) => ({
     }));
   },
   setEdit(edit) {
-    set(() => ({ edit }));
+    set({ edit });
   },
   cursor: 0,
   setCursor(cursor) {
-    set(() => ({ cursor }));
+    set({ cursor });
+  },
+  isSet: false,
+  setIsSet(isSet) {
+    set({ isSet });
   },
 }));
 
@@ -95,7 +104,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         path: root,
         element: (
           <>
-            <ScrollRestoration />
             <DarkThemeState />
             <Base>
               <Outlet />
@@ -132,7 +140,7 @@ function ThreadListArea() {
   const currentName = useParams().name ?? "";
   const current = threadLabeledList.find(({ name }) => name == currentName);
   const list = threadLabeledList.filter(({ name }) => name !== currentName);
-  const { setReloadList } = useThreadsState();
+  const { setReloadList } = usePostsState();
   return (
     <MobileFold wide={true}>
       <ReloadButton
@@ -161,9 +169,9 @@ function PostForm() {
   const formRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const currentName = useParams().name ?? "";
-  const { threadsList, setReloadList, edit, setEdit, setCursor } =
-    useThreadsState();
-  const currentThread = threadsList[currentName];
+  const { postsList, setReloadList, edit, setEdit, setCursor } =
+    usePostsState();
+  const currentThread = postsList[currentName];
   const [searchParams, setSearch] = useSearchParams();
   const { hash, state, pathname, search } = useLocation();
   const [isBusy, setIsBusy] = useState(false);
@@ -418,15 +426,24 @@ function LoguePage() {
   const [cookies, setCookie] = useCookies();
   const [search, setSearch] = useSearchParams();
   const {
-    threadsList,
-    setThreadsList,
+    postsList,
+    setPostsList,
     reloadList,
     setReloadList,
     edit,
     setEdit,
     cursor,
     setCursor,
-  } = useThreadsState();
+    isSet,
+  } = usePostsState();
+  const setIsComplete = useAtom(pageIsCompleteAtom)[1];
+  const [isFirst] = useAtom(siteIsFirstAtom);
+  useEffect(() => {
+    if (isFirst) setIsComplete(false);
+  }, [isFirst]);
+  useEffect(() => {
+    if (isFirst && isSet) setIsComplete(true);
+  }, [isSet, isFirst]);
   useEffect(() => {
     setEdit();
   }, [currentName]);
@@ -442,7 +459,7 @@ function LoguePage() {
   }
   useEffect(() => {
     if (
-      typeof threadsList[currentName] === "undefined" ||
+      typeof postsList[currentName] === "undefined" ||
       reloadList[currentName]
     ) {
       async function Fetch() {
@@ -477,12 +494,12 @@ function LoguePage() {
           .then(async (r) => {
             const bodyString = await new Response(r.body).text();
             const rawData: MeeLoguePostRawType[] = JSON.parse(bodyString);
-            setThreadsList(currentName, ParseThreads(rawData));
+            setPostsList(currentName, ParseThreads(rawData));
           })
           .catch((r: AxiosError) => {
             if (r.response?.status === 401) {
               location.href = getRedirectUrl(location.href);
-            } else setThreadsList(currentName, null);
+            } else setPostsList(currentName, null);
           });
       }
       Fetch();
@@ -539,7 +556,7 @@ function LoguePage() {
   useEffect(() => {
     setKp(page);
   }, [currentName]);
-  const posts = threadsList[currentName];
+  const posts = postsList[currentName];
   const threadsObject = useMemo(() => {
     return findThreads({
       posts: posts ?? [],

@@ -5,6 +5,7 @@ $high-hover: #aecc54;
 $dark-high-color: #c1e654;
 $dark-high-hover: #deff7b;
 $high-color-fluo: #7697142c;
+$high-sub-color: #b39321;
 $disabled-color: #bbc5a4;
 $disabled-color2: #a2ab8d;
 $form-input-bg: #e9eae9;
@@ -683,4 +684,46 @@ input.colorChanger.withDropdown {
   pointer-events: none;
   opacity: 0;
   position: absolute;
+}
+
+code {
+  display: inline-block;
+  background-color: #333430;
+  color: white;
+  border-radius: 16px;
+  padding: 1em 1em;
+  max-width: 92vw;
+  overflow: auto;
+  white-space: pre-wrap;
+  box-sizing: border-box;
+  width: 99%;
+  min-width: unset;
+  &.hljs {
+    .hljs-string {
+      color: $soft-color;
+    }
+    .hljs-comment {
+      color: $soft-color;
+    }
+    .hljs-title,
+    .hljs-keyword {
+      color: $soft-color;
+    }
+    .hljs-selector-class {
+      color: $high-sub-color;
+    }
+    .hljs-variable,
+    .hljs-number {
+      color: $soft-color;
+    }
+    .hljs-selector-pseudo {
+      color: $soft-color;
+    }
+    &.language-css,
+    &.language-scss {
+      .hljs-attribute {
+        color: $high-sub-color;
+      }
+    }
+  }
 }
