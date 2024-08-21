@@ -50,7 +50,6 @@ import { atom, useAtom } from "jotai";
 import { pageIsCompleteAtom, siteIsFirstAtom } from "./state/DataState";
 import { PostTextarea, usePreviewMode } from "./components/parse/PostTextarea";
 import { scrollLock } from "@/components/hook/ScrollLock";
-import { codeToHighlight } from "./components/parse/CodeCheck";
 
 const root = "/logue/";
 const cacheName = "logue-data";
@@ -639,20 +638,6 @@ function LoguePage() {
     if (isEdit) setEdit();
     else setEdit(id);
   }
-  const [isSending, setIsSending] = useAtom(isSendingAtom);
-  const isSendingRef = useRef(false);
-  const isHighlightWaitRef = useRef(false);
-  useEffect(() => {
-    if (isSendingRef.current && !isSending) {
-      isHighlightWaitRef.current = true;
-    }
-    isSendingRef.current = isSending;
-  }, [isSending]);
-  useEffect(() => {
-    const force = isHighlightWaitRef.current;
-    if (postsObject.posts.length > 0) codeToHighlight({ force });
-    if (force) isHighlightWaitRef.current = false;
-  }, [postsObject.posts]);
 
   return (
     <>
@@ -707,7 +692,6 @@ function LoguePage() {
                             "本当に削除しますか？\nid:" + v.id + " " + v.text
                           )
                         ) {
-                          setIsSending(true);
                           const fd = new FormData();
                           fd.append("id", v.id.toString());
                           axios
@@ -718,9 +702,6 @@ function LoguePage() {
                             )
                             .then(() => {
                               setReloadList(currentName, true);
-                            })
-                            .finally(() => {
-                              setIsSending(false);
                             });
                         }
                       }}
