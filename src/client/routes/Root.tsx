@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 import { isMobile } from "react-device-detect";
 import { Outlet, ScrollRestoration, useLocation } from "react-router-dom";
 import { DataState } from "../state/DataState";
-import { CodeCheck } from "../components/parse/CodeCheck";
+import { Code } from "../components/parse/CodeCheck";
 
 export function Base({ children }: { children?: ReactNode }) {
   useLayoutEffect(() => {
@@ -15,7 +15,6 @@ export function Base({ children }: { children?: ReactNode }) {
     <>
       <ScrollRestoration />
       <DataState />
-      <CodeCheck />
       {children}
     </>
   );
