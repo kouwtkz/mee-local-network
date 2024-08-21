@@ -649,10 +649,9 @@ function LoguePage() {
     isSendingRef.current = isSending;
   }, [isSending]);
   useEffect(() => {
-    if (isHighlightWaitRef.current) {
-      codeToHighlight({ force: true });
-      isHighlightWaitRef.current = false;
-    }
+    const force = isHighlightWaitRef.current;
+    if (postsObject.posts.length > 0) codeToHighlight({ force });
+    if (force) isHighlightWaitRef.current = false;
   }, [postsObject.posts]);
 
   return (
