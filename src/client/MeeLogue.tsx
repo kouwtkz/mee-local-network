@@ -49,6 +49,7 @@ import {
 import { useAtom } from "jotai";
 import { pageIsCompleteAtom, siteIsFirstAtom } from "./state/DataState";
 import { PostTextarea, usePreviewMode } from "./components/parse/PostTextarea";
+import { scrollLock } from "@/components/hook/ScrollLock";
 
 const root = "/logue/";
 const cacheName = "logue-data";
@@ -206,6 +207,9 @@ function PostForm() {
     },
     [hash]
   );
+  useEffect(() => {
+    scrollLock(show);
+  }, [show]);
   const editThread = useMemo(
     () =>
       currentThread && typeof edit === "number"

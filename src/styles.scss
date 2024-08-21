@@ -23,6 +23,9 @@ $font-KosugiMaru: "Kosugi Maru";
   --background-color: #{$background-dark};
   --gray-color: #{$gray-dark-mode};
   scrollbar-color: $soft-color transparent;
+  &.scrollLock {
+    scrollbar-color: $gray-dark-mode transparent;
+  }
   body,
   header {
     color: white;
@@ -67,6 +70,9 @@ $font-KosugiMaru: "Kosugi Maru";
       color: $high-hover;
     }
   }
+  &.scrollLock {
+    scrollbar-color: var(--gray-color) transparent;
+  }
   &.dark {
     @include darkMode();
   }
@@ -77,9 +83,8 @@ $font-KosugiMaru: "Kosugi Maru";
   }
 }
 
-$mobileWidth: 520px;
 $tabletWidth: 768px;
-$desktopWidth: 1024px;
+$desktopWidth: 1280px;
 
 body {
   overflow-y: scroll;
@@ -136,7 +141,7 @@ form.uploader {
     }
     font-size: 1.2rem;
   }
-  @media (min-width: $mobileWidth) {
+  @media (min-width: $tabletWidth) {
     text-align: left;
   }
 }
@@ -193,7 +198,7 @@ form.uploader {
       margin: 0.5rem 0.75rem;
     }
   }
-  @media (min-width: $mobileWidth) {
+  @media (min-width: $tabletWidth) {
     ul {
       text-align: left;
       li {
@@ -446,7 +451,7 @@ button,
         display: none;
       }
     }
-    @media (min-width: $mobileWidth) {
+    @media (min-width: $tabletWidth) {
       form.search input[type="search"] {
         width: 12rem;
       }
@@ -488,7 +493,7 @@ button,
     flex-direction: column;
     align-items: stretch;
     flex-wrap: wrap;
-    @media (min-width: $mobileWidth) {
+    @media (min-width: $tabletWidth) {
       flex-direction: row;
     }
     flex: 1;
@@ -509,7 +514,7 @@ button,
       flex-direction: row;
       align-items: center;
       justify-content: space-between;
-      @media (min-width: $mobileWidth) {
+      @media (min-width: $tabletWidth) {
         flex-direction: column;
       }
     }
@@ -539,8 +544,8 @@ button,
     }
     textarea,
     .preview-area {
+      box-sizing: border-box;
       flex: 1;
-      width: 100%;
       height: auto;
       min-height: 10rem;
       max-height: 80dvh;
@@ -550,7 +555,7 @@ button,
       overflow: auto;
     }
     .preview-area {
-      border: $soft-color-fluo solid 1px;
+      border: var(--gray-color) solid 1px;
     }
     textarea {
       resize: vertical;
