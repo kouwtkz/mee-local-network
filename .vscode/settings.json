@@ -12,7 +12,8 @@
     { "label": "build", "task": "npm: build" },
     { "label": "deploy", "task": "npm: deploy" },
     { "label": "ssh", "task": "npm: ssh" },
-    { "label": "restart", "task": "npm: ssh:docker-restart" }
+    { "label": "restart", "task": "npm: ssh:docker-restart" },
+    { "label": "build & deploy", "task": "npm: build-deploy-restart" }
   ],
   // Explorer で非表示にするもの
   "files.exclude": {
