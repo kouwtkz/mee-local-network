@@ -41,11 +41,14 @@ import {
 } from "./components/dropdown/PostEditSelect";
 import {
   MdOutlineAddLink,
+  MdOutlineEditNote,
+  MdOutlineFactCheck,
   MdOutlinePlaylistAdd,
   MdOutlinePostAdd,
 } from "react-icons/md";
 import { useAtom } from "jotai";
 import { pageIsCompleteAtom, siteIsFirstAtom } from "./state/DataState";
+import { PostTextarea, usePreviewMode } from "./components/parse/PostTextarea";
 
 const root = "/logue/";
 const cacheName = "logue-data";
@@ -179,8 +182,10 @@ function PostForm() {
     register,
     handleSubmit,
     reset,
+    getValues,
     formState: { isDirty },
   } = useForm<FieldValues>({ defaultValues });
+  const { previewMode, togglePreviewMode } = usePreviewMode();
   const nav = useNavigate();
   function setShow(v: boolean) {
     if (v)
@@ -348,14 +353,16 @@ function PostForm() {
             onSubmit={handleSubmit(Submit)}
           >
             <input type="hidden" {...register("edit")} />
-            <textarea
-              title="本文"
-              placeholder="今、何してる？"
-              {...SetRegister({
+            <PostTextarea
+              registed={SetRegister({
                 name: "text",
                 ref: textareaRef,
                 register,
               })}
+              id="post_body_area"
+              title="本文"
+              placeholder="今何してる？"
+              className="body"
             />
             <div className="buttons">
               <button
@@ -387,6 +394,14 @@ function PostForm() {
                 MenuButtonClassName="modifier"
                 MenuButton={<MdOutlineAddLink />}
               />
+              <button
+                type="button"
+                className="modifier"
+                title={previewMode ? "編集に戻る" : "プレビューを表示する"}
+                onClick={() => togglePreviewMode(getValues("text"))}
+              >
+                {previewMode ? <MdOutlineEditNote /> : <MdOutlineFactCheck />}
+              </button>
               <button
                 type="submit"
                 title="送信"
