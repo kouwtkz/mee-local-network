@@ -188,7 +188,7 @@ function PostForm() {
     getValues,
     formState: { isDirty },
   } = useForm<FieldValues>({ defaultValues });
-  const { previewMode, togglePreviewMode } = usePreviewMode();
+  const { previewMode, togglePreviewMode, setPreviewMode } = usePreviewMode();
   const nav = useNavigate();
   function setShow(v: boolean) {
     if (v)
@@ -220,6 +220,7 @@ function PostForm() {
     [edit, currentThread]
   );
   useEffect(() => {
+    setPreviewMode({ previewMode: false });
     if (editThread) {
       reset({ edit: editThread.id, text: editThread.text ?? "" });
       textareaRef.current?.focus();

@@ -738,3 +738,15 @@ code {
     }
   }
 }
+
+.parsed {
+  p {
+    white-space: pre-line;
+  }
+  h4 {
+    color: var(--main-color-dark);
+  }
+  img {
+    max-width: 100%;
+  }
+}
