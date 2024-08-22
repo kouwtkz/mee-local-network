@@ -22,6 +22,7 @@
   "dependencies": {
     "@hono/node-server": "^1.12.0",
     "axios": "^1.7.2",
+    "better-sqlite3": "^11.2.1",
     "dotenv": "^16.4.5",
     "highlight.js": "^11.10.0",
     "hono": "^4.4.11",
@@ -36,6 +37,7 @@
   "devDependencies": {
     "@hono/vite-dev-server": "^0.12.2",
     "@hono/vite-ssg": "^0.1.0",
+    "@types/better-sqlite3": "^7.6.11",
     "@types/mailparser": "^3.4.4",
     "@types/node": "^20.14.9",
     "@types/react": "^18.2.79",
