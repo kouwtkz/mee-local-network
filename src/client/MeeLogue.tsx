@@ -17,7 +17,7 @@ import { FormatDate } from "#/functions/DateFunctions";
 import { Base } from "@/routes/Root";
 import { ParseThreads } from "#/functions/MeeLogue";
 import { TopJumpArea } from "@/components/TopJump";
-import findThreads from "#/functions/findThreads";
+import findPosts from "#/functions/findPosts";
 import { MultiParser } from "@/components/parse/MultiParser";
 import { FaHome, FaPen, FaTimes } from "react-icons/fa";
 import { IoSend } from "react-icons/io5";
@@ -580,7 +580,7 @@ function LoguePage() {
   }, [currentName]);
   const posts = postsList[currentName];
   const postsObject = useMemo(() => {
-    return findThreads({
+    return findPosts({
       posts: posts ?? [],
       take,
       page,

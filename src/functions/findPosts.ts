@@ -1,7 +1,7 @@
 import { AutoAllotDate } from "./DateFunctions";
 import { findMee, setWhere } from "./findMee";
 
-interface findThreadsProps {
+interface findPostsProps {
   posts: MeeLoguePostType[];
   update?: boolean;
   take?: number;
@@ -13,9 +13,9 @@ interface findThreadsProps {
   order?: OrderByType;
 }
 
-export default function findThreads(
+export default function findPosts(
   { posts, take, page, common, q = "", id, pinned = false, order = "desc" }
-    : findThreadsProps): MeeLogueDataType {
+    : findPostsProps): MeeLogueDataType {
   if (page) page--;
   const options = {};
   let where: any[] = [];
