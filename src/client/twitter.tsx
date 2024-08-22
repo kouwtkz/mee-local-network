@@ -20,7 +20,7 @@ import { FormatDate } from "../functions/DateFunctions";
 import { SearchArea } from "./components/Search";
 import { BackUrlButton, DarkThemeButton } from "./components/Buttons";
 import { FaHome } from "react-icons/fa";
-import { findMany, setWhere } from "../functions/findMany";
+import { findMee, setWhere } from "../functions/findMee";
 import { BiConversation, BiUserPin } from "react-icons/bi";
 import { TopJumpArea } from "./components/TopJump";
 import { Loading } from "../layout/Loading";
@@ -630,7 +630,7 @@ function DMPage() {
   }, [wheres.where, name]);
   useEffect(() => {
     setFilteredDm(
-      findMany({
+      findMee({
         list: dmArray,
         where: {
           AND: where,

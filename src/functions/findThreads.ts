@@ -1,5 +1,5 @@
 import { AutoAllotDate } from "./DateFunctions";
-import { findMany, setWhere } from "./findMany";
+import { findMee, setWhere } from "./findMee";
 
 interface findThreadsProps {
   posts: MeeLoguePostType[];
@@ -19,7 +19,7 @@ export default function findThreads(
   if (page) page--;
   const options = {};
   let where: any[] = [];
-  let orderBy: OrderByItem[] = []
+  let orderBy: OrderByItem<MeeLoguePostType>[] = []
 
   if (typeof id !== "number") {
     const wheres = setWhere(q, options);
@@ -31,7 +31,6 @@ export default function findThreads(
   const skip = (take && page) ? take * page : 0;
 
   orderBy.push({ date: order });
-  if (pinned) orderBy.unshift({ pin: "desc" });
 
   if (common) where.push(
     { draft: false, date: { lte: new Date() } }
@@ -42,7 +41,7 @@ export default function findThreads(
       const item = posts.find((item) => item.id == id)
       threadsResult = item ? [item] : [];
     } else {
-      threadsResult = findMany({
+      threadsResult = findMee({
         list: posts,
         where: {
           AND: where,
