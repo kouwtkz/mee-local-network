@@ -3,10 +3,12 @@ import { CommonHono } from "#/types/HonoCustomType";
 import { DefaultLayout, Style } from "#/layout/default";
 import { renderToString } from "react-dom/server";
 import { Hono } from "hono";
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
-import { GetRawThreads } from "#/functions/MeeLogue";
+import { readdirSync } from "fs";
 import { buildAddVer, stylesAddVer } from "#/server/env";
 import { LoginRedirect, Unauthorized } from "#/server/LoginCheck";
+import { MeeSqlite } from "#/sqlite/findMeeSqlite";
+import { using } from "#/functions/using";
+import { setWhere } from "#/functions/findMee";
 
 function logueLayout(title = import.meta.env.VITE_LOGUE_TITLE) {
   return renderToString(
@@ -54,104 +56,117 @@ const app_api = new Hono<MeeBindings>({ strict: false });
       return c.json([]);
     }
   });
-
-  function GetPostsFilename(name?: string) {
-    return (name ? name + "_" : "") + "posts.json";
+  const dbPath = logueOptions.data_dir + "local.db";
+  async function createPostsTable(table: string) {
+    return using(new MeeSqlite(dbPath), async (db) =>
+      db.createTable<MeeLoguePostTableType>({
+        table,
+        entry: {
+          id: { primary: true, type: "INT" },
+          name: { type: "TEXT" },
+          text: { type: "TEXT" },
+          createdAt: { type: "TEXT" },
+          updatedAt: { type: "TEXT" },
+        },
+      })
+    ).catch(() => {});
   }
 
-  function ReadPosts(name?: string) {
-    const filename = GetPostsFilename(name);
-    let posts: MeeLoguePostRawType[] | null = null;
-    try {
-      posts = JSON.parse(
-        readFileSync(logueOptions.data_dir + filename).toString()
-      );
-    } catch {}
-    return posts;
-  }
-
-  function WritePosts(posts: MeeLoguePostRawType[], name?: string) {
-    const filename = GetPostsFilename(name);
-    try {
-      writeFileSync(logueOptions.data_dir + filename, JSON.stringify(posts));
-      return true;
-    } catch {
-      return false;
-    }
+  function GetPostsTable(name?: string) {
+    return (name ? name + "_" : "") + "posts";
   }
 
   pathes.forEach((n) => {
     app.get("*", Unauthorized);
-    app.get("get/posts" + n, (c) => {
-      const posts = ReadPosts(c.req.param("name"));
-      if (!posts) return c.json(null, 400);
-      else return c.json(posts);
+    app.get("get/posts" + n, async (c) => {
+      const posts = await using(new MeeSqlite(dbPath), async (db) => {
+        const table = GetPostsTable(c.req.param("name"));
+        if (table) {
+          return db.select<MeeLoguePostRawType>({ table }).catch(async () => {
+            await createPostsTable(table);
+            return null;
+          });
+        } else return null;
+      });
+      if (posts) return c.json(posts);
+      else return c.json(null, 400);
     });
-    app.get("get/posts/filter" + n, (c) => {
+    app.get("get/posts/filter" + n, async (c) => {
       const Url = new URL(c.req.url);
-      const search = Object.fromEntries(Url.searchParams);
-      const posts = ReadPosts(c.req.param("name"));
+      const s = Url.searchParams;
+      let {
+        id,
+        orderBy,
+        take,
+        skip,
+        where: _where,
+      } = setWhere<MeeLoguePostRawType>(Url.searchParams.get("q"));
+      const wheres = [_where];
+      if (orderBy.length === 0) orderBy.push({ id: "desc" });
+      if (id === undefined && s.has("id")) id = Number(s.get("id"));
+      if (id) wheres.push({ id });
+      if (skip === undefined && s.has("p")) {
+        if (!take) take = 100;
+        skip = (Number(s.get("p") ?? 1) - 1) * take;
+      }
+      const posts = await using(new MeeSqlite(dbPath), async (db) => {
+        const table = GetPostsTable(c.req.param("name"));
+        if (table) {
+          return db.select<MeeLoguePostRawType>({
+            table,
+            where: { AND: wheres },
+            orderBy,
+            take,
+            skip,
+          });
+        } else return null;
+      });
       if (!posts) return c.json(null, 400);
-      return c.json(
-        GetRawThreads({
-          posts,
-          ...search,
-        })
-      );
+      return c.json(posts);
     });
     app.post("send/post" + n, async (c) => {
-      let rawThreads = ReadPosts(c.req.param("name")) ?? [];
+      const table = GetPostsTable(c.req.param("name"));
       const v = await c.req.parseBody();
       const currentDate = new Date();
-      const text = ((v.text as string) ?? "").replace(/^\s+|\s+$/g, "");
+      const text = ((v.text as string) ?? "").trim();
+      const name = import.meta.env.VITE_USER_NAME;
+      const now = currentDate.toISOString();
       if (text) {
-        function newData() {
-          return {
-            id: rawThreads.reduce((c, a) => (c <= a.id ? a.id + 1 : c), 0),
-            name: import.meta.env.VITE_USER_NAME,
-            text,
-            createdAt: currentDate.toISOString(),
-            updatedAt: currentDate.toISOString(),
-          };
-        }
-        let data: MeeLoguePostType;
-        if (v.edit === "") {
-          data = newData();
-          rawThreads.push(data);
-        } else {
-          const id = Number(v.edit);
-          const foundIndex = rawThreads.findIndex((item) => item.id === id);
-          if (foundIndex >= 0) {
-            const found = rawThreads[foundIndex];
-            data = {
-              ...found,
-              text,
-              updatedAt: currentDate.toISOString(),
-            };
-            rawThreads[foundIndex] = data;
+        let entry: MeeLoguePostTableType = {
+          name,
+          text,
+          updatedAt: now,
+        };
+        await using(new MeeSqlite(dbPath), async (db) => {
+          if (v.edit === "") {
+            await createPostsTable(table);
+            entry.createdAt = now;
+            db.insert({ table, entry });
           } else {
-            data = newData();
-            rawThreads.push(data);
+            const id = Number(v.edit);
+            db.update({ table, entry, where: { id } });
           }
-        }
-        WritePosts(rawThreads);
-        return c.json(data);
+        });
+        return c.json(entry);
       } else {
         return c.text("本文が入力されていません", 401);
       }
     });
     app.delete("send/post" + n, async (c) => {
-      let rawThreads = ReadPosts(c.req.param("name"));
-      if (!rawThreads) return c.text("スレッドがありません", 400);
       const v = await c.req.parseBody();
       if ("id" in v) {
         const id = Number(v.id as string);
-        rawThreads = rawThreads.filter((item) => item.id !== id);
-        WritePosts(rawThreads);
-        return c.json({ id });
+        const table = GetPostsTable(c.req.param("name"));
+        return await using(new MeeSqlite(dbPath), async (db) => {
+          await db.delete({ table, where: { id } });
+          return c.json({ id });
+        }).catch((e) => c.text(e, 400));
       } else {
         return c.text("IDが入力されていません", 401);
       }
+    });
+    app.post("send/import" + n, async (c) => {
+      return c.text("インポートしました");
     });
   });
 

@@ -10,7 +10,7 @@ function whereToSql<T = any>(where: findWhereType<T>) {
         case "AND":
         case "OR":
         case "NOT":
-          return fvalWheres.map((_val) => recursion(_val)).join(` ${field} `);
+          return fvalWheres.map((_val) => recursion(_val)).filter(v => v).join(` ${fkey} `);
         default:
           if (typeof fval === "object") {
             const _conditions: [any, any][] = Object.entries(fval);
@@ -69,23 +69,22 @@ export class MeeSqlite {
   constructor(path: string, options?: BetterSqlite3.Options) {
     this.db = new BetterSqlite3(path, options);
   }
-  sqlWhere<T>({ where, take, skip }: sqlWhereProps<T>) {
+  dispose() {
+    this.db.close();
+  }
+  sqlWhere<T>(where?: findWhereType<T>) {
     const sqlObject = where ? whereToSql<T>(where) : null;
     let sql = "";
     if (sqlObject?.where) sql = sql + sqlObject.where;
-    if (take) {
-      sql = sql + " LIMIT " + take;
-      if (skip) sql = sql + " OFFSET " + skip;
-    }
     return { sql, bind: sqlObject?.bind }
   }
-  async select<T>({ params = "*", table, orderBy, ...args }: selectProps<T>) {
+  async select<T>({ params = "*", table, orderBy, where, take, skip }: selectProps<T>) {
     const param = (Array.isArray(params) ? params : [params])
       .map(f => {
         const field = String(f);
         return field === "*" || field.startsWith('"') ? field : ("`" + field + "`")
       }).join(", ");
-    let { sql, bind } = this.sqlWhere(args);
+    let { sql, bind } = this.sqlWhere(where);
     sql = "SELECT " + param + " FROM `" + table + "`" + sql;
     if (orderBy) {
       const orderByList =
@@ -106,7 +105,8 @@ export class MeeSqlite {
           }).join(", ");
       }
     }
-    const stmt = this.db.prepare(sql);
+    if (take) sql = sql + " LIMIT " + take + (skip ? (" OFFSET " + skip) : "");
+    const stmt = this.db.prepare<T[], T>(sql);
     if (bind) stmt.bind(...bind);
     return stmt.all();
   }
@@ -118,26 +118,31 @@ export class MeeSqlite {
     stmt.bind(...entries.map((v) => v[1]));
     return stmt.run();
   }
-  async update<T>({ table, entry = {} as T, ...args }: updateProps<T>) {
+  async update<T>({ table, entry = {} as T, where, take, skip }: updateProps<T>) {
     const entries = Object.entries(entry as Object);
-    const { sql: whereSql, bind } = this.sqlWhere(args);
     let sql = "UPDATE `" + table + "` SET " + entries.map((v) => "`" + v[0] + "` = ?").join(", ");
+    const { sql: whereSql, bind } = this.sqlWhere(where);
     if (whereSql) sql = sql + whereSql;
+    if (take) sql = sql + " LIMIT " + take + (skip ? (" OFFSET " + skip) : "");
     const stmt = this.db.prepare(sql);
     stmt.bind(...(entries.map((v) => v[1]).concat(bind)));
     return stmt.run();
   }
-  async delete<T>({ table, ...args }: deleteProps<T>) {
-    let { sql, bind } = this.sqlWhere(args);
+  async delete<T>({ table, where, take, skip }: deleteProps<T>) {
+    let { sql, bind } = this.sqlWhere(where);
     sql = "DELETE FROM `" + table + "`" + sql;
+    if (take) sql = sql + " LIMIT " + take + (skip ? (" OFFSET " + skip) : "");
     const stmt = this.db.prepare(sql);
     if (bind) stmt.bind(...bind);
     return stmt.run();
   }
-  async createTable<T>({ table, entry }: createProps<T>) {
+  async createTable<T = any>({ table, notExists, entry }: createProps<T>) {
     const bind: any[] = [];
-    let sql = "CREATE TABLE `" + table + "`("
-      + Object.entries(entry).map(([k, v]) => {
+    let sql = "CREATE TABLE";
+    if (notExists) sql = sql + " IF NOT EXISTS";
+    sql = sql + " `" + table + "`("
+      + Object.entries(entry).map(([k, _v]) => {
+        const v = _v as createTableEntryItemType;
         let sql = "`" + k + "`";
         const defaultTypeof = typeof v.default;
         let fieldType: sqliteValueType | undefined = v.type;

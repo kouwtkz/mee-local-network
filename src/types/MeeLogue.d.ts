@@ -6,6 +6,10 @@ interface MeeLoguePostRawType {
   updatedAt?: string;
 }
 
+interface MeeLoguePostTableType extends Omit<MeeLoguePostRawType, "id"> {
+  id?: number;
+}
+
 interface MeeLoguePostType extends MeeLoguePostRawType {
   date?: Date;
   update?: Date;

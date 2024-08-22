@@ -1,13 +1,10 @@
-interface sqlWhereProps<T = any> {
-  where?: findWhereType<T>;
-  take?: number,
-  skip?: number,
-};
-
-interface selectProps<T = any> extends sqlWhereProps<T> {
+interface selectProps<T = any> {
   table: string;
   params?: "*" | keyof T | (keyof T)[];
+  where?: findWhereType<T>;
   orderBy?: OrderByItem<T> | OrderByItem<T>[];
+  take?: number,
+  skip?: number,
 };
 
 interface InsertProps<T = any> {
@@ -15,26 +12,34 @@ interface InsertProps<T = any> {
   entry: T,
 };
 
-interface updateProps<T = any> extends sqlWhereProps<T> {
+interface updateProps<T = any> {
   table: string;
   entry: T,
+  where?: findWhereType<T>;
+  take?: number,
+  skip?: number,
 };
 
-interface deleteProps<T = any> extends sqlWhereProps<T> {
+interface deleteProps<T = any> {
   table: string;
+  where?: findWhereType<T>;
+  take?: number,
+  skip?: number,
 };
 
 type sqliteValueType = "TEXT" | "NUM" | "INT" | "REAL" | "";
+interface createTableEntryItemType {
+  default?: any;
+  type?: sqliteValueType;
+  primary?: boolean;
+  unique?: boolean;
+  notNull?: boolean;
+}
 type createTableEntryType<T = any> = {
-  [k in keyof T]: {
-    default?: any;
-    type?: sqliteValueType;
-    primary?: boolean;
-    unique?: boolean;
-    notNull?: boolean;
-  }
+  [k in keyof T]: createTableEntryItemType
 }
 interface createProps<T = any> {
   table: string;
-  entry: createTableEntryType;
+  notExists?: boolean;
+  entry: createTableEntryType<T>;
 };

@@ -157,7 +157,7 @@ function whereFromKey(key: string | string[], value: findWhereWithConditionsType
   }
 }
 
-export function setWhere<T = any>(q: string = "", options: WhereOptionsKvType<T> = {}) {
+export function setWhere<T = any>(q?: string | null, options: WhereOptionsKvType<T> = {}) {
   const textKey = getKeyFromOptions("text", options);
   const fromKey = getKeyFromOptions("from", options);
   const dateKey = getKeyFromOptions("date", options);
@@ -168,11 +168,12 @@ export function setWhere<T = any>(q: string = "", options: WhereOptionsKvType<T>
   const whereList: findWhereType<any>[] = [];
   let id: number | undefined;
   let take: number | undefined;
+  let skip: number | undefined;
   const orderBy: OrderByKeyStr[] = [];
   let OR = false;
   const doubleQuoteDic: KeyValueType<string> = {};
   let i = 0;
-  q = q.replace(/"([^"]+)"/g, (m, m1) => {
+  q = (q ?? "").replace(/"([^"]+)"/g, (m, m1) => {
     const key = (i++).toString(16);
     m1 = m1.toLocaleLowerCase();
     if (kanaReplace) m1 = kanaToHira(m1);
@@ -253,6 +254,9 @@ export function setWhere<T = any>(q: string = "", options: WhereOptionsKvType<T>
             break;
           case "take":
             take = Number(filterValue);
+            break;
+          case "skip":
+            skip = Number(filterValue);
             break;
           case "order":
             const orderValue = filterValue.toLocaleLowerCase();
@@ -392,7 +396,7 @@ export function setWhere<T = any>(q: string = "", options: WhereOptionsKvType<T>
     }
   });
   const where: findWhereType<T> = whereList.length > 1 ? { AND: whereList } : (whereList[0] ?? {});
-  return { where, id, take, orderBy };
+  return { where, id, take, skip, orderBy: orderBy as OrderByItem<T>[] };
 }
 
 function kanaToHira(str: string) {
