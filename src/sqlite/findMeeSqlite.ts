@@ -4,12 +4,13 @@ function whereToSql<T = any>(where: findWhereType<T>) {
   const bind: any[] = [];
   function recursion(__where: findWhereType<T>): string {
     return Object.entries(__where).map(([fkey, fval]) => {
+      const field = "`" + fkey + "`";
       const fvalWheres: findWhereType<T>[] = fval;
       switch (fkey) {
         case "AND":
         case "OR":
         case "NOT":
-          return fvalWheres.map((_val) => recursion(_val)).join(` ${fkey} `);
+          return fvalWheres.map((_val) => recursion(_val)).join(` ${field} `);
         default:
           if (typeof fval === "object") {
             const _conditions: [any, any][] = Object.entries(fval);
@@ -17,44 +18,44 @@ function whereToSql<T = any>(where: findWhereType<T>) {
             return conditions.map(([k, v]) => {
               if (typeof v === "object" && "test" in v) {
                 bind.push((v as RegExp).source);
-                return `${fkey} regexp ?`;
+                return `${field} regexp ?`;
               } else if (v === null) {
-                return `${k === "not" ? "NOT " : ""}ISNULL(${fkey})`;
+                return `${k === "not" ? "NOT " : ""}ISNULL(${field})`;
               }
               switch (k) {
                 case "not":
                   bind.push(v);
-                  return `${fkey} <> ?`;
+                  return `${field} <> ?`;
                 case "contains":
                   bind.push(`%${v}%`);
-                  return `${fkey} LIKE ?`;
+                  return `${field} LIKE ?`;
                 case "startsWith":
                   bind.push(`%${v}`);
-                  return `${fkey} LIKE ?`;
+                  return `${field} LIKE ?`;
                 case "endsWith":
                   bind.push(`${v}%`);
-                  return `${fkey} LIKE ?`;
+                  return `${field} LIKE ?`;
                 case "gt":
                   bind.push(v);
-                  return `${fkey} > ?`;
+                  return `${field} > ?`;
                 case "gte":
                   bind.push(v);
-                  return `${fkey} >= ?`;
+                  return `${field} >= ?`;
                 case "lt":
                   bind.push(v);
-                  return `${fkey} < ?`;
+                  return `${field} < ?`;
                 case "lte":
                   bind.push(v);
-                  return `${fkey} <= ?`;
+                  return `${field} <= ?`;
                 case "equals":
                 default:
                   bind.push(v);
-                  return `${fkey} = ?`;
+                  return `${field} = ?`;
               }
             });
           } else {
             bind.push(fval);
-            return `${fkey} = ?`;
+            return `${field} = ?`;
           }
       }
     }).join(" ");
@@ -62,28 +63,6 @@ function whereToSql<T = any>(where: findWhereType<T>) {
   const whereString = recursion(where);
   return { where: whereString ? " WHERE " + whereString : "", bind };
 }
-
-interface sqlWhereProps<T> {
-  where?: findWhereType<T>;
-  take?: number,
-  skip?: number,
-};
-interface selectProps<T> extends sqlWhereProps<T> {
-  table: string;
-  params?: "*" | keyof T | (keyof T)[];
-  orderBy?: OrderByItem<T> | OrderByItem<T>[];
-};
-interface InsertProps<T> {
-  table: string;
-  entry: T,
-};
-interface updateProps<T> extends sqlWhereProps<T> {
-  table: string;
-  entry: T,
-};
-interface deleteProps<T> extends sqlWhereProps<T> {
-  table: string;
-};
 
 export class MeeSqlite {
   db: BetterSqlite3.Database;
@@ -100,10 +79,14 @@ export class MeeSqlite {
     }
     return { sql, bind: sqlObject?.bind }
   }
-  select<T>({ params = "*", table, orderBy, ...args }: selectProps<T>) {
-    const param = String(Array.isArray(params) ? params.join(", ") : params);
+  async select<T>({ params = "*", table, orderBy, ...args }: selectProps<T>) {
+    const param = (Array.isArray(params) ? params : [params])
+      .map(f => {
+        const field = String(f);
+        return field === "*" || field.startsWith('"') ? field : ("`" + field + "`")
+      }).join(", ");
     let { sql, bind } = this.sqlWhere(args);
-    sql = `SELECT ${param} FROM ${table} ` + sql;
+    sql = "SELECT " + param + " FROM `" + table + "`" + sql;
     if (orderBy) {
       const orderByList =
         (Array.isArray(orderBy) ? orderBy : [orderBy])
@@ -119,7 +102,7 @@ export class MeeSqlite {
         sql = sql + " ORDER BY "
           + orderByList.map(e => {
             const [k, v] = Object.entries(e)[0];
-            return k + " " + v.toUpperCase();
+            return "`" + k + "` " + v.toUpperCase();
           }).join(", ");
       }
     }
@@ -127,28 +110,77 @@ export class MeeSqlite {
     if (bind) stmt.bind(...bind);
     return stmt.all();
   }
-  insert<T>({ table, entry = {} as T }: InsertProps<T>) {
+  async insert<T>({ table, entry = {} as T }: InsertProps<T>) {
     const entries = Object.entries(entry as Object);
-    let sql = `INSERT INTO ${table}(${entries.map((v) => v[0]).join(", ")})`
+    let sql = "INSERT INTO `" + table + "`(" + entries.map((v) => "`" + v[0] + "`").join(", ") + ")"
       + ` VALUES(${entries.map(() => "?").join(", ")})`;
     const stmt = this.db.prepare(sql);
     stmt.bind(...entries.map((v) => v[1]));
     return stmt.run();
   }
-  update<T>({ table, entry = {} as T, ...args }: updateProps<T>) {
+  async update<T>({ table, entry = {} as T, ...args }: updateProps<T>) {
     const entries = Object.entries(entry as Object);
     const { sql: whereSql, bind } = this.sqlWhere(args);
-    let sql = `UPDATE ${table} SET ${entries.map((v) => v[0] + " = ?").join(", ")}`;
+    let sql = "UPDATE `" + table + "` SET " + entries.map((v) => "`" + v[0] + "` = ?").join(", ");
     if (whereSql) sql = sql + whereSql;
     const stmt = this.db.prepare(sql);
     stmt.bind(...(entries.map((v) => v[1]).concat(bind)));
     return stmt.run();
   }
-  delete<T>({ table, ...args }: deleteProps<T>) {
+  async delete<T>({ table, ...args }: deleteProps<T>) {
     let { sql, bind } = this.sqlWhere(args);
-    sql = `DELETE FROM ${table} ` + sql;
+    sql = "DELETE FROM `" + table + "`" + sql;
     const stmt = this.db.prepare(sql);
     if (bind) stmt.bind(...bind);
     return stmt.run();
+  }
+  async createTable<T>({ table, entry }: createProps<T>) {
+    const bind: any[] = [];
+    let sql = "CREATE TABLE `" + table + "`("
+      + Object.entries(entry).map(([k, v]) => {
+        let sql = "`" + k + "`";
+        const defaultTypeof = typeof v.default;
+        let fieldType: sqliteValueType | undefined = v.type;
+        if (typeof fieldType === "undefined") {
+          switch (defaultTypeof) {
+            case "string":
+              fieldType = "TEXT";
+              break;
+            case "number":
+              fieldType = "NUM";
+              break;
+            case "boolean":
+            case "bigint":
+              fieldType = "INT";
+              break;
+            default:
+              fieldType = "";
+          }
+        }
+        if (fieldType) sql = sql + " " + fieldType;
+        if (v.primary) sql = sql + " PRIMARY KEY";
+        if (v.notNull) sql = sql + " NOT NULL";
+        if (v.unique) sql = sql + " UNIQUE";
+        if (defaultTypeof !== "undefined") {
+          sql = sql + " DEFAULT " + (fieldType === "TEXT" ? `'${v.default}'` : v.default);
+        }
+        return sql;
+      }).join(", ")
+      + ")";
+    const stmt = this.db.prepare(sql);
+    if (bind.length > 0) stmt.bind(...bind);
+    return stmt.run();
+  }
+  async dropTable(table: string) {
+    this.db.exec("DROP TABLE `" + table + "`");
+  }
+  begin() {
+    this.db.exec("BEGIN");
+  }
+  commit() {
+    this.db.exec("COMMIT");
+  }
+  rollback() {
+    this.db.exec("ROLLBACK");
   }
 }
