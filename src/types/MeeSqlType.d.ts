@@ -1,4 +1,4 @@
-interface selectProps<T = any> {
+interface MeeSqlSelectProps<T = any> {
   table: string;
   params?: "*" | keyof T | (keyof T)[];
   where?: findWhereType<T>;
@@ -7,13 +7,13 @@ interface selectProps<T = any> {
   skip?: number,
 };
 
-interface InsertProps<T = any> {
+interface MeeSqlInsertProps<T = any> {
   table: string;
   entry?: T,
   rawEntry?: T,
 };
 
-interface updateProps<T = any> {
+interface MeeSqlUpdateProps<T = any> {
   table: string;
   entry?: T,
   rawEntry?: T,
@@ -22,7 +22,7 @@ interface updateProps<T = any> {
   skip?: number,
 };
 
-interface deleteProps<T = any> {
+interface MeeSqlDeleteProps<T = any> {
   table: string;
   where?: findWhereType<T>;
   take?: number,
@@ -30,7 +30,7 @@ interface deleteProps<T = any> {
 };
 
 type sqliteValueType = "TEXT" | "NUMERIC" | "INTEGER" | "REAL" | "";
-interface createTableEntryItemType {
+interface MeeSqlCreateTableEntryItemType {
   default?: any;
   type?: sqliteValueType;
   primary?: boolean;
@@ -38,11 +38,23 @@ interface createTableEntryItemType {
   notNull?: boolean;
   createAt?: boolean;
 }
-type createTableEntryType<T = any> = {
-  [k in keyof T]: createTableEntryItemType
+type MeeSqlCreateTableEntryType<T = any> = {
+  [k in keyof T]: MeeSqlCreateTableEntryItemType
 }
-interface createProps<T = any> {
+interface MeeSqlCreateProps<T = any> {
   table: string;
   notExists?: boolean;
-  entry: createTableEntryType<T>;
+  entry: MeeSqlCreateTableEntryType<T>;
 };
+
+interface MeeSqlDBProps {
+  prepare(query: unknown): MeeSqlPrepareState;
+  exec(query: string): unknown;
+}
+
+interface MeeSqlPrepareState {
+  bind(...values: unknown[]): MeeSqlPrepareState;
+  run(): unknown;
+  all(): unknown;
+  [k: string]: unknown;
+}
