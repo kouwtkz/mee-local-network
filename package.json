@@ -25,7 +25,7 @@
     "better-sqlite3": "^11.2.1",
     "dotenv": "^16.4.5",
     "highlight.js": "^11.10.0",
-    "hono": "^4.4.11",
+    "hono": "^4.5.8",
     "html-react-parser": "^5.1.10",
     "jotai": "^2.9.3",
     "marked": "^13.0.2",
