@@ -27,7 +27,7 @@ interface deleteProps<T = any> {
   skip?: number,
 };
 
-type sqliteValueType = "TEXT" | "NUM" | "INT" | "REAL" | "";
+type sqliteValueType = "TEXT" | "NUMERIC" | "INTEGER" | "REAL" | "";
 interface createTableEntryItemType {
   default?: any;
   type?: sqliteValueType;

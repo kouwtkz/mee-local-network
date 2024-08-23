@@ -21,15 +21,15 @@ export function FilterPosts({
   return posts;
 }
 
-interface PagingThreadsProps {
+interface PagingPostsProps {
   posts: CompThreadType;
   limit?: number | string;
   p?: number | string;
 }
-export function PagingThreads({
+export function PagingPosts({
   posts, limit,
   p = 1,
-}: PagingThreadsProps) {
+}: PagingPostsProps) {
   if (typeof p !== "undefined" && typeof limit !== "undefined") {
     p = Number(p);
     limit = Number(limit);
@@ -39,32 +39,32 @@ export function PagingThreads({
 }
 
 
-interface GetPostsBase extends Omit<FilterPostsProps, "posts">, Omit<PagingThreadsProps, "posts"> {
+interface GetPostsBase extends Omit<FilterPostsProps, "posts">, Omit<PagingPostsProps, "posts"> {
   order?: string;
 };
-interface GetThreadsProps extends GetPostsBase {
+interface GetPostsProps extends GetPostsBase {
   posts: MeeLoguePostType[];
 }
-export function GetThreads({
+export function GetPosts({
   posts,
   id,
   q,
   order = "asc",
   limit,
   p = 1,
-}: GetThreadsProps): MeeLogueDataType {
+}: GetPostsProps): MeeLogueDataType {
   posts = FilterPosts({ posts, id, q });
   if (order === "desc") {
     posts.reverse();
   }
   const length = posts.length;
-  posts = PagingThreads({ posts, p, limit });
+  posts = PagingPosts({ posts, p, limit });
   return { posts, length, take: Number(limit) };
 }
 interface GetRawPostsProps extends GetPostsBase {
   posts: MeeLoguePostRawType[];
 }
-export function GetRawThreads({
+export function GetRawPosts({
   posts,
   id,
   q,
@@ -77,12 +77,12 @@ export function GetRawThreads({
     posts.reverse();
   }
   const length = posts.length;
-  posts = PagingThreads({ posts, p: page, limit });
+  posts = PagingPosts({ posts, p: page, limit });
   return { posts, length, take: Number(limit) };
 }
 
-export function ParseThreads(rawThreads: MeeLoguePostRawType[]) {
-  return rawThreads.map(args => ({
+export function ParsePosts(rawPosts: MeeLoguePostRawType[]) {
+  return rawPosts.map(args => ({
     date: args.createdAt ? new Date(args.createdAt) : undefined,
     update: args.updatedAt ? new Date(args.updatedAt) : undefined,
     ...args,

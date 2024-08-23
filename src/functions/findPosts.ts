@@ -36,12 +36,12 @@ export default function findPosts(
     { draft: false, date: { lte: new Date() } }
   )
   try {
-    let threadsResult: MeeLoguePostType[] = posts.concat();
+    let PostsResult: MeeLoguePostType[] = posts.concat();
     if (id) {
       const item = posts.find((item) => item.id == id)
-      threadsResult = item ? [item] : [];
+      PostsResult = item ? [item] : [];
     } else {
-      threadsResult = findMee({
+      PostsResult = findMee({
         list: posts,
         where: {
           AND: where,
@@ -49,12 +49,12 @@ export default function findPosts(
         orderBy,
       });
     }
-    const length = threadsResult.length;
-    threadsResult = threadsResult.filter((post, i) => {
+    const length = PostsResult.length;
+    PostsResult = PostsResult.filter((post, i) => {
       if (take !== undefined && i >= (take + skip)) return false;
       return ++i > skip;
     })
-    return { posts: threadsResult, length, take };
+    return { posts: PostsResult, length, take };
   } catch (e) {
     console.log(e);
     return { posts: [], length: 0, take }

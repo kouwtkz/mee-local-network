@@ -56,20 +56,26 @@ const app_api = new Hono<MeeBindings>({ strict: false });
       return c.json([]);
     }
   });
-  const dbPath = logueOptions.data_dir + "local.db";
-  async function createPostsTable(table: string) {
-    return using(new MeeSqlite(dbPath), async (db) =>
-      db.createTable<MeeLoguePostTableType>({
+  const dbPath = logueOptions.data_dir + "posts.db";
+  async function createPostsTable({
+    table,
+    db,
+  }: {
+    table: string;
+    db: MeeSqlite;
+  }) {
+    return db
+      .createTable<MeeLoguePostTableType>({
         table,
         entry: {
-          id: { primary: true, type: "INT" },
+          id: { primary: true, type: "INTEGER" },
           name: { type: "TEXT" },
           text: { type: "TEXT" },
           createdAt: { type: "TEXT" },
           updatedAt: { type: "TEXT" },
         },
       })
-    ).catch(() => {});
+      .catch(() => {});
   }
 
   function GetPostsTable(name?: string) {
@@ -83,7 +89,7 @@ const app_api = new Hono<MeeBindings>({ strict: false });
         const table = GetPostsTable(c.req.param("name"));
         if (table) {
           return db.select<MeeLoguePostRawType>({ table }).catch(async () => {
-            await createPostsTable(table);
+            await createPostsTable({ table, db });
             return null;
           });
         } else return null;
@@ -139,7 +145,7 @@ const app_api = new Hono<MeeBindings>({ strict: false });
         };
         await using(new MeeSqlite(dbPath), async (db) => {
           if (v.edit === "") {
-            await createPostsTable(table);
+            await createPostsTable({ table, db });
             entry.createdAt = now;
             db.insert({ table, entry });
           } else {
@@ -166,6 +172,31 @@ const app_api = new Hono<MeeBindings>({ strict: false });
       }
     });
     app.post("send/import" + n, async (c) => {
+      const table = GetPostsTable(c.req.param("name"));
+      const formData = (await c.req.parseBody()) as any;
+      const file: File | undefined = formData["posts"];
+      const mode = formData["mode"] ?? "overwrite";
+      if (file && file.type === "application/json") {
+        const posts: MeeLoguePostRawType[] = JSON.parse(await file.text());
+        posts.sort((a, b) => a.id - b.id);
+        await using(new MeeSqlite(dbPath), async (db) => {
+          db.begin();
+          if (mode === "overwrite") await db.dropTable(table);
+          await createPostsTable({ table, db });
+          await Promise.all(
+            posts.map((post) => {
+              let entry: MeeLoguePostTableType = post;
+              switch (mode) {
+                case "insert":
+                  delete entry.id;
+                  break;
+              }
+              return db.insert({ table, entry });
+            })
+          );
+          db.commit();
+        });
+      }
       return c.text("インポートしました");
     });
   });

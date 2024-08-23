@@ -152,11 +152,11 @@ export class MeeSqlite {
               fieldType = "TEXT";
               break;
             case "number":
-              fieldType = "NUM";
+              fieldType = "NUMERIC";
               break;
             case "boolean":
             case "bigint":
-              fieldType = "INT";
+              fieldType = "INTEGER";
               break;
             default:
               fieldType = "";

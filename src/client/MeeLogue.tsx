@@ -15,7 +15,7 @@ import {
 import ErrorPage from "@/routes/ErrorPage";
 import { FormatDate } from "#/functions/DateFunctions";
 import { Base } from "@/routes/Root";
-import { ParseThreads } from "#/functions/MeeLogue";
+import { ParsePosts } from "#/functions/MeeLogue";
 import { TopJumpArea } from "@/components/TopJump";
 import findPosts from "#/functions/findPosts";
 import { MultiParser } from "@/components/parse/MultiParser";
@@ -35,6 +35,7 @@ import { useCookies } from "react-cookie";
 import { FieldValues, useForm } from "react-hook-form";
 import SetRegister from "@/components/hook/SetRegister";
 import {
+  MenuItem,
   PostEditSelectDecoration,
   PostEditSelectInsert,
   PostEditSelectMedia,
@@ -43,6 +44,7 @@ import {
   MdOutlineAddLink,
   MdOutlineEditNote,
   MdOutlineFactCheck,
+  MdOutlineMenu,
   MdOutlinePlaylistAdd,
   MdOutlinePostAdd,
 } from "react-icons/md";
@@ -50,10 +52,14 @@ import { atom, useAtom } from "jotai";
 import { pageIsCompleteAtom, siteIsFirstAtom } from "./state/DataState";
 import { PostTextarea, usePreviewMode } from "./components/parse/PostTextarea";
 import { scrollLock } from "@/components/hook/ScrollLock";
+import { DropdownObject } from "./components/dropdown/DropdownMenu";
+import { fileDialog } from "./components/FileTool";
 
 const root = "/logue/";
 const cacheName = "logue-data";
 const cacheSessionName = "logue-data-session";
+const cacheOptions = { path: root };
+const cachesEnable = typeof caches !== "undefined";
 
 interface PostsStateType {
   postsList: {
@@ -144,6 +150,7 @@ function ThreadListArea() {
   const currentName = useParams().name ?? "";
   const current = threadLabeledList.find(({ name }) => name == currentName);
   const list = threadLabeledList.filter(({ name }) => name !== currentName);
+  const deleteCookie = useCookies()[2];
   const { setReloadList } = usePostsState();
   return (
     <MobileFold wide={true}>
@@ -153,8 +160,43 @@ function ThreadListArea() {
           setReloadList(currentName, true);
         }}
         cacheSession={cacheSessionName}
-        cacheOptions={{ path: root }}
+        cacheOptions={cacheOptions}
       />
+      <DropdownObject
+        className="dropdown"
+        MenuButton={<MdOutlineMenu />}
+        MenuButtonTitle="その他のメニュー"
+        MenuButtonClassName="link"
+        autoClose={true}
+      >
+        <MenuItem
+          onClick={() => {
+            fileDialog("application/json").then((files) => {
+              const file = files[0];
+              const formData = new FormData();
+              formData.append("posts", file);
+              axios
+                .post(
+                  "/logue/api/send/import/" +
+                    (currentName ? currentName + "/" : ""),
+                  formData
+                )
+                .then(() => {
+                  if (!(current?.postable ?? true) && cachesEnable) {
+                    if (cacheSessionName)
+                      deleteCookie(cacheSessionName, cacheOptions);
+                    location.reload();
+                  } else {
+                    setReloadList(currentName, true);
+                  }
+                });
+            });
+          }}
+        >
+          上書きインポート
+        </MenuItem>
+      </DropdownObject>
+
       <span>【{current?.label}】</span>
       {list.map(({ name, label }, i) => {
         return (
@@ -444,6 +486,7 @@ function LoguePage() {
   const currentName = useParams().name ?? "";
   const current = threadLabeledList.find(({ name }) => name == currentName);
   const postable = useMemo(() => current?.postable ?? true, [current]);
+  const cacheEnable = useMemo(() => cachesEnable && !postable, [postable]);
   const refMain = useRef<HTMLElement>(null);
   const [cookies, setCookie] = useCookies();
   const [search, setSearch] = useSearchParams();
@@ -495,7 +538,7 @@ function LoguePage() {
         let response: Promise<Response>;
         const url =
           "/logue/api/get/posts/" + (currentName ? currentName + "/" : "");
-        if (!postable && typeof caches !== "undefined") {
+        if (cacheEnable) {
           if (!(cacheSessionName in cookies)) {
             await caches.delete(cacheName);
             setCookie(cacheSessionName, Date.now(), {
@@ -516,7 +559,7 @@ function LoguePage() {
           .then(async (r) => {
             const bodyString = await new Response(r.body).text();
             const rawData: MeeLoguePostRawType[] = JSON.parse(bodyString);
-            setPostsList(currentName, ParseThreads(rawData));
+            setPostsList(currentName, ParsePosts(rawData));
           })
           .catch((r: AxiosError) => {
             if (r.response?.status === 401) {
@@ -526,7 +569,7 @@ function LoguePage() {
       }
       Fetch();
     }
-  }, [currentName, reloadList]);
+  }, [currentName, reloadList, cacheEnable]);
   useEffect(() => {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/logue/sw.js").then((reg) => {
