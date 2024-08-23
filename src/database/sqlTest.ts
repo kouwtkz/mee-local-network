@@ -1,5 +1,5 @@
 import { using } from "#/functions/using";
-import { MeeSqlite } from "./findMeeSqlite";
+import { MeeSqlite } from "./MeeSqlite";
 
 await using(new MeeSqlite("data/posts.db"), async (db) => {
   console.log(await db.select<MeeLoguePostRawType>(
