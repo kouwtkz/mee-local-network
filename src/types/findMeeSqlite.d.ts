@@ -9,12 +9,14 @@ interface selectProps<T = any> {
 
 interface InsertProps<T = any> {
   table: string;
-  entry: T,
+  entry?: T,
+  rawEntry?: T,
 };
 
 interface updateProps<T = any> {
   table: string;
-  entry: T,
+  entry?: T,
+  rawEntry?: T,
   where?: findWhereType<T>;
   take?: number,
   skip?: number,
@@ -34,6 +36,7 @@ interface createTableEntryItemType {
   primary?: boolean;
   unique?: boolean;
   notNull?: boolean;
+  createAt?: boolean;
 }
 type createTableEntryType<T = any> = {
   [k in keyof T]: createTableEntryItemType

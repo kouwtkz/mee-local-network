@@ -9,6 +9,7 @@ import { LoginRedirect, Unauthorized } from "#/server/LoginCheck";
 import { MeeSqlite } from "#/sqlite/findMeeSqlite";
 import { using } from "#/functions/using";
 import { setWhere } from "#/functions/findMee";
+import { GetPostsTable, MeeLoguePostsToRaw } from "#/functions/MeeLogue";
 
 function logueLayout(title = import.meta.env.VITE_LOGUE_TITLE) {
   return renderToString(
@@ -71,15 +72,11 @@ const app_api = new Hono<MeeBindings>({ strict: false });
           id: { primary: true, type: "INTEGER" },
           name: { type: "TEXT" },
           text: { type: "TEXT" },
-          createdAt: { type: "TEXT" },
+          createdAt: { createAt: true },
           updatedAt: { type: "TEXT" },
         },
       })
       .catch(() => {});
-  }
-
-  function GetPostsTable(name?: string) {
-    return (name ? name + "_" : "") + "posts";
   }
 
   pathes.forEach((n) => {
@@ -133,24 +130,23 @@ const app_api = new Hono<MeeBindings>({ strict: false });
     app.post("send/post" + n, async (c) => {
       const table = GetPostsTable(c.req.param("name"));
       const v = await c.req.parseBody();
-      const currentDate = new Date();
       const text = ((v.text as string) ?? "").trim();
       const name = import.meta.env.VITE_USER_NAME;
-      const now = currentDate.toISOString();
       if (text) {
-        let entry: MeeLoguePostTableType = {
+        const entry: MeeLoguePostTableType = {
           name,
           text,
-          updatedAt: now,
+        };
+        const rawEntry = {
+          updatedAt: MeeSqlite.isoFormat(),
         };
         await using(new MeeSqlite(dbPath), async (db) => {
           if (v.edit === "") {
             await createPostsTable({ table, db });
-            entry.createdAt = now;
-            db.insert({ table, entry });
+            db.insert({ table, entry, rawEntry });
           } else {
             const id = Number(v.edit);
-            db.update({ table, entry, where: { id } });
+            db.update({ table, entry, rawEntry, where: { id } });
           }
         });
         return c.json(entry);
@@ -184,13 +180,9 @@ const app_api = new Hono<MeeBindings>({ strict: false });
           if (mode === "overwrite") await db.dropTable(table);
           await createPostsTable({ table, db });
           await Promise.all(
-            posts.map((post) => {
-              let entry: MeeLoguePostTableType = post;
-              switch (mode) {
-                case "insert":
-                  delete entry.id;
-                  break;
-              }
+            MeeLoguePostsToRaw(posts).map((post) => {
+              const entry: MeeLoguePostTableType = post;
+              if (mode !== "overwrite") delete entry.id;
               return db.insert({ table, entry });
             })
           );

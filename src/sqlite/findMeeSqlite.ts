@@ -82,7 +82,7 @@ export class MeeSqlite {
     const param = (Array.isArray(params) ? params : [params])
       .map(f => {
         const field = String(f);
-        return field === "*" || field.startsWith('"') ? field : ("`" + field + "`")
+        return field === "*" || /[\("']/.test(field) ? field : ("`" + field + "`")
       }).join(", ");
     let { sql, bind } = this.sqlWhere(where);
     sql = "SELECT " + param + " FROM `" + table + "`" + sql;
@@ -110,17 +110,20 @@ export class MeeSqlite {
     if (bind) stmt.bind(...bind);
     return stmt.all();
   }
-  async insert<T>({ table, entry = {} as T }: InsertProps<T>) {
-    const entries = Object.entries(entry as Object);
-    let sql = "INSERT INTO `" + table + "`(" + entries.map((v) => "`" + v[0] + "`").join(", ") + ")"
-      + ` VALUES(${entries.map(() => "?").join(", ")})`;
+  async insert<T extends Object>({ table, entry = {} as T, rawEntry = {} as T }: InsertProps<T>) {
+    const entries = Object.entries(entry);
+    const rawEntries = Object.entries(rawEntry);
+    let sql = "INSERT INTO `" + table + "`(" + entries.map((v) => "`" + v[0] + "`")
+      .concat(rawEntries.map((v) => "`" + v[0] + "`")).join(", ") + ")"
+      + ` VALUES(${entries.map(() => "?").concat(rawEntries.map((v) => v[1])).join(", ")})`;
     const stmt = this.db.prepare(sql);
     stmt.bind(...entries.map((v) => v[1]));
     return stmt.run();
   }
-  async update<T>({ table, entry = {} as T, where, take, skip }: updateProps<T>) {
-    const entries = Object.entries(entry as Object);
-    let sql = "UPDATE `" + table + "` SET " + entries.map((v) => "`" + v[0] + "` = ?").join(", ");
+  async update<T extends Object>({ table, entry = {} as T, rawEntry = {} as T, where, take, skip }: updateProps<T>) {
+    const entries = Object.entries(entry);
+    const rawEntries = Object.entries(rawEntry).map((v) => "`" + v[0] + "` = " + v[1]);
+    let sql = "UPDATE `" + table + "` SET " + entries.map((v) => "`" + v[0] + "` = ?").concat(rawEntries).join(", ");
     const { sql: whereSql, bind } = this.sqlWhere(where);
     if (whereSql) sql = sql + whereSql;
     if (take) sql = sql + " LIMIT " + take + (skip ? (" OFFSET " + skip) : "");
@@ -136,6 +139,7 @@ export class MeeSqlite {
     if (bind) stmt.bind(...bind);
     return stmt.run();
   }
+  static isoFormat(time = "'now'") { return `strftime('%Y-%m-%dT%H:%M:%fZ', ${time})` };
   async createTable<T = any>({ table, notExists, entry }: createProps<T>) {
     const bind: any[] = [];
     let sql = "CREATE TABLE";
@@ -159,15 +163,20 @@ export class MeeSqlite {
               fieldType = "INTEGER";
               break;
             default:
-              fieldType = "";
+              if (v.createAt) fieldType = "TEXT";
+              else fieldType = "";
           }
         }
         if (fieldType) sql = sql + " " + fieldType;
         if (v.primary) sql = sql + " PRIMARY KEY";
-        if (v.notNull) sql = sql + " NOT NULL";
-        if (v.unique) sql = sql + " UNIQUE";
-        if (defaultTypeof !== "undefined") {
-          sql = sql + " DEFAULT " + (fieldType === "TEXT" ? `'${v.default}'` : v.default);
+        if (v.createAt) {
+          sql = sql + " NOT NULL DEFAULT (" + MeeSqlite.isoFormat() + ")";
+        } else {
+          if (v.notNull) sql = sql + " NOT NULL";
+          if (v.unique) sql = sql + " UNIQUE";
+          if (defaultTypeof !== "undefined") {
+            sql = sql + " DEFAULT " + (fieldType === "TEXT" ? `'${v.default}'` : v.default);
+          }
         }
         return sql;
       }).join(", ")

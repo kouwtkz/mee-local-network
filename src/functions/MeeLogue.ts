@@ -88,3 +88,21 @@ export function ParsePosts(rawPosts: MeeLoguePostRawType[]) {
     ...args,
   } as MeeLoguePostType))
 }
+
+export function GetPostsTable(name?: string) {
+  return (name ? name + "_" : "") + "posts";
+}
+
+export function MeeLoguePostToRaw(post: MeeLoguePostType): MeeLoguePostRawType {
+  let { createdAt, id, name, text, updatedAt } = post;
+  return {
+    id,
+    createdAt,
+    name,
+    text,
+    updatedAt,
+  };
+}
+export function MeeLoguePostsToRaw(posts: MeeLoguePostType[]) {
+  return posts.map(post => MeeLoguePostToRaw(post));
+}

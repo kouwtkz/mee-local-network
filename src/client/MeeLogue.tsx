@@ -15,7 +15,11 @@ import {
 import ErrorPage from "@/routes/ErrorPage";
 import { FormatDate } from "#/functions/DateFunctions";
 import { Base } from "@/routes/Root";
-import { ParsePosts } from "#/functions/MeeLogue";
+import {
+  GetPostsTable,
+  MeeLoguePostsToRaw,
+  ParsePosts,
+} from "#/functions/MeeLogue";
 import { TopJumpArea } from "@/components/TopJump";
 import findPosts from "#/functions/findPosts";
 import { MultiParser } from "@/components/parse/MultiParser";
@@ -53,7 +57,7 @@ import { pageIsCompleteAtom, siteIsFirstAtom } from "./state/DataState";
 import { PostTextarea, usePreviewMode } from "./components/parse/PostTextarea";
 import { scrollLock } from "@/components/hook/ScrollLock";
 import { DropdownObject } from "./components/dropdown/DropdownMenu";
-import { fileDialog } from "./components/FileTool";
+import { fileDialog, fileDownload } from "./components/FileTool";
 
 const root = "/logue/";
 const cacheName = "logue-data";
@@ -151,7 +155,7 @@ function ThreadListArea() {
   const current = threadLabeledList.find(({ name }) => name == currentName);
   const list = threadLabeledList.filter(({ name }) => name !== currentName);
   const deleteCookie = useCookies()[2];
-  const { setReloadList } = usePostsState();
+  const { postsList, setReloadList } = usePostsState();
   return (
     <MobileFold wide={true}>
       <ReloadButton
@@ -194,6 +198,18 @@ function ThreadListArea() {
           }}
         >
           上書きインポート
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (confirm("記事データを一括で取得しますか？")) {
+              fileDownload(
+                GetPostsTable(currentName) + ".json",
+                JSON.stringify(MeeLoguePostsToRaw(postsList[currentName] ?? []))
+              );
+            }
+          }}
+        >
+          エクスポート
         </MenuItem>
       </DropdownObject>
 
