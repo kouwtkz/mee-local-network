@@ -5,14 +5,9 @@ interface webManifestType {
   "scope"?: string,
   "display"?: "fullscreen" | "standalone" | "minimal-ui" | "browser",
   "background_color"?: string,
+  "theme_color"?: string,
   "description"?: string,
-  "icons"?: [
-    {
-      "src": string,
-      "sizes": string,
-      "type": string
-    },
-  ],
+  "icons"?: iconType[],
   "related_applications"?: [
     {
       "platform"?: string,
@@ -34,5 +29,25 @@ interface webManifestType {
         },
       ]
     }
-  }
+  },
+  "shortcuts"?: {
+    "name": string,
+    "url": string,
+    "icons": iconType[]
+  }[],
+  "gcm_sender_id"?: string,
+  "gcm_user_visible_only"?: boolean,
+  "related_applications"?: {
+    "platform": "play" | string,
+    "url": string,
+    "id"?: "com.example.app1"
+  }[],
+  "capture_links"?: "none" | "new-client" | "existing-client-navigate" | "existing-client-event",
+}
+
+type iconType = {
+  "src": string,
+  "sizes": string,
+  "type": string,
+  "purpose"?: "any monochrome"
 }

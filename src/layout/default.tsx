@@ -28,7 +28,7 @@ export function DefaultLayout({
   style = defaultStyle,
   script,
   className,
-  bodyClassName,
+  htmlClassName,
   children,
 }: {
   title?: string;
@@ -36,11 +36,11 @@ export function DefaultLayout({
   style?: React.ReactNode;
   script?: React.ReactNode;
   className?: string;
-  bodyClassName?: string;
+  htmlClassName?: string;
   children?: React.ReactNode;
 }) {
   return (
-    <html lang="ja" className={className}>
+    <html lang="ja" className={htmlClassName}>
       <head>
         <meta charSet="utf-8" />
         <meta content="width=device-width, initial-scale=1" name="viewport" />
@@ -48,7 +48,7 @@ export function DefaultLayout({
         {meta}
         {style}
       </head>
-      <body className={bodyClassName}>
+      <body className={className}>
         {children}
         {script}
       </body>
