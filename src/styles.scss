@@ -136,10 +136,10 @@ form.uploader {
     color: white;
     background-color: #98b04f;
     cursor: pointer;
+    font-size: 1.2rem;
     &:hover {
       background-color: #aebe7b;
     }
-    font-size: 1.2rem;
   }
   @media (min-width: $tabletWidth) {
     text-align: left;
@@ -179,6 +179,7 @@ form.uploader {
     margin: auto;
     display: table;
     height: 2rem;
+    font-size: 1.25rem;
     background-color: var(--background-color);
     & > * {
       display: table-cell;
@@ -191,7 +192,6 @@ form.uploader {
         margin-right: 0.25rem;
       }
     }
-    font-size: 1.25rem;
     svg {
       width: 1.5rem;
       height: 1.5rem;
@@ -241,24 +241,9 @@ ul.links {
 }
 
 button.topJump {
-  &.working {
-    visibility: visible;
-  }
-  &.hide {
-    opacity: 0;
-    pointer-events: none;
-  }
-  svg {
-    height: 1.5rem;
-    width: 1.5rem;
-    margin: 0;
-  }
   padding: 1rem;
   margin: 0.5rem 0.5rem 1.5rem 1.5rem;
   margin-bottom: 1.5rem;
-  @media (min-width: $tabletWidth) {
-    margin-left: 2rem;
-  }
   opacity: 1;
   visibility: hidden;
   transition: 250ms;
@@ -274,6 +259,21 @@ button.topJump {
   color: #aaaaaa99;
   &:hover {
     background-color: #{$soft-color-fluo} !important;
+  }
+  &.working {
+    visibility: visible;
+  }
+  &.hide {
+    opacity: 0;
+    pointer-events: none;
+  }
+  svg {
+    height: 1.5rem;
+    width: 1.5rem;
+    margin: 0;
+  }
+  @media (min-width: $tabletWidth) {
+    margin-left: 2rem;
   }
 }
 
@@ -438,6 +438,7 @@ button,
     }
     form.search {
       margin: 0;
+      border: solid #999 0.1em;
       input[type="search"] {
         width: 9rem;
         border-radius: 0.4em;
@@ -445,7 +446,6 @@ button,
         @media (prefers-color-scheme: dark) {
           background-color: $form-input-bg;
         }
-        border: solid #999 0.1em;
       }
       button[type="submit"] {
         display: none;
@@ -493,12 +493,12 @@ button,
     flex-direction: column;
     align-items: stretch;
     flex-wrap: wrap;
-    @media (min-width: $tabletWidth) {
-      flex-direction: row;
-    }
     flex: 1;
     margin: 0 1rem;
     max-width: 36rem;
+    @media (min-width: $tabletWidth) {
+      flex-direction: row;
+    }
     > *,
     .list > * {
       margin-left: 0.1rem;
