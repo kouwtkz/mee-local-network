@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "ssh:docker-restart": "ssh rs -t \"cd mee-local-network; docker compose restart\"",
+    "build-deploy-restart": "npm run build && npm run deploy && npm run ssh:docker-restart",
+    "ssh:docker-down": "ssh rs -t \"cd mee-local-network; docker compose down\"",
+    "ssh:docker-build": "ssh rs -t \"cd mee-local-network; docker compose up -d --build\"",
+    "docker:up": "docker-compose up",
+    "docker:build": "docker-compose build"
+  }
+}

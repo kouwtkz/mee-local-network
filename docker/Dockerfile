@@ -12,5 +12,5 @@ RUN npm install --omit=dev
 # COPY . .
 
 # 開放するポート番号
-EXPOSE 80
+EXPOSE 3000
 CMD [ "npm", "start" ]
