@@ -40,6 +40,46 @@ function logueLayout(title = import.meta.env.VITE_LOGUE_TITLE) {
   );
 }
 
+const createEntry: MeeSqlCreateTableEntryType<MeeLoguePostTableType> = {
+  id: { primary: true, type: "INTEGER" },
+  name: { type: "TEXT" },
+  text: { type: "TEXT" },
+  createdAt: { createAt: true, unique: true },
+  updatedAt: { createAt: true, unique: true },
+};
+async function CreateTable(db: MeeSqlite, table: string) {
+  await db
+    .createTable({
+      table,
+      entry: createEntry,
+    })
+    .catch(() => {});
+}
+interface SelectProps extends MeeSqlSelectProps<MeeLoguePostRawType> {
+  db: MeeSqlite;
+}
+async function Select({ db, ...args }: SelectProps) {
+  function _s() {
+    return db.select(args);
+  }
+  return _s().catch(() => CreateTable(db, args.table).then(() => _s()));
+}
+
+export async function ServerPostsGetData(
+  searchParams: URLSearchParams,
+  db: MeeSqlite,
+  table: string
+) {
+  const wheres: MeeSqlFindWhereType<MeeLoguePostRawType>[] = [];
+  const lastmod = searchParams.get("lastmod");
+  if (lastmod) wheres.push({ updatedAt: { gt: lastmod } });
+  const id = searchParams.get("id");
+  if (id) wheres.push({ id: Number(id) });
+  const postId = searchParams.get("postId");
+  if (postId) wheres.push({ postId });
+  return Select({ db, table, where: { AND: wheres } });
+}
+
 export const logueOptions = {
   title: import.meta.env.VITE_LOGUE_TITLE ?? import.meta.env.VITE_TITLE,
   data_dir: import.meta.env.PROD ? "../data/" : "./data/",
@@ -58,41 +98,18 @@ const app_api = new Hono<MeeBindings>({ strict: false });
     }
   });
   const dbPath = logueOptions.data_dir + "posts.db";
-  async function createPostsTable({
-    table,
-    db,
-  }: {
-    table: string;
-    db: MeeSqlite;
-  }) {
-    return db
-      .createTable<MeeLoguePostTableType>({
-        table,
-        entry: {
-          id: { primary: true, type: "INTEGER" },
-          name: { type: "TEXT" },
-          text: { type: "TEXT" },
-          createdAt: { createAt: true },
-          updatedAt: { type: "TEXT" },
-        },
-      })
-      .catch(() => {});
-  }
-
   pathes.forEach((n) => {
     app.get("*", Unauthorized);
     app.get("get/posts" + n, async (c) => {
-      const posts = await using(new MeeSqlite(dbPath), async (db) => {
-        const table = GetPostsTable(c.req.param("name"));
-        if (table) {
-          return db.select<MeeLoguePostRawType>({ table }).catch(async () => {
-            await createPostsTable({ table, db });
-            return null;
-          });
-        } else return null;
-      });
-      if (posts) return c.json(posts);
-      else return c.json(null, 400);
+      return using(new MeeSqlite(dbPath), async (db) =>
+        c.json(
+          await ServerPostsGetData(
+            new URL(c.req.url).searchParams,
+            db,
+            GetPostsTable(c.req.param("name"))
+          )
+        )
+      );
     });
     app.get("get/posts/filter" + n, async (c) => {
       const Url = new URL(c.req.url);
@@ -136,17 +153,15 @@ const app_api = new Hono<MeeBindings>({ strict: false });
         const entry: MeeLoguePostTableType = {
           name,
           text,
-        };
-        const rawEntry = {
-          updatedAt: MeeSqlite.isoFormat(),
+          updatedAt: new Date().toISOString(),
         };
         await using(new MeeSqlite(dbPath), async (db) => {
           if (v.edit === "") {
-            await createPostsTable({ table, db });
-            db.insert({ table, entry, rawEntry });
+            await CreateTable(db, table);
+            db.insert({ table, entry });
           } else {
             const id = Number(v.edit);
-            db.update({ table, entry, rawEntry, where: { id } });
+            db.update({ table, entry, where: { id } });
           }
         });
         return c.json(entry);
@@ -160,8 +175,20 @@ const app_api = new Hono<MeeBindings>({ strict: false });
         const id = Number(v.id as string);
         const table = GetPostsTable(c.req.param("name"));
         return await using(new MeeSqlite(dbPath), async (db) => {
-          await db.delete({ table, where: { id } });
-          return c.json({ id });
+          const nullEntry = MeeSqlite.getNullEntry(createEntry);
+          try {
+            await db.update<MeeLoguePostRawType>({
+              table,
+              entry: { ...nullEntry, updatedAt: new Date().toISOString() },
+              where: { id },
+            });
+            return c.text(String(id));
+          } catch (e) {
+            console.error(e);
+            return c.text("データベースでの削除に失敗しました", {
+              status: 500,
+            });
+          }
         }).catch((e) => c.text(e, 400));
       } else {
         return c.text("IDが入力されていません", 401);
@@ -177,8 +204,8 @@ const app_api = new Hono<MeeBindings>({ strict: false });
         posts.sort((a, b) => a.id - b.id);
         await using(new MeeSqlite(dbPath), async (db) => {
           db.begin();
-          if (mode === "overwrite") await db.dropTable(table);
-          await createPostsTable({ table, db });
+          if (mode === "overwrite") await db.dropTable({ table });
+          await CreateTable(db, table);
           await Promise.all(
             MeeLoguePostsToRaw(posts).map((post) => {
               const entry: MeeLoguePostTableType = post;

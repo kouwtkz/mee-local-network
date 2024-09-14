@@ -52,28 +52,58 @@ import {
   MdOutlinePlaylistAdd,
   MdOutlinePostAdd,
 } from "react-icons/md";
-import { atom, useAtom } from "jotai";
+import { atom, PrimitiveAtom, useAtom } from "jotai";
 import { pageIsCompleteAtom, siteIsFirstAtom } from "./state/DataState";
 import { PostTextarea, usePreviewMode } from "./components/parse/PostTextarea";
 import { scrollLock } from "@/components/hook/ScrollLock";
 import { DropdownObject } from "./components/dropdown/DropdownMenu";
 import { fileDialog, fileDownload } from "./components/FileTool";
+import { StorageDataAtomClass } from "#/functions/storage/StorageDataAtomClass";
 
 const root = "/logue/";
-const cacheName = "logue-data";
 const cacheSessionName = "logue-data-session";
 const cacheOptions = { path: root };
 const cachesEnable = typeof caches !== "undefined";
+
+const threadLabeledList: {
+  name: string;
+  label?: string;
+  order?: OrderByType;
+  postable?: boolean;
+  postsAtom: PrimitiveAtom<MeeLoguePostType[] | undefined>;
+  object: StorageDataAtomClass<MeeLoguePostRawType>;
+}[] = [
+  {
+    name: "",
+    label: "メイン",
+    postsAtom: atom(),
+    object: new StorageDataAtomClass({
+      key: "main",
+      src: "/logue/api/get/posts",
+      version: "1.0",
+      preLoad: true,
+    }),
+  },
+  {
+    name: "old",
+    label: "過去",
+    order: "asc",
+    postable: false,
+    postsAtom: atom(),
+    object: new StorageDataAtomClass({
+      key: "old",
+      src: "/logue/api/get/posts/old",
+      version: "1.0",
+      preLoad: true,
+    }),
+  },
+];
 
 interface PostsStateType {
   postsList: {
     [k: string]: MeeLoguePostType[] | null | undefined;
   };
-  reloadList: {
-    [k: string]: boolean;
-  };
   setPostsList: (name: string, list: MeeLoguePostType[] | null) => void;
-  setReloadList: (name: string, flag: boolean) => void;
   edit?: number;
   setEdit: (edit?: number) => void;
   cursor: number;
@@ -83,20 +113,13 @@ interface PostsStateType {
 }
 export const usePostsState = create<PostsStateType>((set) => ({
   postsList: {},
-  reloadList: {},
   setPostsList(name, list) {
     set((state) => {
       return {
         postsList: { ...state.postsList, [name]: list },
-        reloadList: { ...state.reloadList, [name]: false },
         isSet: true,
       };
     });
-  },
-  setReloadList(name, flag) {
-    set((state) => ({
-      reloadList: { ...state.reloadList, [name]: flag },
-    }));
   },
   setEdit(edit) {
     set({ edit });
@@ -141,29 +164,24 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   />
 );
 
-const threadLabeledList: {
-  name: string;
-  label?: string;
-  order?: OrderByType;
-  postable?: boolean;
-}[] = [
-  { name: "", label: "メイン" },
-  { name: "old", label: "過去", order: "asc", postable: false },
-];
 function ThreadListArea() {
   const currentName = useParams().name ?? "";
   const current = threadLabeledList.find(({ name }) => name == currentName);
   const list = threadLabeledList.filter(({ name }) => name !== currentName);
-  const deleteCookie = useCookies()[2];
-  const { postsList, setReloadList } = usePostsState();
+  const posts = current ? useAtom(current.postsAtom)[0] : undefined;
+  const setLoad = current ? useAtom(current.object.loadAtom)[1] : undefined;
   return (
     <MobileFold wide={true}>
       <ReloadButton
         className="link"
         onClick={() => {
-          setReloadList(currentName, true);
+          if (setLoad) setLoad(true);
+          else location.reload();
         }}
-        cacheSession={cacheSessionName}
+        onContextMenu={() => {
+          if (setLoad) setLoad("no-cache-reload");
+          else location.reload();
+        }}
         cacheOptions={cacheOptions}
       />
       <DropdownObject
@@ -186,12 +204,10 @@ function ThreadListArea() {
                   formData
                 )
                 .then(() => {
-                  if (!(current?.postable ?? true) && cachesEnable) {
-                    if (cacheSessionName)
-                      deleteCookie(cacheSessionName, cacheOptions);
-                    location.reload();
+                  if (setLoad) {
+                    setLoad("no-cache-reload");
                   } else {
-                    setReloadList(currentName, true);
+                    location.reload();
                   }
                 });
             });
@@ -204,7 +220,7 @@ function ThreadListArea() {
             if (confirm("記事データを一括で取得しますか？")) {
               fileDownload(
                 GetPostsTable(currentName) + ".json",
-                JSON.stringify(MeeLoguePostsToRaw(postsList[currentName] ?? []))
+                JSON.stringify(MeeLoguePostsToRaw(posts || []))
               );
             }
           }}
@@ -232,9 +248,10 @@ function PostForm() {
   const formRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const currentName = useParams().name ?? "";
-  const { postsList, setReloadList, edit, setEdit, setCursor } =
-    usePostsState();
-  const currentThread = postsList[currentName];
+  const current = threadLabeledList.find(({ name }) => name == currentName);
+  const posts = current ? useAtom(current.postsAtom)[0] : undefined;
+  const setLoad = current ? useAtom(current.object.loadAtom)[1] : undefined;
+  const { edit, setEdit, setCursor } = usePostsState();
   const [searchParams, setSearch] = useSearchParams();
   const { hash, state, pathname, search } = useLocation();
   const [isSending, setIsSending] = useAtom(isSendingAtom);
@@ -272,10 +289,10 @@ function PostForm() {
   }, [show]);
   const editThread = useMemo(
     () =>
-      currentThread && typeof edit === "number"
-        ? currentThread.find(({ id }) => edit === id)
+      posts && typeof edit === "number"
+        ? posts.find(({ id }) => edit === id)
         : undefined,
-    [edit, currentThread]
+    [edit, posts]
   );
   useEffect(() => {
     setPreviewMode({ previewMode: false });
@@ -310,7 +327,7 @@ function PostForm() {
               }
             }
           }
-          setReloadList(currentName, true);
+          if (setLoad) setLoad(true);
           setEdit();
           setShow(false);
           reset();
@@ -501,22 +518,38 @@ function OptionButtons() {
 function LoguePage() {
   const currentName = useParams().name ?? "";
   const current = threadLabeledList.find(({ name }) => name == currentName);
+  const posts = current ? useAtom(current.postsAtom)[0] : undefined;
+  const setLoad = current ? useAtom(current.object.loadAtom)[1] : undefined;
   const postable = useMemo(() => current?.postable ?? true, [current]);
-  const cacheEnable = useMemo(() => cachesEnable && !postable, [postable]);
   const refMain = useRef<HTMLElement>(null);
-  const [cookies, setCookie] = useCookies();
   const [search, setSearch] = useSearchParams();
-  const {
-    postsList,
-    setPostsList,
-    reloadList,
-    setReloadList,
-    edit,
-    setEdit,
-    cursor,
-    setCursor,
-    isSet,
-  } = usePostsState();
+  const { edit, setEdit, cursor, setCursor, isSet } = usePostsState();
+  const [postsLoad, setPostsLoad] = current
+    ? useAtom(current.object.loadAtom)
+    : [];
+  const [postsData, setPostsData] = current
+    ? useAtom(current.object.dataAtom)
+    : [];
+  useEffect(() => {
+    if (current && postsLoad) {
+      current.object
+        .fetchData({
+          loadAtomValue: postsLoad,
+        })
+        .then((data) => {
+          current.object.setData({
+            data,
+            lastmod: "updatedAt",
+            setAtom: setPostsData!,
+          });
+        });
+      setPostsLoad!(false);
+    }
+  }, [current, postsLoad, setPostsLoad, setPostsData]);
+  const setPosts = current ? useAtom(current.postsAtom)[1] : undefined;
+  useEffect(() => {
+    if (setPosts && postsData) setPosts(ParsePosts(postsData));
+  }, [setPosts, postsData]);
   const setIsComplete = useAtom(pageIsCompleteAtom)[1];
   const [isFirst] = useAtom(siteIsFirstAtom);
   useEffect(() => {
@@ -529,7 +562,7 @@ function LoguePage() {
     setEdit();
   }, [currentName]);
   useHotkeys("period, NumpadDecimal", (e) => {
-    setReloadList(currentName, true);
+    if (setLoad) setLoad(true);
     e.preventDefault();
   });
   function findParentItem(e: Element | null) {
@@ -538,54 +571,6 @@ function LoguePage() {
     if (!refMain.current?.contains(e) || !p) return null;
     else return findParentItem(p);
   }
-  useEffect(() => {
-    if (
-      typeof postsList[currentName] === "undefined" ||
-      reloadList[currentName]
-    ) {
-      async function Fetch() {
-        if (!(cacheSessionName in cookies)) {
-          if (typeof caches !== "undefined") await caches.delete(cacheName);
-          setCookie(cacheSessionName, Date.now(), {
-            path: root,
-            maxAge: 60 * 60 * 24 * 30,
-          });
-        }
-        let response: Promise<Response>;
-        const url =
-          "/logue/api/get/posts/" + (currentName ? currentName + "/" : "");
-        if (cacheEnable) {
-          if (!(cacheSessionName in cookies)) {
-            await caches.delete(cacheName);
-            setCookie(cacheSessionName, Date.now(), {
-              path: root,
-              maxAge: 60 * 60 * 24 * 30,
-            });
-          }
-          const cache = await caches.open(cacheName);
-          response = cache.match(url).then(async (cachedData) => {
-            if (!cachedData?.status) {
-              return cache.add(url).then(async () => (await cache.match(url))!);
-            } else return cachedData;
-          });
-        } else {
-          response = fetch(url);
-        }
-        response
-          .then(async (r) => {
-            const bodyString = await new Response(r.body).text();
-            const rawData: MeeLoguePostRawType[] = JSON.parse(bodyString);
-            setPostsList(currentName, ParsePosts(rawData));
-          })
-          .catch((r: AxiosError) => {
-            if (r.response?.status === 401) {
-              location.href = getRedirectUrl(location.href);
-            } else setPostsList(currentName, null);
-          });
-      }
-      Fetch();
-    }
-  }, [currentName, reloadList, cacheEnable]);
   useEffect(() => {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/logue/sw.js").then((reg) => {
@@ -637,7 +622,6 @@ function LoguePage() {
   useEffect(() => {
     setKp(page);
   }, [currentName]);
-  const posts = postsList[currentName];
   const postsObject = useMemo(() => {
     return findPosts({
       posts: posts ?? [],
@@ -761,7 +745,7 @@ function LoguePage() {
                               { data: fd }
                             )
                             .then(() => {
-                              setReloadList(currentName, true);
+                              if (setLoad) setLoad(true);
                             });
                         }
                       }}

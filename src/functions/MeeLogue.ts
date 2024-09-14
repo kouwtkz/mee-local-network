@@ -82,11 +82,13 @@ export function GetRawPosts({
 }
 
 export function ParsePosts(rawPosts: MeeLoguePostRawType[]) {
-  return rawPosts.map(args => ({
-    date: args.createdAt ? new Date(args.createdAt) : undefined,
-    update: args.updatedAt ? new Date(args.updatedAt) : undefined,
-    ...args,
-  } as MeeLoguePostType))
+  return rawPosts
+    .filter(v => v.text)
+    .map(args => ({
+      date: args.createdAt ? new Date(args.createdAt) : undefined,
+      update: args.updatedAt ? new Date(args.updatedAt) : undefined,
+      ...args,
+    } as MeeLoguePostType))
 }
 
 export function GetPostsTable(name?: string) {
