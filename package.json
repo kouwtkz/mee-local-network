@@ -25,14 +25,15 @@
     "better-sqlite3": "^11.2.1",
     "dotenv": "^16.4.5",
     "highlight.js": "^11.10.0",
-    "hono": "^4.5.8",
+    "hono": "^4.6.1",
     "html-react-parser": "^5.1.10",
     "jotai": "^2.9.3",
     "marked": "^13.0.2",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.52.2",
     "react-icons": "^5.0.1",
-    "react-select": "^5.8.0"
+    "react-select": "^5.8.0",
+    "tsqlstring": "^1.0.1"
   },
   "devDependencies": {
     "@hono/vite-dev-server": "^0.12.2",
@@ -42,6 +43,7 @@
     "@types/node": "^20.14.9",
     "@types/react": "^18.2.79",
     "@types/react-dom": "^18.2.25",
+    "@types/tsqlstring": "^1.0.2",
     "@vitejs/plugin-react": "^4.2.1",
     "mailparser": "^3.7.1",
     "react": "^18.2.0",
