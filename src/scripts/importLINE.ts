@@ -1,4 +1,4 @@
-import { FormatDate } from "#/functions/DateFunctions";
+import { FormatDate } from "#/functions/DateFunction";
 import { mkdirTry, readdirAsync, readFileAsync } from "#/functions/fileSystem";
 import { getConversationId } from "#/functions/twitter";
 import { writeFileSync } from "fs";

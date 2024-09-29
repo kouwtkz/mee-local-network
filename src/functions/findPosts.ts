@@ -1,5 +1,4 @@
-import { AutoAllotDate } from "./DateFunctions";
-import { findMee, setWhere } from "./findMee";
+import { findMee, setWhere } from "#/functions/find/findMee";
 
 interface findPostsProps {
   posts: MeeLoguePostType[];

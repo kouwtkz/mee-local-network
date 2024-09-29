@@ -1,5 +1,3 @@
-import { AutoAllotDate } from "./DateFunctions";
-
 export function findMee<T>({
   list,
   where,
@@ -144,7 +142,7 @@ export function createFilterEntry(
   }
 }
 
-function getKeyFromOptions<T>(key: string, options: WhereOptionsKvType<T>): (string | string[]) {
+function getKeyFromOptions<T>(key: WhereOptionsKeyUnion, options: WhereOptionsKvType<T>): (string | string[]) {
   const _options = options as any;
   return typeof _options[key] === "object" && ("key" in _options[key])
     ? _options[key].key
@@ -166,7 +164,7 @@ function whereFromKey(key: string | string[], value: findWhereWithConditionsType
 export function setWhere<T = any>(q: string = "", options: WhereOptionsKvType<T> = {}) {
   const textKey = getKeyFromOptions("text", options);
   const fromKey = getKeyFromOptions("from", options);
-  const dateKey = getKeyFromOptions("date", options);
+  const timeKey = getKeyFromOptions("time", options);
   const hashtagKey = options.hashtag?.key ?? "hashtag";
   const kanaReplace = options.kanaReplace ?? false;
   const enableHashtagKey = options.hashtag?.enableKey ?? true;
@@ -265,7 +263,7 @@ export function setWhere<T = any>(q: string = "", options: WhereOptionsKvType<T>
             switch (orderValue) {
               case "asc":
               case "desc":
-                Array.isArray(dateKey) ? dateKey : [dateKey].forEach((k) => {
+                Array.isArray(timeKey) ? timeKey : [timeKey].forEach((k) => {
                   orderBy.push({ [k]: orderValue });
                 })
                 break;
@@ -292,7 +290,7 @@ export function setWhere<T = any>(q: string = "", options: WhereOptionsKvType<T>
             });
             break;
           case "since":
-            whereItem = whereFromKey(dateKey, {
+            whereItem = whereFromKey(timeKey, {
               gte: AutoAllotDate({
                 value: String(filterValue),
                 dayFirst: true,
@@ -300,7 +298,7 @@ export function setWhere<T = any>(q: string = "", options: WhereOptionsKvType<T>
             });
             break;
           case "until":
-            whereItem = whereFromKey(dateKey, {
+            whereItem = whereFromKey(timeKey, {
               lte: AutoAllotDate({
                 value: String(filterValue),
                 dayLast: true,
@@ -379,6 +377,7 @@ export function setWhere<T = any>(q: string = "", options: WhereOptionsKvType<T>
         }
       }
       if (whereItem) {
+        console.log(whereItem);
         if (NOT) whereItem = { NOT: [whereItem] }
         whereList.push(whereItem);
       }
@@ -406,4 +405,52 @@ function kanaToHira(str: string) {
     var chr = m.charCodeAt(0) - 0x60;
     return String.fromCharCode(chr);
   });
+}
+
+
+interface AutoAllotDateProps {
+  value: string;
+  replaceT?: boolean;
+  Normalize?: boolean;
+  dayFirst?: boolean;
+  dayLast?: boolean;
+  forceDayTime?: boolean;
+}
+
+function AutoAllotDate({ value, replaceT = true, Normalize = true, dayFirst = false, dayLast = false, forceDayTime = false }: AutoAllotDateProps) {
+  if (replaceT) value = value.replace(/[\s_]/, "T"); else value = value.replace(/[_]/, "T");
+  const dateLength = value.split(/[-/]/, 3).length;
+  const nonTime = forceDayTime || !/[T\s]/.test(value);
+  if (forceDayTime && (dayFirst || dayLast)) value = value.replace(/[T\s][\d.:]+/, 'T00:00');
+  else if (nonTime) value = value.replace(/([\d.:])(\+[\d:]+|Z|)$/, "$1T00:00$2")
+
+  if (Normalize && /[T]/.test(value)) {
+    value = value.replace(/(\d+)[-/]?(\d*)[-/]?(\d*)T(\d*):?(\d*):?(\d*)/, (m, m1, m2, m3, m4, m5, m6) => {
+      let dateStr: string[] = []
+      if (m1) dateStr.push(`000${m1}`.slice(-4));
+      if (m2) dateStr.push(`0${m2}`.slice(-2));
+      if (m3) dateStr.push(`0${m3}`.slice(-2));
+      let timeStr: string[] = []
+      if (m4 + m5 === "0000") timeStr.push("00", "00");
+      else {
+        if (m4) timeStr.push(`0${m4}`.slice(-2));
+        if (m5) timeStr.push(`0${m5}`.slice(-2));
+      }
+      if (m6) timeStr.push(`0${m6}`.slice(-2));
+      return dateStr.join("-") + "T" + timeStr.join(":");
+    });
+  }
+
+  let time: Date;
+  if (value.endsWith("Z") || /\+/.test(value))
+    time = new Date(value);
+  else
+    time = new Date(`${value}+09:00`);
+  if (dayLast && nonTime) {
+    if (dateLength === 1) time.setUTCFullYear(time.getUTCFullYear() + 1);
+    else if (dateLength === 2) time.setUTCMonth(time.getUTCMonth() + 1);
+    else time.setUTCDate(time.getUTCDate() + 1);
+    time.setUTCMilliseconds(-1);
+  }
+  return time;
 }

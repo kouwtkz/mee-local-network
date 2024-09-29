@@ -13,7 +13,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import ErrorPage from "@/routes/ErrorPage";
-import { FormatDate } from "#/functions/DateFunctions";
+import { FormatDate } from "#/functions/DateFunction";
 import { Base } from "@/routes/Root";
 import {
   GetPostsTable,

@@ -8,7 +8,7 @@ import { buildAddVer, stylesAddVer } from "#/server/env";
 import { LoginRedirect, Unauthorized } from "#/server/LoginCheck";
 import { MeeSqlite } from "#/database/MeeSqlite";
 import { using } from "#/functions/using";
-import { setWhere } from "#/functions/findMee";
+import { setWhere } from "#/functions/find/findMee";
 import { GetPostsTable, MeeLoguePostsToRaw } from "#/functions/MeeLogue";
 
 function logueLayout(title = import.meta.env.VITE_LOGUE_TITLE) {
