@@ -114,13 +114,13 @@ const app_api = new Hono<MeeBindings>({ strict: false });
     app.get("get/posts/filter" + n, async (c) => {
       const Url = new URL(c.req.url);
       const s = Url.searchParams;
+      let skip: number | undefined;
       let {
         id,
         orderBy,
         take,
-        skip,
         where: _where,
-      } = setWhere<MeeLoguePostRawType>(Url.searchParams.get("q"));
+      } = setWhere<MeeLoguePostRawType>(Url.searchParams.get("q") || "");
       const wheres = [_where];
       if (orderBy.length === 0) orderBy.push({ id: "desc" });
       if (id === undefined && s.has("id")) id = Number(s.get("id"));
@@ -175,7 +175,7 @@ const app_api = new Hono<MeeBindings>({ strict: false });
         const id = Number(v.id as string);
         const table = GetPostsTable(c.req.param("name"));
         return await using(new MeeSqlite(dbPath), async (db) => {
-          const nullEntry = MeeSqlite.getNullEntry(createEntry);
+          const nullEntry = MeeSqlite.fillNullEntry(createEntry);
           try {
             await db.update<MeeLoguePostRawType>({
               table,
