@@ -80,10 +80,8 @@ export function MultiParser({
   }, [children]);
   const childString = useMemo(() => {
     let childString = typeof children === "string" ? children : "";
-    childString =
-      childString && markdown
-        ? (parse(childString, { async: false }) as string)
-        : "";
+    if (childString && markdown)
+      childString = parse(childString, { async: false }) as string;
     return childString;
   }, [children, markdown]);
   const ReactParserArgs = { trim, htmlparser2, library, transform };
@@ -113,17 +111,10 @@ export function MultiParser({
                     } else if (!/^[^\/]+@[^\/]+$/.test(url)) {
                       v.attribs.onClick = ((e: any) => {
                         const Url = new URL(url, location.href);
-                        let query = Url.search
-                          ? Object.fromEntries(new URLSearchParams(url))
-                          : {};
                         if (Url.search) {
-                          const scroll =
-                            Url.searchParams.get("scroll") === "true";
-                          Url.searchParams.delete("scroll");
                           Url.searchParams.delete("p");
-                          if (query.p) delete query.p;
-                          nav(Url.href, {
-                            preventScrollReset: !scroll,
+                          nav(Url.pathname + Url.search + Url.hash, {
+                            preventScrollReset: Boolean(Url.hash),
                           });
                         } else {
                           nav(url);
