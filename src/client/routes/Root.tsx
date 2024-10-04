@@ -13,7 +13,6 @@ export function Base({ children }: { children?: ReactNode }) {
   return (
     <>
       <ScrollRestoration />
-      <DataState />
       {children}
     </>
   );
