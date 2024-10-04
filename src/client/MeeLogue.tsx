@@ -256,15 +256,26 @@ function PostForm() {
         : undefined,
     [edit, posts]
   );
+  const qParam = searchParams.get("q");
+  const hashtags = useMemo(
+    () => qParam?.split(" ").filter((v) => v.startsWith("#")),
+    [qParam]
+  );
+  const selectionPosition = useRef<null | number>(null);
   useEffect(() => {
     setPreviewMode({ previewMode: false });
     if (editThread) {
       reset({ edit: editThread.id, text: editThread.text ?? "" });
+      selectionPosition.current = null;
       textareaRef.current?.focus();
+    } else if (hashtags) {
+      reset({ ...defaultValues, text: " " + hashtags.join(" ") });
+      selectionPosition.current = 0;
     } else {
       reset(defaultValues);
+      selectionPosition.current = null;
     }
-  }, [editThread]);
+  }, [editThread, hashtags]);
   function Submit() {
     if (formRef.current && !isBusy && isDirty) {
       setIsSending(true);
@@ -320,7 +331,15 @@ function PostForm() {
     const modalPostClass = "view-modal-post";
     if (show) {
       document.body.classList.add(modalPostClass);
-      textareaRef.current?.focus();
+      if (textareaRef.current) {
+        const textarea = textareaRef.current;
+        textarea.focus();
+        if (typeof selectionPosition.current === "number") {
+          textarea.selectionStart = selectionPosition.current;
+          textarea.selectionEnd = selectionPosition.current;
+        }
+      }
+      selectionPosition.current = null;
     } else {
       document.body.classList.remove(modalPostClass);
     }
