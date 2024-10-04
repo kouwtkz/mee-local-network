@@ -29,7 +29,7 @@ export function findMee<T>({
         if (sign !== 0) {
           list.sort((a: any, b: any) => {
             let result = 0;
-            const judgeValue = a[k] ?? b[k];
+            const judgeValue = a[k] || b[k];
             const typeofValue = typeof judgeValue;
             switch (typeofValue) {
               case "string":
@@ -39,7 +39,7 @@ export function findMee<T>({
                 result = a[k] - b[k];
                 break;
               case "object":
-                if ("getTime" in judgeValue) {
+                if (judgeValue && "getTime" in judgeValue) {
                   const atime = a[k]?.getTime() || 0;
                   const btime = b[k]?.getTime() || 0;
                   if (atime !== btime) result = atime - btime;
@@ -165,10 +165,9 @@ export function setWhere<T = any>(q: string = "", options: WhereOptionsKvType<T>
   const textKey = getKeyFromOptions("text", options);
   const fromKey = getKeyFromOptions("from", options);
   const timeKey = getKeyFromOptions("time", options);
-  const hashtagKey = options.hashtag?.key ?? "hashtag";
+  const hashtagKey = options.hashtag?.key ? Array.isArray(options.hashtag.key) ? options.hashtag.key : [options.hashtag.key] : null;
+  const hashtagTextKey = options.hashtag?.textKey ? Array.isArray(options.hashtag.textKey) ? options.hashtag.textKey : [options.hashtag.textKey] : null;
   const kanaReplace = options.kanaReplace ?? false;
-  const enableHashtagKey = options.hashtag?.enableKey ?? true;
-  const enableHashtagText = options.hashtag?.enableText ?? false;
   const whereList: findWhereType<any>[] = [];
   let id: number | undefined;
   let take: number | undefined;
@@ -195,29 +194,23 @@ export function setWhere<T = any>(q: string = "", options: WhereOptionsKvType<T>
       if (item.length > 1 && item.startsWith("#")) {
         const filterValue = item.slice(1).toLocaleLowerCase();
         const whereHashtags: findWhereWithConditionsType<any>[] = [];
-        if (enableHashtagKey) {
-          (Array.isArray(hashtagKey) ? hashtagKey : [hashtagKey])
-            .forEach(k => {
-              whereHashtags.push({
-                [k]: {
-                  contains: filterValue
-                }
-              })
-            })
-        }
-        if (enableHashtagText) {
-          (Array.isArray(textKey) ? textKey : [textKey])
-            .forEach(k => {
-              whereHashtags.push({
-                [k]: {
-                  contains: new RegExp(
-                    `#${filterValue.replace(/(\+)/g, "\\$1")}(\\s|$)`,
-                    "i"
-                  )
-                }
-              })
-            })
-        }
+        hashtagKey?.forEach(k => {
+          whereHashtags.push({
+            [k]: {
+              contains: filterValue
+            }
+          })
+        })
+        hashtagTextKey?.forEach(k => {
+          whereHashtags.push({
+            [k]: {
+              contains: new RegExp(
+                `#${filterValue.replace(/(\+)/g, "\\$1")}(\\s|$)`,
+                "i"
+              )
+            }
+          })
+        })
         if (whereHashtags.length > 0) {
           whereItem = { OR: whereHashtags };
         }
@@ -355,7 +348,8 @@ export function setWhere<T = any>(q: string = "", options: WhereOptionsKvType<T>
             if (filterOptions.where) {
               whereItem = filterOptions.where(filterValue);
             } else {
-              const key = filterOptions.key ?? filterKey;
+              const keyraw = filterOptions.key || filterKey;
+              const key = Array.isArray(keyraw) ? keyraw.map(v => String(v)) : String(keyraw);
               let filterEntry: filterConditionsAllKeyValue<any>;
               switch (filterValue) {
                 case "true":
@@ -377,7 +371,6 @@ export function setWhere<T = any>(q: string = "", options: WhereOptionsKvType<T>
         }
       }
       if (whereItem) {
-        console.log(whereItem);
         if (NOT) whereItem = { NOT: [whereItem] }
         whereList.push(whereItem);
       }
