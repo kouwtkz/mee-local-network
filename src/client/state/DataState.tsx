@@ -1,71 +1,71 @@
-import { ReactNode, useEffect, useMemo, useRef } from "react";
-import { atom, useAtom } from "jotai";
+import { useEffect, useMemo, useState } from "react";
+import { StorageDataStateClass as SdsClass } from "#/functions/storage/StorageDataStateClass";
+import { CreateState, CreateStateFunctionType } from "./CreateState";
+import { useParams } from "react-router-dom";
 
-const loadingCheckID = "Element_DateState_Loading_NotEnd";
-const reloadFunction =
-  process.env.NODE_ENV === "development"
-    ? `setTimeout(() => {if (document.getElementById("${loadingCheckID}")) location.reload()}, 5000)`
-    : "";
+export const threadLabeledList: {
+  name: string;
+  label?: string;
+  order?: OrderByType;
+  postable?: boolean;
+  usePosts: CreateStateFunctionType<MeeLoguePostType[] | undefined>;
+  object: SdsClass<MeeLoguePostRawType>;
+}[] = [
+  {
+    name: "",
+    label: "メイン",
+    usePosts: CreateState(),
+    object: new SdsClass({
+      key: "main",
+      src: "/logue/api/get/posts",
+      version: "1.0",
+      preLoad: true,
+      lastmodField: "updatedAt",
+    }),
+  },
+  {
+    name: "old",
+    label: "過去",
+    order: "asc",
+    postable: false,
+    usePosts: CreateState(),
+    object: new SdsClass({
+      key: "old",
+      src: "/logue/api/get/posts/old",
+      version: "1.0",
+      preLoad: true,
+      lastmodField: "updatedAt",
+    }),
+  },
+];
 
-export const siteIsFirstAtom = atom(true);
-export const dataIsCompleteAtom = atom(false);
-export const pageIsCompleteAtom = atom(true);
-
-interface DataStateProps {
-  children?: ReactNode;
-  isSetList?: boolean[];
-}
-export function DataState({ isSetList, children }: DataStateProps) {
-  const fScrollY = useRef(window.scrollY);
-  const [isFirst, setIsFirst] = useAtom(siteIsFirstAtom);
-  const [dataIsComplete, setIsComplete] = useAtom(dataIsCompleteAtom);
-  const [pageIsComplete, setPageIsComplete] = useAtom(pageIsCompleteAtom);
-  const isComplete = useMemo(
-    () => dataIsComplete && pageIsComplete,
-    [dataIsComplete, pageIsComplete]
-  );
-  const isCompleteRef = useRef(false);
-  const comp = useMemo(
-    () => (isSetList ?? [true]).every((v) => v),
-    [isSetList]
-  );
-  useEffect(() => {
-    if (comp !== dataIsComplete) setIsComplete(comp);
-  }, [comp, dataIsComplete]);
-  useEffect(() => {
-    isCompleteRef.current = isComplete;
-  }, [isComplete]);
-  useEffect(() => {
-    document.body.classList.remove("dummy");
-    setTimeout(() => {
-      if (!isCompleteRef.current) {
-        setIsComplete(true);
-        setPageIsComplete(true);
+export function DataState() {
+  function SdsClassSetData<T extends object>(dataObject: SdsClass<T>) {
+    const [load, setLoad] = dataObject.useLoad();
+    const setData = dataObject.useData()[1];
+    useEffect(() => {
+      if (load) {
+        dataObject
+          .fetchData({
+            loadValue: load,
+          })
+          .then((data) => {
+            dataObject.setData({
+              data,
+              setState: setData,
+            });
+          });
+        setLoad(false);
       }
-    }, 5000);
-  }, []);
-  useEffect(() => {
-    if (isComplete) {
-      document.body.classList.remove("loading");
-    } else {
-      document.body.classList.add("loading");
-    }
-  }, [isComplete]);
-  useEffect(() => {
-    if (isFirst && isComplete) {
-      scrollTo({ top: fScrollY.current });
-      setIsFirst(false);
-    }
-  }, [isComplete, isFirst]);
-  return (
-    <>
-      {isComplete ? null : isFirst && reloadFunction ? (
-        <>
-          <script dangerouslySetInnerHTML={{ __html: reloadFunction }} />
-          <div id={loadingCheckID} />
-        </>
-      ) : null}
-      {children}
-    </>
-  );
+    }, [load, setLoad, setData]);
+  }
+
+  const currentName = useParams().name ?? "";
+  const current = useMemo(() => {
+    return threadLabeledList.find(({ name }) => name == currentName);
+  }, [currentName, threadLabeledList]);
+  const currentObject = current?.object;
+  if (currentObject) SdsClassSetData(currentObject);
+
+  return <></>;
 }

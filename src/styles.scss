@@ -97,6 +97,50 @@ div.simple {
   padding: 2% 0% 0% 4%;
 }
 
+body {
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  overflow-y: scroll;
+  &.dummy {
+    min-height: 5000rem;
+  }
+  &.loading {
+    overflow-y: hidden;
+  }
+}
+html.loading {
+  scrollbar-color: transparent transparent !important;
+}
+
+.loadingWindow {
+  display: none;
+  .loading & {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    max-width: var(--ct-width);
+    height: 100vh;
+    background-color: var(--background);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: sans-serif;
+    text-align: center;
+    .loadingNow {
+      color: var(--main-color);
+      font-size: 1.5rem;
+    }
+    img {
+      margin: 1rem;
+      width: auto;
+      height: 128px;
+    }
+  }
+}
+
 input,
 textarea,
 button,
@@ -369,26 +413,6 @@ button,
 
 .pixel {
   image-rendering: pixelated;
-}
-
-.loadingWindow {
-  background-color: var(--background);
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-family: sans-serif;
-  text-align: center;
-  .loadingNow {
-    color: var(--main-color);
-    font-size: 1.5rem;
-  }
-  img {
-    margin: 1rem;
-    width: auto;
-    height: 128;
-  }
 }
 
 .logue {

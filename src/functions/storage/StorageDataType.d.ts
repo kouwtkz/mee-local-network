@@ -1,14 +1,14 @@
+type setStateFunction<T> = (args_0: SetStateAction<T[] | undefined>) => void;
 interface storageReadDataProps<T> {
   data?: T[];
-  setAtom: (args_0: SetStateAction<T[] | undefined>) => void;
+  setState: setStateFunction<T>;
   id?: string;
   lastmod?: string;
 }
 interface storageSetSearchParamsOptionProps<T> {
   searchParams: URLSearchParams;
-  loadAtomValue?: LoadAtomType;
+  loadValue?: LoadStateType;
   prefix?: string;
-  lastmod?: string;
 }
 interface storageFetchDataProps<T>
   extends Omit<storageSetSearchParamsOptionProps<T>, "searchParams"> {

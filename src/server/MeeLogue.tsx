@@ -10,12 +10,14 @@ import { MeeSqlite } from "#/database/MeeSqlite";
 import { using } from "#/functions/using";
 import { setWhere } from "#/functions/find/findMee";
 import { GetPostsTable, MeeLoguePostsToRaw } from "#/functions/MeeLogue";
+import { Loading } from "#/layout/Loading";
 
 function logueLayout(title = import.meta.env.VITE_LOGUE_TITLE) {
   return renderToString(
     <DefaultLayout
       title={title}
-      className="pwa"
+      htmlClassName="loading"
+      className="pwa dummy"
       script={
         <script
           type="module"
@@ -35,6 +37,7 @@ function logueLayout(title = import.meta.env.VITE_LOGUE_TITLE) {
       }
       style={<Style href={"/assets/styles.css" + stylesAddVer} />}
     >
+      <Loading />
       <div id="root" />
     </DefaultLayout>
   );

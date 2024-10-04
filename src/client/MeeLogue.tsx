@@ -1,12 +1,11 @@
-import axios, { AxiosError } from "axios";
-import React, { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import axios from "axios";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
 import {
   createBrowserRouter,
   Link,
   Outlet,
   RouterProvider,
-  ScrollRestoration,
   useLocation,
   useNavigate,
   useParams,
@@ -28,14 +27,11 @@ import { IoSend } from "react-icons/io5";
 import { create } from "zustand";
 import { useHotkeys } from "react-hotkeys-hook";
 import { TbEraser, TbPencil, TbPencilCancel } from "react-icons/tb";
-import { getRedirectUrl } from "#/functions/redirectUrl";
-import { DarkThemeState } from "@/theme";
 import { SearchArea } from "@/components/Search";
 import { BackUrlButton, DarkThemeButton } from "@/components/Buttons";
 import { Loading } from "#/layout/Loading";
 import { MobileFold } from "@/components/MobileFold";
 import { ReloadButton } from "@/components/Reload";
-import { useCookies } from "react-cookie";
 import { FieldValues, useForm } from "react-hook-form";
 import SetRegister from "@/components/hook/SetRegister";
 import {
@@ -52,52 +48,18 @@ import {
   MdOutlinePlaylistAdd,
   MdOutlinePostAdd,
 } from "react-icons/md";
-import { atom, PrimitiveAtom, useAtom } from "jotai";
-import { pageIsCompleteAtom, siteIsFirstAtom } from "./state/DataState";
 import { PostTextarea, usePreviewMode } from "./components/parse/PostTextarea";
 import { scrollLock } from "@/components/hook/ScrollLock";
 import { DropdownObject } from "./components/dropdown/DropdownMenu";
 import { fileDialog, fileDownload } from "./components/FileTool";
-import { StorageDataAtomClass } from "#/functions/storage/StorageDataAtomClass";
+import { StateSet } from "./state/StateSet";
+import { CreateState } from "./state/CreateState";
+import { threadLabeledList } from "./state/DataState";
 
 const root = "/logue/";
 const cacheSessionName = "logue-data-session";
 const cacheOptions = { path: root };
 const cachesEnable = typeof caches !== "undefined";
-
-const threadLabeledList: {
-  name: string;
-  label?: string;
-  order?: OrderByType;
-  postable?: boolean;
-  postsAtom: PrimitiveAtom<MeeLoguePostType[] | undefined>;
-  object: StorageDataAtomClass<MeeLoguePostRawType>;
-}[] = [
-  {
-    name: "",
-    label: "メイン",
-    postsAtom: atom(),
-    object: new StorageDataAtomClass({
-      key: "main",
-      src: "/logue/api/get/posts",
-      version: "1.0",
-      preLoad: true,
-    }),
-  },
-  {
-    name: "old",
-    label: "過去",
-    order: "asc",
-    postable: false,
-    postsAtom: atom(),
-    object: new StorageDataAtomClass({
-      key: "old",
-      src: "/logue/api/get/posts/old",
-      version: "1.0",
-      preLoad: true,
-    }),
-  },
-];
 
 interface PostsStateType {
   postsList: {
@@ -141,7 +103,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         path: root,
         element: (
           <>
-            <DarkThemeState />
+            <StateSet />
             <Base>
               <Outlet />
             </Base>
@@ -168,8 +130,8 @@ function ThreadListArea() {
   const currentName = useParams().name ?? "";
   const current = threadLabeledList.find(({ name }) => name == currentName);
   const list = threadLabeledList.filter(({ name }) => name !== currentName);
-  const posts = current ? useAtom(current.postsAtom)[0] : undefined;
-  const setLoad = current ? useAtom(current.object.loadAtom)[1] : undefined;
+  const posts = current ? current.usePosts()[0] : undefined;
+  const setLoad = current ? current.object.useLoad()[1] : undefined;
   return (
     <MobileFold wide={true}>
       <ReloadButton
@@ -241,7 +203,7 @@ function ThreadListArea() {
   );
 }
 
-const isSendingAtom = atom(false);
+const useIsSending = CreateState(false);
 const defaultValues = { text: "", edit: "" };
 function PostForm() {
   const modalRef = useRef<HTMLDivElement>(null);
@@ -249,12 +211,12 @@ function PostForm() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const currentName = useParams().name ?? "";
   const current = threadLabeledList.find(({ name }) => name == currentName);
-  const posts = current ? useAtom(current.postsAtom)[0] : undefined;
-  const setLoad = current ? useAtom(current.object.loadAtom)[1] : undefined;
+  const posts = current ? current.usePosts()[0] : undefined;
+  const setLoad = current ? current.object.useLoad()[1] : undefined;
   const { edit, setEdit, setCursor } = usePostsState();
   const [searchParams, setSearch] = useSearchParams();
   const { hash, state, pathname, search } = useLocation();
-  const [isSending, setIsSending] = useAtom(isSendingAtom);
+  const [isSending, setIsSending] = useIsSending();
   const isBusy = useMemo(() => isSending, [isSending]);
   const {
     register,
@@ -518,46 +480,17 @@ function OptionButtons() {
 function LoguePage() {
   const currentName = useParams().name ?? "";
   const current = threadLabeledList.find(({ name }) => name == currentName);
-  const posts = current ? useAtom(current.postsAtom)[0] : undefined;
-  const setLoad = current ? useAtom(current.object.loadAtom)[1] : undefined;
+  const posts = current ? current.usePosts()[0] : undefined;
+  const setLoad = current ? current.object.useLoad()[1] : undefined;
   const postable = useMemo(() => current?.postable ?? true, [current]);
   const refMain = useRef<HTMLElement>(null);
   const [search, setSearch] = useSearchParams();
-  const { edit, setEdit, cursor, setCursor, isSet } = usePostsState();
-  const [postsLoad, setPostsLoad] = current
-    ? useAtom(current.object.loadAtom)
-    : [];
-  const [postsData, setPostsData] = current
-    ? useAtom(current.object.dataAtom)
-    : [];
-  useEffect(() => {
-    if (current && postsLoad) {
-      current.object
-        .fetchData({
-          loadAtomValue: postsLoad,
-        })
-        .then((data) => {
-          current.object.setData({
-            data,
-            lastmod: "updatedAt",
-            setAtom: setPostsData!,
-          });
-        });
-      setPostsLoad!(false);
-    }
-  }, [current, postsLoad, setPostsLoad, setPostsData]);
-  const setPosts = current ? useAtom(current.postsAtom)[1] : undefined;
+  const { edit, setEdit, cursor, setCursor } = usePostsState();
+  const postsData = current?.object.useData()[0];
+  const setPosts = current?.usePosts()[1];
   useEffect(() => {
     if (setPosts && postsData) setPosts(ParsePosts(postsData));
   }, [setPosts, postsData]);
-  const setIsComplete = useAtom(pageIsCompleteAtom)[1];
-  const [isFirst] = useAtom(siteIsFirstAtom);
-  useEffect(() => {
-    if (isFirst) setIsComplete(false);
-  }, [isFirst]);
-  useEffect(() => {
-    if (isFirst && isSet) setIsComplete(true);
-  }, [isSet, isFirst]);
   useEffect(() => {
     setEdit();
   }, [currentName]);
@@ -693,9 +626,7 @@ function LoguePage() {
           </div>
         </header>
         {postable ? <PostForm /> : null}
-        {typeof posts === "undefined" ? (
-          <Loading />
-        ) : (
+        {typeof posts === "undefined" ? null : (
           <main className="list" ref={refMain}>
             {postsObject.posts.map((v, i) => {
               const isEdit = edit === v.id;
