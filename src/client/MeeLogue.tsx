@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
 import {
   createBrowserRouter,
@@ -248,7 +248,16 @@ function PostForm() {
   );
   useEffect(() => {
     scrollLock(show);
+    const modalPostClass = "view-modal-post";
+    if (show) {
+      document.body.classList.add(modalPostClass);
+    } else {
+      document.body.classList.remove(modalPostClass);
+    }
   }, [show]);
+  useEffect(() => {
+    if (typeof edit !== "undefined") setShow(true);
+  }, [edit]);
   const editThread = useMemo(
     () =>
       posts && typeof edit === "number"
@@ -261,21 +270,44 @@ function PostForm() {
     () => qParam?.split(" ").filter((v) => v.startsWith("#")),
     [qParam]
   );
-  const selectionPosition = useRef<null | number>(null);
-  useEffect(() => {
+  const [selectionPosition, setSelectionPosition] = useState<null | number>(
+    null
+  );
+  function SelectionSet() {
+    if (textareaRef.current) {
+      const textarea = textareaRef.current;
+      textarea.focus();
+      if (typeof selectionPosition === "number") {
+        textarea.selectionStart = selectionPosition;
+        textarea.selectionEnd = selectionPosition;
+      }
+    }
+  }
+  const depsForReset = [editThread, hashtags, setSelectionPosition];
+  const Reset = useCallback((direct?: boolean) => {
     setPreviewMode({ previewMode: false });
     if (editThread) {
       reset({ edit: editThread.id, text: editThread.text ?? "" });
-      selectionPosition.current = null;
+      setSelectionPosition(null);
       textareaRef.current?.focus();
     } else if (hashtags) {
       reset({ ...defaultValues, text: " " + hashtags.join(" ") });
-      selectionPosition.current = 0;
+      setSelectionPosition(0);
     } else {
       reset(defaultValues);
-      selectionPosition.current = null;
+      setSelectionPosition(null);
     }
-  }, [editThread, hashtags]);
+    if (direct) SelectionSet();
+  }, depsForReset);
+  useEffect(() => {
+    Reset();
+  }, depsForReset);
+  useEffect(() => {
+    if (show) {
+      SelectionSet();
+      if (selectionPosition !== null) setSelectionPosition(null);
+    }
+  }, [show, selectionPosition, setSelectionPosition]);
   function Submit() {
     if (formRef.current && !isBusy && isDirty) {
       setIsSending(true);
@@ -303,7 +335,7 @@ function PostForm() {
           if (setLoad) setLoad(true);
           setEdit();
           setShow(false);
-          reset();
+          Reset();
         })
         .finally(() => {
           setIsSending(false);
@@ -324,26 +356,6 @@ function PostForm() {
     setShow(true);
     e.preventDefault();
   });
-  useEffect(() => {
-    if (typeof edit !== "undefined") setShow(true);
-  }, [edit]);
-  useEffect(() => {
-    const modalPostClass = "view-modal-post";
-    if (show) {
-      document.body.classList.add(modalPostClass);
-      if (textareaRef.current) {
-        const textarea = textareaRef.current;
-        textarea.focus();
-        if (typeof selectionPosition.current === "number") {
-          textarea.selectionStart = selectionPosition.current;
-          textarea.selectionEnd = selectionPosition.current;
-        }
-      }
-      selectionPosition.current = null;
-    } else {
-      document.body.classList.remove(modalPostClass);
-    }
-  }, [show]);
   const shared_intent = useMemo(() => {
     const list = ["name", "description", "link"]
       .map((v) => searchParams.get(v) ?? "")
@@ -434,8 +446,15 @@ function PostForm() {
                 title="リセット"
                 onClick={() => {
                   if (confirm("入力内容をリセットしますか？")) {
+                    Reset();
+                    if (show) textareaRef.current?.focus();
+                  }
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  if (confirm("編集も含めてリセットしますか？")) {
                     setEdit();
-                    reset(defaultValues);
+                    Reset();
                     if (show) textareaRef.current?.focus();
                   }
                 }}
