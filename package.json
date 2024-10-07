@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite --host",
     "start": "cd dist && node ./index.js",
+    "build:sw": "vite build --mode sw",
     "build": "npm run build:client && npm run build:server",
     "deploy": "bash deploy.bash",
     "ssh": "ssh rs -t \"cd mee-local-network; bash --login\"",

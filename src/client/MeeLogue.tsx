@@ -542,13 +542,6 @@ function LoguePage() {
     if (!refMain.current?.contains(e) || !p) return null;
     else return findParentItem(p);
   }
-  useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/logue/sw.js").then((reg) => {
-        // console.log("SW registered.", reg);
-      });
-    }
-  }, []);
   const take = useMemo(() => {
     let v = search.get("take");
     return v ? Number(v) : 100;

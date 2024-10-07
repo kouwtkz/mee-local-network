@@ -23,19 +23,22 @@ function logueLayout(title = import.meta.env.VITE_LOGUE_TITLE) {
           type="module"
           src={
             import.meta.env.PROD
-              ? "/assets/MeeLogue.js" + buildAddVer
+              ? "/assets/MeeLogue.js"
               : "/src/client/MeeLogue.tsx"
           }
         />
       }
       meta={
-        <link
-          rel="manifest"
-          href={"/manifest/MeeLogue.json" + buildAddVer}
-          crossOrigin="use-credentials"
-        />
+        <>
+          <script type="module" src="/logue/setSw.js" />
+          <link
+            rel="manifest"
+            href="/manifest/MeeLogue.json"
+            crossOrigin="use-credentials"
+          />
+        </>
       }
-      style={<Style href={"/assets/styles.css" + stylesAddVer} />}
+      style={<Style href="/assets/styles.css" />}
     >
       <Loading />
       <div id="root" />
