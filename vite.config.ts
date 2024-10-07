@@ -8,7 +8,11 @@ import { setBuildEnv, writeEnv } from './BuildEnv';
 import { configDotenv } from 'dotenv';
 import path from 'path';
 
-const outDir = "dist";
+const defaultBuild: BuildOptions = {
+  outDir: "dist",
+  emptyOutDir: false,
+  copyPublicDir: false,
+};
 const publicDirBuild: BuildOptions = {
   outDir: "public",
   emptyOutDir: false,
@@ -38,7 +42,9 @@ export default defineConfig(({ mode }) => {
         ...config,
         plugins: [...plugins, react()],
         build: {
-          outDir,
+          ...defaultBuild,
+          emptyOutDir: true,
+          copyPublicDir: true,
           rollupOptions: {
             input: [
               // './src/client.tsx',
@@ -99,7 +105,7 @@ export default defineConfig(({ mode }) => {
       env = Object.fromEntries(
         Object.entries(env).filter(([k]) => !k.startsWith("VITE_"))
       )
-      writeEnv(path.resolve(outDir, ".env"), env);
+      writeEnv(path.resolve(defaultBuild.outDir || "dist", ".env"), env);
       return {
         ...config,
         plugins: [
@@ -112,10 +118,7 @@ export default defineConfig(({ mode }) => {
           }),
           ssgBuild({ entry: "./src/ssg.tsx" }),
         ],
-        build: {
-          outDir,
-          emptyOutDir: false,
-        },
+        build: defaultBuild,
         ssr: { external: ['axios', 'react', 'react-dom'] },
       };
     case "development":
