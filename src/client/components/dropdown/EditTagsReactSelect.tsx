@@ -11,8 +11,8 @@ import ReactSelect, {
   StylesConfig,
   ThemeConfig,
 } from "react-select";
-import { callReactSelectTheme } from "#/theme/main";
-import { ReactNode, useMemo } from "react";
+import { callReactSelectTheme } from "@/components/define/callReactSelectTheme";
+import { ReactNode } from "react";
 type setValueFunctionType = (
   name: string,
   value: any,
@@ -37,6 +37,7 @@ interface EditTagsReactSelectType {
   enableEnterAdd?: boolean;
   theme?: ThemeConfig;
   styles?: StylesConfig;
+  formatOptionLabel?: (data: unknown) => ReactNode;
 }
 export function EditTagsReactSelect({
   name,
@@ -56,6 +57,7 @@ export function EditTagsReactSelect({
   enableEnterAdd,
   theme = callReactSelectTheme,
   styles,
+  formatOptionLabel,
 }: EditTagsReactSelectType) {
   function addTags(value: string) {
     const newValues = { label: value, value };
@@ -90,6 +92,7 @@ export function EditTagsReactSelect({
             <button
               title={addButtonTitle}
               type="button"
+              className="color"
               onClick={() => addTagsPrompt()}
               disabled={isBusy}
             >
@@ -112,6 +115,7 @@ export function EditTagsReactSelect({
               value={(field.value as string[]).map((fv) =>
                 tags.find((ci) => ci.value === fv)
               )}
+              formatOptionLabel={formatOptionLabel}
               placeholder={placeholder}
               onChange={(newValues) => {
                 field.onChange(

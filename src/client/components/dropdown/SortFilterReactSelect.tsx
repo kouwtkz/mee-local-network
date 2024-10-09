@@ -1,7 +1,7 @@
 import { ContentsTagsOption, getTagsOptions } from "./SortFilterTags";
-import { callReactSelectTheme } from "#/theme/main";
+import { callReactSelectTheme } from "@/components/define/callReactSelectTheme";
 import { HTMLAttributes, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import ReactSelect, { MultiValue } from "react-select";
 
 interface SelectAreaProps
@@ -15,8 +15,10 @@ export function ContentsTagsSelect({
   className,
   submitPreventScrollReset = true,
 }: SelectAreaProps) {
+  const { state } = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const searchTags = searchParams.get("tag")?.split(",") || [];
+  const isModal = searchParams.has("modal");
+  const searchTags = searchParams.get("tags")?.split(",") || [];
   const searchType =
     searchParams
       .get("type")
@@ -27,6 +29,11 @@ export function ContentsTagsSelect({
       .get("month")
       ?.split(",")
       .map((v) => `month:${v}`) || [];
+  const searchMonthMode =
+    searchParams
+      .get("monthMode")
+      ?.split(",")
+      .map((v) => `monthMode:${v}`) || [];
   const searchFilters =
     searchParams
       .get("filter")
@@ -40,6 +47,7 @@ export function ContentsTagsSelect({
   const searchQuery = searchTags.concat(
     searchType,
     searchMonth,
+    searchMonthMode,
     searchFilters,
     searchSort
   );
@@ -52,8 +60,9 @@ export function ContentsTagsSelect({
         sort: [],
         type: [],
         filter: [],
-        tag: [],
+        tags: [],
         month: [],
+        monthMode: [],
       };
       list.forEach(({ value }) => {
         const values = (value?.split(":", 2) || [""]).concat("");
@@ -70,8 +79,11 @@ export function ContentsTagsSelect({
           case "month":
             listObj.month = [values[1]];
             break;
+          case "monthMode":
+            listObj.monthMode = [values[1]];
+            break;
           default:
-            if (value) listObj.tag.push(value);
+            if (value) listObj.tags.push(value);
             break;
         }
       });
@@ -81,28 +93,28 @@ export function ContentsTagsSelect({
       });
       setSearchParams(searchParams, {
         preventScrollReset: submitPreventScrollReset,
+        replace: isModal,
+        state,
       });
     },
     [searchParams]
   );
   return (
-    <div className={className}>
-      <ReactSelect
-        options={tags}
-        value={currentTags}
-        isMulti
-        isSearchable={false}
-        classNamePrefix="select"
-        placeholder="ソート / フィルタ"
-        instanceId="galleryTagSelect"
-        className="tagSelect"
-        theme={callReactSelectTheme}
-        styles={{
-          menuList: (style) => ({ ...style, minHeight: "22rem" }),
-          menu: (style) => ({ ...style, zIndex: 9999 }),
-        }}
-        onChange={changeHandler}
-      />
-    </div>
+    <ReactSelect
+      options={tags}
+      value={currentTags}
+      isMulti
+      isSearchable={false}
+      classNamePrefix="select"
+      placeholder="ソート / フィルタ"
+      instanceId="contentsTagSelect"
+      className={"tagSelect" + (className ? " " + className : "")}
+      theme={callReactSelectTheme}
+      styles={{
+        menuList: (style) => ({ ...style, minHeight: "22rem" }),
+        menu: (style) => ({ ...style, zIndex: 9999 }),
+      }}
+      onChange={changeHandler}
+    />
   );
 }

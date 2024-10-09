@@ -19,9 +19,15 @@ $gray-dark-mode: #bec1b5;
 @import url("https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap");
 $font-KosugiMaru: "Kosugi Maru";
 
+%lightMode {
+  --background-bw: white;
+  --main-color: #{$soft-color};
+}
+
 @mixin darkMode() {
   --background-color: #{$background-dark};
   --gray-color: #{$gray-dark-mode};
+  --background-bw: #{$background-dark};
   scrollbar-color: $soft-color transparent;
   &.scrollLock {
     scrollbar-color: $gray-dark-mode transparent;
@@ -50,6 +56,7 @@ $font-KosugiMaru: "Kosugi Maru";
   scrollbar-color: $soft-color transparent;
   --background-color: #{$background-color};
   --gray-color: #{$gray-color};
+  @extend %lightMode;
   body,
   header {
     color: black;
@@ -685,31 +692,72 @@ button,
   @extend .logue;
 }
 
+%cursor-pointer {
+  cursor: pointer;
+}
+
 .dropdown {
   position: relative;
   > button,
   > .button {
     padding: 0.25em 0.5em;
   }
-  .list {
+  .listMenu {
     position: absolute;
-    background-color: var(--background-color);
-    left: 0;
     z-index: 100;
     text-align: left;
     width: max-content;
-    display: flex;
-    flex-direction: column;
-    :focus {
-      outline: none;
-      background-color: $soft-color;
+    background-color: var(--form-background-color);
+    &.right {
+      right: 0;
     }
-    & > *:nth-child(n) {
-      padding: 0.25em 0.5em;
-      cursor: pointer;
+    &:not(.right) {
+      left: 0;
+    }
+    .item,
+    [tabindex] {
+      @extend %cursor-pointer;
+      padding: 0.25em 0.75em;
+      color: var(--current-text-color);
+      background-color: var(--background-bw);
       &:hover {
-        background-color: $soft-color;
+        background-color: var(--main-color);
       }
+    }
+  }
+  button:focus {
+    outline: none;
+    background-color: var(--main-color);
+  }
+  .menu > * {
+    display: flex;
+  }
+  &.flex {
+    display: flex;
+    pointer-events: none;
+    :not(div) {
+      pointer-events: all;
+    }
+    .listMenu {
+      position: inherit;
+    }
+    &.on {
+      flex-direction: column-reverse;
+    }
+    &.right {
+      align-items: flex-end;
+    }
+    &.row {
+      > * {
+        display: flex;
+      }
+      &.right .menu {
+        justify-content: flex-start;
+        flex-direction: row-reverse;
+      }
+    }
+    &.transparent .listMenu {
+      background-color: transparent;
     }
   }
 }

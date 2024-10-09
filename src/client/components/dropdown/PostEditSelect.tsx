@@ -1,6 +1,5 @@
 import { HTMLAttributes, useRef } from "react";
 import { DropdownObject, DropdownObjectBaseProps } from "./DropdownMenu";
-
 interface PostEditSelectBaseProps extends DropdownObjectBaseProps {
   textarea: HTMLTextAreaElement | null;
 }
@@ -51,8 +50,15 @@ interface PostEditSelectProps extends PostEditSelectBaseProps {
 export interface MenuItemProps extends HTMLAttributes<HTMLDivElement> {
   value?: string;
 }
-export function MenuItem({ value, ...args }: MenuItemProps) {
-  return <div tabIndex={0} data-value={value} {...args} />;
+export function MenuItem({ value, className, ...args }: MenuItemProps) {
+  return (
+    <div
+      tabIndex={0}
+      data-value={value}
+      className={"item" + (className ? " " + className : "")}
+      {...args}
+    />
+  );
 }
 export function PostEditSelectInsert({
   textarea,
@@ -218,8 +224,7 @@ export function setColorChange({
 }
 
 interface PostEditSelectMediaProps extends PostEditSelectProps {
-  enableAttatch?: boolean;
-  inputAttached?: HTMLInputElement | null;
+  album?: string;
 }
 
 export function PostEditSelectMedia({
@@ -228,10 +233,17 @@ export function PostEditSelectMedia({
   MenuButton = "メディア",
   MenuButtonTitle = "メディア",
   MenuButtonClassName,
-  enableAttatch = false,
-  inputAttached,
+  album,
   autoClose,
 }: PostEditSelectMediaProps) {
+  function setMedia(value: string) {
+    if (!value || !textarea) return;
+    switch (value) {
+      case "link":
+        replacePostTextarea({ textarea, before: "[", after: "]()" });
+        break;
+    }
+  }
   return (
     <DropdownObject
       className={className}
@@ -240,45 +252,10 @@ export function PostEditSelectMedia({
       MenuButtonClassName={MenuButtonClassName}
       autoClose={autoClose}
       onClick={(e) => {
-        setMedia({
-          value: e.dataset.value ?? "",
-          inputAttached,
-          textarea,
-        });
+        setMedia(e.dataset.value || "");
       }}
     >
       <MenuItem value="link">リンク</MenuItem>
-      <MenuItem value="gallery">ギャラリー</MenuItem>
-      {enableAttatch ? <MenuItem value="attached">添付</MenuItem> : null}
-      <MenuItem value="upload">アップロード</MenuItem>
     </DropdownObject>
   );
-}
-
-interface setMediaProps extends PostEditSelectBaseProps {
-  value: string;
-  inputAttached?: HTMLInputElement | null;
-}
-export function setMedia({ value, inputAttached, textarea }: setMediaProps) {
-  if (!value || !textarea) return;
-  switch (value) {
-    case "attached":
-      if (inputAttached) {
-        if (inputAttached.style.display === "none") inputAttached.value = "";
-        inputAttached.click();
-      }
-      break;
-    case "upload":
-      if (import.meta.env.VITE_UPLOAD_BRACKET === "true")
-        replacePostTextarea({ textarea, before: "![](", after: ")" });
-      else textarea.focus();
-      window.open(import.meta.env.VITE_UPLOAD_SERVICE, "upload");
-      break;
-    case "gallery":
-      window.open("/gallery/", "gallery", "width=620px,height=720px");
-      break;
-    case "link":
-      replacePostTextarea({ textarea, before: "[", after: "]()" });
-      break;
-  }
 }

@@ -33,7 +33,8 @@ export const defaultGalleryTags: ContentsTagsOption[] = [
     label: "マンスリー",
     name: "monthly",
     options: [
-      { value: "filter:monthTag", label: "🔎月タグ", editable: false },
+      { value: "monthMode:event", label: "🔎月イベント", editable: false },
+      { value: "monthMode:tag", label: "🔎月タグ", editable: false },
       { value: "month:1", label: "🎍1月" },
       { value: "month:2", label: "👹2月" },
       { value: "month:3", label: "🎎3月" },
@@ -92,6 +93,21 @@ export const defaultGalleryTags: ContentsTagsOption[] = [
   },
 ];
 
+export function addExtentionGalleryTagsOptions(options: ContentsTagsOption[]) {
+  options.push(...[{ value: "type:banner", label: "🖼バナー" }]);
+  return options;
+}
+
+export function addExtentionTagsOptions(options = defaultGalleryTags) {
+  const list = options.concat();
+  return list.map((item) => {
+    if (item.name === "type") {
+      return { ...item, options: addExtentionGalleryTagsOptions(item.options!.concat()) };
+    }
+    return item;
+  })
+}
+
 export type filterMonthType = {
   month: number;
   tags: string[];
@@ -110,17 +126,6 @@ export const filterGalleryMonthList: filterMonthType[] = [
   { month: 10, tags: ["october", "halloween", "autumn"] },
   { month: 11, tags: ["november", "autumn"] },
   { month: 12, tags: ["december", "winter", "christmas", "myBirthday"] },
-];
-
-export const defaultGalleryFilterTags: ContentsTagsOption[] = [
-  {
-    label: "固定編集用",
-    options: [
-      { value: "filter:topImage", label: "🪄トップ画像" },
-      { value: "filter:pickup", label: "📍ピックアップ" },
-      { value: "filter:notHide", label: "🔬アルバム全表示" },
-    ],
-  },
 ];
 
 export type defineSortTagsUnion =
