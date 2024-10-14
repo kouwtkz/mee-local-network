@@ -16,7 +16,7 @@ export default function findPosts(
   { posts, take, page, common, q = "", id, pinned = false, order = "desc" }
     : findPostsProps): MeeLogueDataType {
   if (page) page--;
-  const options: WhereOptionsKvType<MeeLoguePostType> = { hashtag: { textKey: "text" } };
+  const options: WhereOptionsKvType<MeeLoguePostType> = { hashtag: { textKey: "text" }, time: { key: "date" } };
   let where: any[] = [];
   let orderBy: OrderByItem<MeeLoguePostType>[] = []
 
