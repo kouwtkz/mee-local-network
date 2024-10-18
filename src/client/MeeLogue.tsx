@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
 import {
   createBrowserRouter,
+  createSearchParams,
   Link,
   Outlet,
   RouterProvider,
@@ -647,6 +648,14 @@ function LoguePage() {
     else setEdit(id);
   }
 
+  const nextPageSearchStr = useMemo(() => {
+    const s = createSearchParams(search);
+    if (page < maxPage) {
+      s.set("p", (page + 1).toString());
+      return s.toString();
+    } else return null;
+  }, [page, maxPage, search]);
+
   return (
     <>
       <div className="logue">
@@ -730,6 +739,13 @@ function LoguePage() {
                 </div>
               );
             })}
+            <div className="item text-center">
+              {nextPageSearchStr ? (
+                <div className="body">
+                  <Link to={{ search: nextPageSearchStr }}>次のページへ進む</Link>
+                </div>
+              ) : null}
+            </div>
           </main>
         )}
         <TopJumpArea />

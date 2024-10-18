@@ -422,6 +422,16 @@ button,
   image-rendering: pixelated;
 }
 
+.text-left {
+  text-align: left;
+}
+.text-right {
+  text-align: right;
+}
+.text-center {
+  text-align: center;
+}
+
 .logue {
   .modal {
     @media (max-aspect-ratio: 9/16) {
